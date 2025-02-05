@@ -44,6 +44,10 @@ export default function App() {
     loadProfiles()
   }
 
+  const handleProfileUpdate = async (updatedProfile: Profile) => {
+    setCurrentProfile(updatedProfile)
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -70,6 +74,7 @@ export default function App() {
             <SettingsPanel 
               profile={currentProfile}
               onLogout={handleLogout}
+              onProfileUpdate={handleProfileUpdate}
             />
           ) : (
             <ChatPanel profile={currentProfile} />

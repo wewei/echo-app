@@ -25,7 +25,27 @@ export default {
     save: '保存',
     logout: '注销账号',
     logoutConfirmTitle: '确认注销',
-    logoutConfirmMessage: '注销账号将删除所有数据，此操作不可恢复。确定要继续吗？'
+    logoutConfirmMessage: '注销账号将删除所有数据，此操作不可恢复。确定要继续吗？',
+    ai: {
+      title: 'AI 设置',
+      provider: 'AI 供应商',
+      apiKey: 'API 密钥',
+      endpoint: '服务端点',
+      model: '模型',
+      providers: {
+        openai: 'OpenAI',
+        deepseek: 'DeepSeek',
+        azure: 'Azure OpenAI'
+      },
+      models: {
+        gpt35: 'GPT-3.5 Turbo',
+        gpt4: 'GPT-4',
+        deepseekChat: 'DeepSeek Chat',
+        deepseekCoder: 'DeepSeek Coder',
+        azureGpt35: 'Azure GPT-3.5 Turbo',
+        azureGpt4: 'Azure GPT-4'
+      }
+    }
   },
   welcome: {
     title: '欢迎使用 Echo Chat',

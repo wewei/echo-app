@@ -25,7 +25,27 @@ export default {
     save: 'Save',
     logout: 'Logout',
     logoutConfirmTitle: 'Confirm Logout',
-    logoutConfirmMessage: 'Logging out will delete all your data. This action cannot be undone. Are you sure you want to continue?'
+    logoutConfirmMessage: 'Logging out will delete all your data. This action cannot be undone. Are you sure you want to continue?',
+    ai: {
+      title: 'AI Settings',
+      provider: 'AI Provider',
+      apiKey: 'API Key',
+      endpoint: 'Endpoint',
+      model: 'Model',
+      providers: {
+        openai: 'OpenAI',
+        deepseek: 'DeepSeek',
+        azure: 'Azure OpenAI'
+      },
+      models: {
+        gpt35: 'GPT-3.5 Turbo',
+        gpt4: 'GPT-4',
+        deepseekChat: 'DeepSeek Chat',
+        deepseekCoder: 'DeepSeek Coder',
+        azureGpt35: 'Azure GPT-3.5 Turbo',
+        azureGpt4: 'Azure GPT-4'
+      }
+    }
   },
   welcome: {
     title: 'Welcome to Echo Chat',
