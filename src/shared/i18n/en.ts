@@ -4,6 +4,7 @@ export default {
     version: '1.0.0'
   },
   profile: {
+    defaultName: 'New User',
     create: {
       title: 'Create New Account',
       username: 'Username',
@@ -18,7 +19,13 @@ export default {
   settings: {
     title: 'Settings',
     account: 'Account',
-    version: 'Version'
+    version: 'Version',
+    about: 'About',
+    editProfile: 'Edit Profile',
+    save: 'Save',
+    logout: 'Logout',
+    logoutConfirmTitle: 'Confirm Logout',
+    logoutConfirmMessage: 'Logging out will delete all your data. This action cannot be undone. Are you sure you want to continue?'
   },
   welcome: {
     title: 'Welcome to Echo Chat',
@@ -27,6 +34,7 @@ export default {
   },
   common: {
     settings: 'Settings',
-    back: 'Back'
+    back: 'Back',
+    cancel: 'Cancel'
   }
 } 

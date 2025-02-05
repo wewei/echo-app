@@ -5,7 +5,6 @@ import { Profile } from '../shared/types/profile'
 import AppHeader from './components/AppHeader'
 import ChatPanel from './components/ChatPanel'
 import NoProfile from './components/NoProfile'
-import ProfileDialog from './components/ProfileDialog'
 import SettingsPanel from './components/SettingsPanel'
 
 const theme = createTheme({
@@ -17,7 +16,6 @@ const theme = createTheme({
 export default function App() {
   const [currentProfile, setCurrentProfile] = useState<Profile | null>(null)
   const [profiles, setProfiles] = useState<Profile[]>([])
-  const [profileDialogOpen, setProfileDialogOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
 
   // 加载 profiles
@@ -40,6 +38,14 @@ export default function App() {
     await window.electron.profile.setDefault(profileId)
   }
 
+  const handleLogout = async () => {
+    if (!currentProfile) return
+    await window.electron.profile.delete(currentProfile.id)
+    setProfiles(profiles.filter(p => p.id !== currentProfile.id))
+    setCurrentProfile(null)
+    setShowSettings(false)
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -52,14 +58,21 @@ export default function App() {
           profiles={profiles}
           currentProfile={currentProfile}
           onProfileChange={handleProfileChange}
-          onProfileCreate={() => setProfileDialogOpen(true)}
+          onProfileCreate={(profile) => {
+            setProfiles([...profiles, profile])
+            setCurrentProfile(profile)
+            setShowSettings(true)  // 直接进入设置页
+          }}
           onSettingsClick={() => setShowSettings(true)}
           showSettings={showSettings}
           onBackFromSettings={() => setShowSettings(false)}
         />
         {currentProfile ? (
           showSettings ? (
-            <SettingsPanel profile={currentProfile} />
+            <SettingsPanel 
+              profile={currentProfile}
+              onLogout={handleLogout}
+            />
           ) : (
             <ChatPanel profile={currentProfile} />
           )
@@ -67,18 +80,11 @@ export default function App() {
           <NoProfile onProfileCreated={(profile) => {
             setProfiles([...profiles, profile])
             setCurrentProfile(profile)
-          }} />
-        )}
-
-        <ProfileDialog
-          open={profileDialogOpen}
-          onClose={() => setProfileDialogOpen(false)}
-          onProfileCreated={(profile) => {
-            setProfiles([...profiles, profile])
-            setCurrentProfile(profile)
-            setProfileDialogOpen(false)
+            setShowSettings(true)
           }}
-        />
+          onNavigateToSettings={() => setShowSettings(true)}
+          />
+        )}
       </Box>
     </ThemeProvider>
   )

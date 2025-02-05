@@ -15,7 +15,7 @@ interface Props {
   currentProfile: Profile | null
   profiles: Profile[]
   onProfileChange: (profileId: string) => void
-  onProfileCreate: () => void
+  onProfileCreate: (profile: Profile) => void
   onSettingsClick: () => void
   showSettings?: boolean
   onBackFromSettings?: () => void
@@ -103,10 +103,19 @@ export default function AppHeader({
                 </Box>
 
                 <ListItem 
-                  button
+                  component="button"
                   onClick={() => {
                     onSettingsClick()
                     setDrawerOpen(false)
+                  }}
+                  sx={{
+                    width: '100%',
+                    border: 'none',
+                    bgcolor: 'transparent',
+                    color: 'text.primary',
+                    '&:hover': {
+                      bgcolor: 'action.hover'
+                    }
                   }}
                 >
                   <ListItemIcon>
@@ -124,8 +133,17 @@ export default function AppHeader({
                 .filter(p => p.id !== currentProfile?.id)
                 .map(profile => (
                   <ListItem
+                    component="button"
                     key={profile.id}
-                    button
+                    sx={{
+                      width: '100%',
+                      border: 'none',
+                      bgcolor: 'transparent',
+                      color: 'text.primary',
+                      '&:hover': {
+                        bgcolor: 'action.hover'
+                      }
+                    }}
                     onClick={() => {
                       onProfileChange(profile.id)
                       setDrawerOpen(false)
@@ -143,9 +161,23 @@ export default function AppHeader({
               }
 
               <ListItem
-                button
-                onClick={() => {
-                  onProfileCreate()
+                component="button"
+                sx={{
+                  width: '100%',
+                  border: 'none',
+                  bgcolor: 'transparent',
+                  color: 'text.primary',
+                  '&:hover': {
+                    bgcolor: 'action.hover'
+                  }
+                }}
+                onClick={async () => {
+                  // 创建新用户
+                  const profile = await window.electron.profile.create(
+                    t('profile.defaultName'),
+                    ''  // 空头像
+                  )
+                  onProfileCreate(profile)
                   setDrawerOpen(false)
                 }}
               >

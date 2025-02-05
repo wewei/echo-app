@@ -4,6 +4,7 @@ export default {
     version: '1.0.0'
   },
   profile: {
+    defaultName: '新用户',
     create: {
       title: '创建新账号',
       username: '用户名',
@@ -18,7 +19,13 @@ export default {
   settings: {
     title: '设置',
     account: '账号',
-    version: '版本'
+    version: '版本',
+    about: '关于',
+    editProfile: '编辑个人资料',
+    save: '保存',
+    logout: '注销账号',
+    logoutConfirmTitle: '确认注销',
+    logoutConfirmMessage: '注销账号将删除所有数据，此操作不可恢复。确定要继续吗？'
   },
   welcome: {
     title: '欢迎使用 Echo Chat',
@@ -27,6 +34,7 @@ export default {
   },
   common: {
     settings: '设置',
-    back: '返回'
+    back: '返回',
+    cancel: '取消'
   }
 } 
