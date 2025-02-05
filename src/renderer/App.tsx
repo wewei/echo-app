@@ -1,9 +1,12 @@
 import { Box, CssBaseline, ThemeProvider, createTheme } from '@mui/material'
 import React, { useState, useEffect } from 'react'
+import '../shared/i18n'
 import { Profile } from '../shared/types/profile'
-import ProfileSelector from './components/ProfileSelector'
+import AppHeader from './components/AppHeader'
 import ChatPanel from './components/ChatPanel'
 import NoProfile from './components/NoProfile'
+import ProfileDialog from './components/ProfileDialog'
+import SettingsPanel from './components/SettingsPanel'
 
 const theme = createTheme({
   palette: {
@@ -14,6 +17,8 @@ const theme = createTheme({
 export default function App() {
   const [currentProfile, setCurrentProfile] = useState<Profile | null>(null)
   const [profiles, setProfiles] = useState<Profile[]>([])
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
 
   // 加载 profiles
   useEffect(() => {
@@ -43,20 +48,37 @@ export default function App() {
         display: 'flex',
         flexDirection: 'column'
       }}>
-        <ProfileSelector
+        <AppHeader
           profiles={profiles}
           currentProfile={currentProfile}
           onProfileChange={handleProfileChange}
-          onProfilesChange={setProfiles}
+          onProfileCreate={() => setProfileDialogOpen(true)}
+          onSettingsClick={() => setShowSettings(true)}
+          showSettings={showSettings}
+          onBackFromSettings={() => setShowSettings(false)}
         />
         {currentProfile ? (
-          <ChatPanel profile={currentProfile} />
+          showSettings ? (
+            <SettingsPanel profile={currentProfile} />
+          ) : (
+            <ChatPanel profile={currentProfile} />
+          )
         ) : (
           <NoProfile onProfileCreated={(profile) => {
             setProfiles([...profiles, profile])
             setCurrentProfile(profile)
           }} />
         )}
+
+        <ProfileDialog
+          open={profileDialogOpen}
+          onClose={() => setProfileDialogOpen(false)}
+          onProfileCreated={(profile) => {
+            setProfiles([...profiles, profile])
+            setCurrentProfile(profile)
+            setProfileDialogOpen(false)
+          }}
+        />
       </Box>
     </ThemeProvider>
   )

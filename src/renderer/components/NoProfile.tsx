@@ -1,5 +1,6 @@
 import React from 'react'
 import { Box, Button, Typography } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 import { Profile } from '../../shared/types/profile'
 
 interface Props {
@@ -25,6 +26,8 @@ const generateDefaultAvatar = () => {
 }
 
 export default function NoProfile({ onProfileCreated }: Props) {
+  const { t } = useTranslation()
+
   const handleCreateProfile = async () => {
     // 创建默认头像资源
     const svgContent = generateDefaultAvatar()
@@ -70,16 +73,16 @@ export default function NoProfile({ onProfileCreated }: Props) {
       gap: 2
     }}>
       <Typography variant="h5">
-        欢迎使用 Echo Chat
+        {t('welcome.title')}
       </Typography>
       <Typography color="text.secondary">
-        创建一个个人资料开始聊天
+        {t('welcome.subtitle')}
       </Typography>
       <Button 
         variant="contained" 
         onClick={handleCreateProfile}
       >
-        创建个人资料
+        {t('welcome.createProfile')}
       </Button>
     </Box>
   )
