@@ -21,12 +21,12 @@ const readProfiles = async () => {
     return ProfilesSchema.parse(JSON.parse(data))
   } catch (error) {
     // 如果文件不存在，返回初始状态
-    return { profiles: [], defaultProfileId: null }
+    return { profiles: [] }
   }
 }
 
 // 保存 profiles 配置
-const saveProfiles = async (data: { profiles: Profile[], defaultProfileId: string | null }) => {
+const saveProfiles = async (data: { profiles: Profile[] }) => {
   const filePath = getProfilesPath()
   await fs.writeFile(filePath, JSON.stringify(data, null, 2))
 }
@@ -53,10 +53,7 @@ export const createProfile = async (username: string, avatar: string): Promise<P
   })
   
   await createProfileDir(newProfile.id)
-  await saveProfiles({
-    profiles: [...profiles.profiles, newProfile],
-    defaultProfileId: profiles.defaultProfileId || newProfile.id
-  })
+  await saveProfiles({ profiles: [...profiles.profiles, newProfile] });
   
   return newProfile
 }
@@ -66,16 +63,8 @@ export const deleteProfile = async (profileId: string): Promise<void> => {
   const profiles = await readProfiles()
   const newProfiles = profiles.profiles.filter(p => p.id !== profileId)
   
-  let newDefaultId = profiles.defaultProfileId
-  if (profiles.defaultProfileId === profileId) {
-    newDefaultId = newProfiles[0]?.id || null
-  }
-  
   await removeProfileDir(profileId)
-  await saveProfiles({
-    profiles: newProfiles,
-    defaultProfileId: newDefaultId
-  })
+  await saveProfiles({ profiles: newProfiles })
 }
 
 // 更新 profile
@@ -88,25 +77,9 @@ export const updateProfile = async (
     p.id === profileId ? { ...p, ...updates, id: profileId } : p
   )
   
-  await saveProfiles({
-    profiles: updatedProfiles,
-    defaultProfileId: profiles.defaultProfileId
-  })
+  await saveProfiles({ profiles: updatedProfiles })
   
   return updatedProfiles.find(p => p.id === profileId) || null
-}
-
-// 设置默认 profile
-export const setDefaultProfile = async (profileId: string): Promise<void> => {
-  const profiles = await readProfiles()
-  if (!profiles.profiles.some(p => p.id === profileId)) {
-    throw new Error('Profile not found')
-  }
-  
-  await saveProfiles({
-    profiles: profiles.profiles,
-    defaultProfileId: profileId
-  })
 }
 
 // 获取所有 profiles
@@ -120,10 +93,3 @@ export const getProfile = async (profileId: string): Promise<Profile | null> => 
   const profiles = await readProfiles()
   return profiles.profiles.find(p => p.id === profileId) || null
 }
-
-// 获取默认 profile
-export const getDefaultProfile = async (): Promise<Profile | null> => {
-  const profiles = await readProfiles()
-  if (!profiles.defaultProfileId) return null
-  return profiles.profiles.find(p => p.id === profiles.defaultProfileId) || null
-} 

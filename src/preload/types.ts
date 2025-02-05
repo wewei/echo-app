@@ -6,10 +6,8 @@ export interface IProfileAPI {
   create: (username: string, avatar: string) => Promise<Profile>
   delete: (profileId: string) => Promise<void>
   update: (profileId: string, updates: Partial<Profile>) => Promise<Profile | null>
-  setDefault: (profileId: string) => Promise<void>
   getAll: () => Promise<Profile[]>
   get: (profileId: string) => Promise<Profile | null>
-  getDefault: () => Promise<Profile | null>
 }
 
 export interface IAssetAPI {

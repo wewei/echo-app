@@ -19,11 +19,6 @@ export const registerProfileHandlers = () => {
     return await ProfileManager.updateProfile(profileId, updatesObj)
   })
 
-  // 设置默认 profile
-  ipcMain.handle('profile:setDefault', async (_, profileId: string) => {
-    await ProfileManager.setDefaultProfile(profileId)
-  })
-
   // 获取所有 profiles
   ipcMain.handle('profile:getAll', async () => {
     return await ProfileManager.getAllProfiles()
@@ -32,10 +27,5 @@ export const registerProfileHandlers = () => {
   // 获取指定 profile
   ipcMain.handle('profile:get', async (_, profileId: string) => {
     return await ProfileManager.getProfile(profileId)
-  })
-
-  // 获取默认 profile
-  ipcMain.handle('profile:getDefault', async () => {
-    return await ProfileManager.getDefaultProfile()
   })
 } 

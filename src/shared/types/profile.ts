@@ -10,7 +10,6 @@ export type Profile = z.infer<typeof ProfileSchema>
 
 export const ProfilesSchema = z.object({
   profiles: z.array(ProfileSchema),
-  defaultProfileId: z.string().uuid().nullable(),
 })
 
 export type Profiles = z.infer<typeof ProfilesSchema> 

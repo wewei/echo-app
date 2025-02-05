@@ -9,14 +9,10 @@ const profileAPI: IProfileAPI = {
     ipcRenderer.invoke('profile:delete', profileId),
   update: (profileId, updates) => 
     ipcRenderer.invoke('profile:update', profileId, updates),
-  setDefault: (profileId) => 
-    ipcRenderer.invoke('profile:setDefault', profileId),
   getAll: () => 
     ipcRenderer.invoke('profile:getAll'),
   get: (profileId) => 
     ipcRenderer.invoke('profile:get', profileId),
-  getDefault: () => 
-    ipcRenderer.invoke('profile:getDefault')
 }
 
 // Asset API
