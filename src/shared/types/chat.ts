@@ -27,3 +27,5 @@ export interface ChatResponse {
     totalTokens: number
   }
 } 
+
+export const CHAT_SETTINGS = "chat"

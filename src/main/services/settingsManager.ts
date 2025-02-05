@@ -53,6 +53,7 @@ export const updateSettings = async (
   const current = await readSettings(profileId, scope)
   const updated = { ...current, ...updates }
   await writeSettings(profileId, scope, updated)
+  settingsListeners.get(scope)?.forEach(callback => callback(profileId, updated))
   return updated
 }
 
@@ -96,3 +97,12 @@ export const getScopes = async (profileId: string): Promise<string[]> => {
     return []
   }
 } 
+
+const settingsListeners = new Map<string, ((profileId: string, settings: Settings) => void)[]>()
+
+export const onSettingsUpdate = (scope: string, callback: (profileId: string, settings: Settings) => void): () => void => {
+  settingsListeners.set(scope, [...(settingsListeners.get(scope) || []), callback])
+  return () => {
+    settingsListeners.set(scope, [...(settingsListeners.get(scope) || []), callback])
+  }
+}

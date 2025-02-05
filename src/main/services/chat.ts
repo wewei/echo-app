@@ -1,8 +1,8 @@
-import OpenAI from 'openai'
+import OpenAI, { AzureOpenAI } from 'openai'
 import { Profile } from '../../shared/types/profile'
-import { AISettings } from '../../shared/types/aiSettings'
-import { Message, ChatOptions, ChatResponse } from '../../shared/types/chat'
-import { readSettings } from './settingsManager'
+import { ChatSettings } from '../../shared/types/chatSettings'
+import { Message, ChatOptions, ChatResponse, CHAT_SETTINGS } from '../../shared/types/chat'
+import { readSettings, onSettingsUpdate } from './settingsManager'
 import { randomUUID } from 'crypto'
 
 // 缓存 OpenAI clients
@@ -11,20 +11,19 @@ const clients = new Map<string, OpenAI>()
 const getClient = async (profileId: string): Promise<OpenAI> => {
   let client = clients.get(profileId)
   if (!client) {
-    const settings = await readSettings(profileId, 'ai') as AISettings
+    const settings = await readSettings(profileId, CHAT_SETTINGS) as ChatSettings
     if (!settings) {
       throw new Error('AI settings not found')
     }
 
-    const config = settings[settings.provider]
-    client = new OpenAI({
-      apiKey: config.apiKey,
-      baseURL: config.endpoint || undefined,
-    })
-    clients.set(profileId, client)
+    client = new (settings.provider === 'azure' ? AzureOpenAI : OpenAI)(settings[settings.provider])
   }
   return client
 }
+
+onSettingsUpdate(CHAT_SETTINGS, (profileId) => {
+  clients.delete(profileId)
+})
 
 export const chat = async (
   profile: Profile,
@@ -32,7 +31,7 @@ export const chat = async (
   options: ChatOptions = { stream: false }
 ): Promise<ChatResponse> => {
   const client = await getClient(profile.id)
-  const settings = await readSettings(profile.id, 'ai') as AISettings
+  const settings = await readSettings(profile.id, CHAT_SETTINGS) as ChatSettings
   if (!settings) {
     throw new Error('AI settings not found')
   }
@@ -75,7 +74,7 @@ export const streamChat = async (
   options: ChatOptions = { stream: true }
 ): Promise<void> => {
   const client = await getClient(profile.id)
-  const settings = await readSettings(profile.id, 'ai') as AISettings
+  const settings = await readSettings(profile.id, CHAT_SETTINGS) as ChatSettings
   if (!settings) {
     throw new Error('AI settings not found')
   }

@@ -44,6 +44,10 @@ export default {
         deepseekCoder: 'DeepSeek Coder',
         azureGpt35: 'Azure GPT-3.5 Turbo',
         azureGpt4: 'Azure GPT-4'
+      },
+      azure: {
+        apiVersion: 'API Version',
+        deployment: 'Deployment Name'
       }
     }
   },

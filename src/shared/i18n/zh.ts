@@ -44,6 +44,10 @@ export default {
         deepseekCoder: 'DeepSeek Coder',
         azureGpt35: 'Azure GPT-3.5 Turbo',
         azureGpt4: 'Azure GPT-4'
+      },
+      azure: {
+        apiVersion: 'API 版本',
+        deployment: '部署名称'
       }
     }
   },
@@ -56,5 +60,14 @@ export default {
     settings: '设置',
     back: '返回',
     cancel: '取消'
+  },
+  chat: {
+    inputPlaceholder: '输入消息，按 Enter 发送...',
+    error: {
+      unknown: '发生未知错误',
+      noSettings: '请先在设置中配置 AI 供应商',
+      networkError: '网络连接错误',
+      invalidResponse: '无效的响应'
+    }
   }
 } 

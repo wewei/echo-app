@@ -57,6 +57,7 @@
     "openai": "^4.82.0",
     "react-dom": "^19.0.0",
     "react-i18next": "^15.4.0",
+    "react-markdown": "^9.0.3",
     "update-electron-app": "^3.1.1",
     "uuid": "^11.0.5",
     "zod": "^3.24.1"

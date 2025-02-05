@@ -16,7 +16,11 @@ import DoneIcon from '@mui/icons-material/Done'
 import CloseIcon from '@mui/icons-material/Close'
 import LogoutIcon from '@mui/icons-material/Logout'
 import { Profile } from '../../shared/types/profile'
-import { AISettings, AISettingsSchema, AIProvider } from '../../shared/types/aiSettings'
+import { ChatSettings, ChatSettingsSchema, ChatProvider } from '../../shared/types/chatSettings'
+import OpenAISettingsPanel from './settings/OpenAISettings'
+import DeepSeekSettingsPanel from './settings/DeepSeekSettings'
+import AzureSettingsPanel from './settings/AzureSettings'
+import { CHAT_SETTINGS } from '../../shared/types/chat'
 
 // 添加AI供应商类型定义
 interface Props {
@@ -32,14 +36,14 @@ export default function SettingsPanel({ profile, onLogout, onProfileUpdate }: Pr
   const [avatarAssetId, setAvatarAssetId] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
-  const [aiSettings, setAISettings] = useState<AISettings>(AISettingsSchema.parse({}))
+  const [chatSettings, setChatSettings] = useState<ChatSettings>(ChatSettingsSchema.parse({}))
 
   // 获取已保存的设置
   useEffect(() => {
     const loadAISettings = async () => {
-      const settings = await window.electron.settings.read(profile.id, 'ai')
+      const settings = await window.electron.settings.read(profile.id, CHAT_SETTINGS)
       if (settings) {
-        setAISettings(AISettingsSchema.parse(settings))
+        setChatSettings(ChatSettingsSchema.parse(settings))
       }
     }
     loadAISettings()
@@ -50,41 +54,19 @@ export default function SettingsPanel({ profile, onLogout, onProfileUpdate }: Pr
     field: 'provider' | 'apiKey' | 'endpoint' | 'model',
     value: string
   ) => {
-    const newSettings = { ...aiSettings }
+    const newSettings = { ...chatSettings }
     
     if (field === 'provider') {
-      newSettings.provider = value as AIProvider
+      newSettings.provider = value as ChatProvider
     } else {
-      newSettings[aiSettings.provider] = {
-        ...newSettings[aiSettings.provider],
+      newSettings[chatSettings.provider] = {
+        ...newSettings[chatSettings.provider],
         [field]: value
       }
     }
     
-    setAISettings(newSettings)
-    await window.electron.settings.write(profile.id, 'ai', newSettings)
-  }
-
-  const getModelOptions = (provider: AIProvider) => {
-    switch (provider) {
-      case 'openai':
-        return [
-          { value: 'gpt-3.5-turbo', label: t('settings.ai.models.gpt35') },
-          { value: 'gpt-4', label: t('settings.ai.models.gpt4') }
-        ]
-      case 'deepseek':
-        return [
-          { value: 'deepseek-chat', label: t('settings.ai.models.deepseekChat') },
-          { value: 'deepseek-coder', label: t('settings.ai.models.deepseekCoder') }
-        ]
-      case 'azure':
-        return [
-          { value: 'gpt-35-turbo', label: t('settings.ai.models.azureGpt35') },
-          { value: 'gpt-4', label: t('settings.ai.models.azureGpt4') }
-        ]
-      default:
-        return []
-    }
+    setChatSettings(newSettings)
+    await window.electron.settings.write(profile.id, CHAT_SETTINGS, newSettings)
   }
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,6 +121,46 @@ export default function SettingsPanel({ profile, onLogout, onProfileUpdate }: Pr
       onLogout()
     } catch (error) {
       console.error('Failed to logout:', error)
+    }
+  }
+
+  const renderAISettings = () => {
+    switch (chatSettings.provider) {
+      case 'openai':
+        return (
+          <OpenAISettingsPanel
+            settings={chatSettings.openai}
+            onChange={(settings) => {
+              const newSettings = { ...chatSettings, openai: settings }
+              setChatSettings(newSettings)
+              window.electron.settings.write(profile.id, CHAT_SETTINGS, newSettings)
+            }}
+          />
+        )
+      case 'deepseek':
+        return (
+          <DeepSeekSettingsPanel
+            settings={chatSettings.deepseek}
+            onChange={(settings) => {
+              const newSettings = { ...chatSettings, deepseek: settings }
+              setChatSettings(newSettings)
+              window.electron.settings.write(profile.id, CHAT_SETTINGS, newSettings)
+            }}
+          />
+        )
+      case 'azure':
+        return (
+          <AzureSettingsPanel
+            settings={chatSettings.azure}
+            onChange={(settings) => {
+              const newSettings = { ...chatSettings, azure: settings }
+              setChatSettings(newSettings)
+              window.electron.settings.write(profile.id, CHAT_SETTINGS, newSettings)
+            }}
+          />
+        )
+      default:
+        return null
     }
   }
 
@@ -271,7 +293,7 @@ export default function SettingsPanel({ profile, onLogout, onProfileUpdate }: Pr
               <FormControl fullWidth size="small">
                 <InputLabel>{t('settings.ai.provider')}</InputLabel>
                 <Select
-                  value={aiSettings.provider}
+                  value={chatSettings.provider}
                   label={t('settings.ai.provider')}
                   onChange={(e) => handleAISettingsChange('provider', e.target.value)}
                 >
@@ -281,39 +303,7 @@ export default function SettingsPanel({ profile, onLogout, onProfileUpdate }: Pr
                 </Select>
               </FormControl>
 
-              <TextField
-                size="small"
-                label={t('settings.ai.apiKey')}
-                type="password"
-                value={aiSettings[aiSettings.provider].apiKey}
-                onChange={(e) => handleAISettingsChange('apiKey', e.target.value)}
-                fullWidth
-              />
-
-              <TextField
-                size="small"
-                label={t('settings.ai.endpoint')}
-                value={aiSettings[aiSettings.provider].endpoint}
-                onChange={(e) => handleAISettingsChange('endpoint', e.target.value)}
-                fullWidth
-                placeholder={aiSettings.provider === 'azure' ? 
-                  'https://{resource}.openai.azure.com' : 
-                  'https://api.openai.com'
-                }
-              />
-
-              <FormControl fullWidth size="small">
-                <InputLabel>{t('settings.ai.model')}</InputLabel>
-                <Select
-                  value={aiSettings[aiSettings.provider].model}
-                  label={t('settings.ai.model')}
-                  onChange={(e) => handleAISettingsChange('model', e.target.value)}
-                >
-                  {getModelOptions(aiSettings.provider).map(({ value, label }) => (
-                    <MenuItem key={value} value={value}>{label}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              {renderAISettings()}
             </Box>
           </ListItem>
         </List>
