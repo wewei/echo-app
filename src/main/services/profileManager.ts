@@ -2,7 +2,7 @@ import { app } from 'electron'
 import path from 'path'
 import fs from 'fs/promises'
 import { v4 as uuidv4 } from 'uuid'
-import { Profile, ProfileSchema, ProfilesSchema } from '../types/profile'
+import { Profile, ProfileSchema, ProfilesSchema } from '../../shared/types/profile'
 
 const PROFILES_FILE = 'profiles.json'
 
@@ -82,10 +82,10 @@ export const deleteProfile = async (profileId: string): Promise<void> => {
 export const updateProfile = async (
   profileId: string, 
   updates: Partial<Omit<Profile, 'id'>>
-): Promise<Profile> => {
+): Promise<Profile | null> => {
   const profiles = await readProfiles()
   const updatedProfiles = profiles.profiles.map(p => 
-    p.id === profileId ? { ...p, ...updates } : p
+    p.id === profileId ? { ...p, ...updates, id: profileId } : p
   )
   
   await saveProfiles({
@@ -93,7 +93,7 @@ export const updateProfile = async (
     defaultProfileId: profiles.defaultProfileId
   })
   
-  return updatedProfiles.find(p => p.id === profileId)!
+  return updatedProfiles.find(p => p.id === profileId) || null
 }
 
 // 设置默认 profile

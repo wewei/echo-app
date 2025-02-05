@@ -1,7 +1,7 @@
 import { app } from 'electron'
 import path from 'path'
 import fs from 'fs/promises'
-import { Settings, SettingsSchema } from '../types/settings'
+import { Settings, SettingsSchema } from '../../shared/types/settings'
 
 const SETTINGS_DIR = 'settings'
 

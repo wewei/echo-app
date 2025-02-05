@@ -1,5 +1,6 @@
 import { ipcMain } from 'electron'
 import * as ProfileManager from '../services/profileManager'
+import { ProfileSchema } from '../../shared/types/profile'
 
 export const registerProfileHandlers = () => {
   // 创建 profile
@@ -13,8 +14,9 @@ export const registerProfileHandlers = () => {
   })
 
   // 更新 profile
-  ipcMain.handle('profile:update', async (_, profileId: string, updates: any) => {
-    return await ProfileManager.updateProfile(profileId, updates)
+  ipcMain.handle('profile:update', async (_, profileId: string, updates: unknown) => {
+    const updatesObj = ProfileSchema.partial().parse(updates);
+    return await ProfileManager.updateProfile(profileId, updatesObj)
   })
 
   // 设置默认 profile

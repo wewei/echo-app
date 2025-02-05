@@ -2,7 +2,7 @@ import { app, protocol } from 'electron'
 import path from 'path'
 import fs from 'fs/promises'
 import { v4 as uuidv4 } from 'uuid'
-import { AssetMetadata, AssetsMetadata, AssetMetadataSchema, AssetsMetadataSchema } from '../types/asset'
+import { AssetMetadata, AssetsMetadata, AssetMetadataSchema, AssetsMetadataSchema } from '../../shared/types/asset'
 
 const ASSETS_METADATA_FILE = 'assets.json'
 const ASSETS_DIR = 'assets'

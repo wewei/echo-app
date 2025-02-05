@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import * as SettingsManager from '../services/settingsManager'
-import { Settings } from '../types/settings'
+import { Settings } from '../../shared/types/settings'
 
 export const registerSettingsHandlers = () => {
   // 读取 settings
