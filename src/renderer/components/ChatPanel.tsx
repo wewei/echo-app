@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Box, Alert, Collapse } from '@mui/material'
-import { Message } from '../../shared/types/chat'
+import { ChatMessage } from '../../shared/types/chat'
 import { Profile } from '../../shared/types/profile'
 import { useTranslation } from 'react-i18next'
 import MessageList from './MessageList'
@@ -12,7 +12,7 @@ interface Props {
 
 export default function ChatPanel({ profile }: Props) {
   const { t } = useTranslation()
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const streamCleanupRef = useRef<(() => void) | null>(null)
@@ -30,7 +30,7 @@ export default function ChatPanel({ profile }: Props) {
     setError(null)
 
     // 添加用户消息
-    const userMessage: Message = {
+    const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
       content,
@@ -39,7 +39,7 @@ export default function ChatPanel({ profile }: Props) {
     setMessages(prev => [...prev, userMessage])
 
     // 创建一个空的助手消息用于流式更新
-    const assistantMessage: Message = {
+    const assistantMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'assistant',
       content: '',

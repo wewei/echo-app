@@ -1,15 +1,15 @@
 import { z } from 'zod'
 
-export const MessageRoleSchema = z.enum(['system', 'user', 'assistant'])
-export type MessageRole = z.infer<typeof MessageRoleSchema>
+export const ChatMessageRoleSchema = z.enum(['system', 'user', 'assistant'])
+export type ChatMessageRole = z.infer<typeof ChatMessageRoleSchema>
 
-export const MessageSchema = z.object({
+export const ChatMessageSchema = z.object({
   id: z.string(),
-  role: MessageRoleSchema,
+  role: ChatMessageRoleSchema,
   content: z.string(),
   timestamp: z.number(),
 })
-export type Message = z.infer<typeof MessageSchema>
+export type ChatMessage = z.infer<typeof ChatMessageSchema>
 
 export const ChatOptionsSchema = z.object({
   stream: z.boolean().default(false),
@@ -20,7 +20,7 @@ export type ChatOptions = z.infer<typeof ChatOptionsSchema>
 
 export interface ChatResponse {
   id: string
-  message: Message
+  message: ChatMessage
   usage?: {
     promptTokens: number
     completionTokens: number

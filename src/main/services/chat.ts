@@ -1,7 +1,7 @@
 import OpenAI, { AzureOpenAI } from 'openai'
 import { Profile } from '../../shared/types/profile'
 import { ChatSettings } from '../../shared/types/chatSettings'
-import { Message, ChatOptions, ChatResponse, CHAT_SETTINGS } from '../../shared/types/chat'
+import { ChatMessage, ChatOptions, ChatResponse, CHAT_SETTINGS } from '../../shared/types/chat'
 import { readSettings, onSettingsUpdate } from './settingsManager'
 import { randomUUID } from 'crypto'
 
@@ -27,7 +27,7 @@ onSettingsUpdate(CHAT_SETTINGS, (profileId) => {
 
 export const chat = async (
   profile: Profile,
-  messages: Message[],
+  messages: ChatMessage[],
   options: ChatOptions = { stream: false }
 ): Promise<ChatResponse> => {
   const client = await getClient(profile.id)
@@ -68,7 +68,7 @@ export const chat = async (
 
 export const streamChat = async (
   profile: Profile,
-  messages: Message[],
+  messages: ChatMessage[],
   onMessage: (delta: string) => void,
   onDone: (response: ChatResponse) => void,
   options: ChatOptions = { stream: true }

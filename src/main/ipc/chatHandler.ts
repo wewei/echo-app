@@ -1,19 +1,19 @@
 import { ipcMain } from 'electron'
 import { Profile } from '../../shared/types/profile'
-import { Message, ChatOptions } from '../../shared/types/chat'
+import { ChatMessage, ChatOptions } from '../../shared/types/chat'
 import * as chatService from '../services/chat'
 
 export const registerChatHandlers = () => {
   ipcMain.handle(
     'chat:send',
-    async (_, profile: Profile, messages: Message[], options?: ChatOptions) => {
+    async (_, profile: Profile, messages: ChatMessage[], options?: ChatOptions) => {
       return await chatService.chat(profile, messages, options)
     }
   )
 
   ipcMain.handle(
     'chat:stream',
-    async (event, streamId: string, profile: Profile, messages: Message[], options?: ChatOptions) => {
+    async (event, streamId: string, profile: Profile, messages: ChatMessage[], options?: ChatOptions) => {
       try {
         await chatService.streamChat(
           profile,

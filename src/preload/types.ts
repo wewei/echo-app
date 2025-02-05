@@ -1,7 +1,8 @@
 import { Profile } from '../shared/types/profile'
 import { AssetMetadata } from '../shared/types/asset'
 import { Settings } from '../shared/types/settings'
-import { Message, ChatOptions, ChatResponse } from '../shared/types/chat'
+import { ChatMessage, ChatOptions, ChatResponse } from '../shared/types/chat'
+import type { Message, MessageQuery } from '../shared/types/message'
 
 export interface IProfileAPI {
   create: (username: string, avatar: string) => Promise<Profile>
@@ -28,10 +29,10 @@ export interface ISettingsAPI {
 }
 
 export interface IChatAPI {
-  send: (profile: Profile, messages: Message[], options?: ChatOptions) => Promise<ChatResponse>
+  send: (profile: Profile, messages: ChatMessage[], options?: ChatOptions) => Promise<ChatResponse>
   stream: (
     profile: Profile,
-    messages: Message[],
+    messages: ChatMessage[],
     onMessage: (delta: string) => void,
     onDone: (response: ChatResponse) => void,
     onError: (error: Error) => void,
@@ -39,20 +40,22 @@ export interface IChatAPI {
   ) => () => void
 }
 
+export interface IMessageAPI {
+  add: (profileId: string, message: Message) => Promise<void>
+  get: (profileId: string, id: string) => Promise<Message | null>
+  query: (profileId: string, query: MessageQuery) => Promise<Message[]>
+}
+
 export interface IElectronAPI {
   profile: IProfileAPI
   asset: IAssetAPI
   settings: ISettingsAPI
   chat: IChatAPI
+  message: IMessageAPI
 }
 
 declare global {
   interface Window {
-    electron: {
-      profile: IProfileAPI
-      asset: IAssetAPI
-      settings: ISettingsAPI
-      chat: IChatAPI
-    }
+    electron: IElectronAPI
   }
 } 

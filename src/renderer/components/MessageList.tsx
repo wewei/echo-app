@@ -1,12 +1,12 @@
 import React, { useRef, useEffect } from 'react'
 import { Box, Typography, Avatar, CircularProgress } from '@mui/material'
-import { Message } from '../../shared/types/chat'
+import { ChatMessage } from '../../shared/types/chat'
 import SmartToyIcon from '@mui/icons-material/SmartToy'
 import PersonIcon from '@mui/icons-material/Person'
 import ReactMarkdown from 'react-markdown'
 
 interface Props {
-  messages: Message[]
+  messages: ChatMessage[]
   isStreaming: boolean
 }
 

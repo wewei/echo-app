@@ -1,12 +1,12 @@
 import { ipcRenderer } from 'electron'
 import { Profile } from '../shared/types/profile'
-import { Message, ChatOptions, ChatResponse } from '../shared/types/chat'
+import { ChatMessage, ChatOptions, ChatResponse } from '../shared/types/chat'
 import { v4 as uuid } from 'uuid'
 
 export const chatAPI = {
   send: (
     profile: Profile,
-    messages: Message[],
+    messages: ChatMessage[],
     options?: ChatOptions
   ): Promise<ChatResponse> => {
     return ipcRenderer.invoke('chat:send', profile, messages, options)
@@ -14,7 +14,7 @@ export const chatAPI = {
 
   stream: (
     profile: Profile,
-    messages: Message[],
+    messages: ChatMessage[],
     onMessage: (delta: string) => void,
     onDone: (response: ChatResponse) => void,
     onError: (error: Error) => void,
