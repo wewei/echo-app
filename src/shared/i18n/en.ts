@@ -60,5 +60,10 @@ export default {
     settings: 'Settings',
     back: 'Back',
     cancel: 'Cancel'
+  },
+  chat: {
+    error: {
+      loadHistory: 'Failed to load message history'
+    }
   }
 } 

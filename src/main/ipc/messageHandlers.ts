@@ -7,7 +7,7 @@ export const registerMessageHandlers = () => {
   ipcMain.handle(
     'message:add',
     async (_, profileId: string, message: Message) => {
-      await messageStore.addMessage(profileId, message)
+      return await messageStore.addMessage(profileId, message)
     }
   )
 

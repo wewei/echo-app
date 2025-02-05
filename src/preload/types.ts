@@ -41,9 +41,10 @@ export interface IChatAPI {
 }
 
 export interface IMessageAPI {
-  add: (profileId: string, message: Message) => Promise<void>
-  get: (profileId: string, id: string) => Promise<Message | null>
+  add: (profileId: string, message: Omit<Message, 'id'>) => Promise<number>
+  get: (profileId: string, id: number) => Promise<Message | null>
   query: (profileId: string, query: MessageQuery) => Promise<Message[]>
+  update: (profileId: string, message: Message) => Promise<void>
 }
 
 export interface IElectronAPI {

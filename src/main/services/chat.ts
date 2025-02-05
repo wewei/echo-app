@@ -73,6 +73,7 @@ export const streamChat = async (
   onDone: (response: ChatResponse) => void,
   options: ChatOptions = { stream: true }
 ): Promise<void> => {
+  console.log(messages);
   const client = await getClient(profile.id)
   const settings = await readSettings(profile.id, CHAT_SETTINGS) as ChatSettings
   if (!settings) {

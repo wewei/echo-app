@@ -1,12 +1,12 @@
 import React, { useRef, useEffect } from 'react'
 import { Box, Typography, Avatar, CircularProgress } from '@mui/material'
-import { ChatMessage } from '../../shared/types/chat'
+import { Message } from '../../shared/types/message'
 import SmartToyIcon from '@mui/icons-material/SmartToy'
 import PersonIcon from '@mui/icons-material/Person'
 import ReactMarkdown from 'react-markdown'
 
 interface Props {
-  messages: ChatMessage[]
+  messages: Message[]
   isStreaming: boolean
 }
 
@@ -39,10 +39,10 @@ export default function MessageList({ messages, isStreaming }: Props) {
         >
           <Avatar
             sx={{
-              bgcolor: message.role === 'assistant' ? 'primary.main' : 'secondary.main'
+              bgcolor: message.sender === 'agent' ? 'primary.main' : 'secondary.main'
             }}
           >
-            {message.role === 'assistant' ? 
+            {message.sender === 'agent' ? 
               isStreaming && index === messages.length - 1 ? 
                 <CircularProgress size={24} color="inherit" /> : 
                 <SmartToyIcon /> : 

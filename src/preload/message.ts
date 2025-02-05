@@ -2,7 +2,7 @@ import { ipcRenderer } from 'electron'
 import type { Message, MessageQuery } from '../shared/types/message'
 
 export const messageAPI = {
-  add: (profileId: string, message: Message): Promise<void> => {
+  add: (profileId: string, message: Message): Promise<number> => {
     return ipcRenderer.invoke('message:add', profileId, message)
   },
 

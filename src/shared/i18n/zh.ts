@@ -67,7 +67,8 @@ export default {
       unknown: '发生未知错误',
       noSettings: '请先在设置中配置 AI 供应商',
       networkError: '网络连接错误',
-      invalidResponse: '无效的响应'
+      invalidResponse: '无效的响应',
+      loadHistory: '加载历史消息失败'
     }
   }
 } 

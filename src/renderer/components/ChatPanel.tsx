@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Box, Alert, Collapse } from '@mui/material'
-import { ChatMessage } from '../../shared/types/chat'
+import { Message } from '../../shared/types/message'
 import { Profile } from '../../shared/types/profile'
 import { useTranslation } from 'react-i18next'
 import MessageList from './MessageList'
@@ -12,47 +12,61 @@ interface Props {
 
 export default function ChatPanel({ profile }: Props) {
   const { t } = useTranslation()
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const streamCleanupRef = useRef<(() => void) | null>(null)
 
-  // 清理流式响应
+  // 加载历史消息
   useEffect(() => {
-    return () => {
-      if (streamCleanupRef.current) {
-        streamCleanupRef.current()
+    const loadMessages = async () => {
+      try {
+        const history = await window.electron.message.query(profile.id, {
+          take: 50,  // 最近50条消息
+          skip: 0
+        })
+        setMessages(history)
+      } catch (err) {
+        console.error('Failed to load messages:', err)
+        setError(t('chat.error.loadHistory'))
       }
     }
-  }, [])
+    
+    loadMessages()
+  }, [profile.id, t])
 
   const handleSend = async (content: string) => {
     setError(null)
 
-    // 添加用户消息
-    const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      content,
-      timestamp: Date.now(),
-    }
-    setMessages(prev => [...prev, userMessage])
-
-    // 创建一个空的助手消息用于流式更新
-    const assistantMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'assistant',
-      content: '',
-      timestamp: Date.now(),
-    }
-    setMessages(prev => [...prev, assistantMessage])
-    setIsStreaming(true)
-
     try {
+      // 添加用户消息
+      const userMessage: Omit<Message, 'id'> = {
+        sender: 'user',
+        content,
+        timestamp: Date.now(),
+      }
+      const userMessageId = await window.electron.message.add(profile.id, userMessage)
+      const savedUserMessage = { ...userMessage, id: userMessageId }
+
+      // 创建一个临时的助手消息用于流式更新
+      const assistantMessage: Message = {
+        id: -1, // 临时ID
+        sender: 'agent',
+        content: '',
+        timestamp: Date.now(),
+      }
+      setMessages(prev => [...prev, savedUserMessage, assistantMessage])
+      setIsStreaming(true)
+
       // 开始流式响应
       streamCleanupRef.current = window.electron.chat.stream(
         profile,
-        [...messages, userMessage],
+        [...messages, savedUserMessage].map(msg => ({
+          id: msg.id?.toString() || crypto.randomUUID(),
+          role: msg.sender === 'user' ? 'user' : 'assistant',
+          content: msg.content,
+          timestamp: msg.timestamp
+        })),
         // 处理增量更新
         (delta: string) => {
           setMessages(prev => {
@@ -63,10 +77,18 @@ export default function ChatPanel({ profile }: Props) {
           })
         },
         // 处理完成
-        (response) => {
+        async (response) => {
+          // 保存完整的助手消息
+          const assistantMessage: Omit<Message, 'id'> = {
+            sender: 'agent',
+            content: response.message.content,
+            timestamp: response.message.timestamp,
+          }
+          const assistantMessageId = await window.electron.message.add(profile.id, assistantMessage)
+          
           setMessages(prev => {
             const updated = [...prev]
-            updated[updated.length - 1] = response.message
+            updated[updated.length - 1] = { ...assistantMessage, id: assistantMessageId }
             return updated
           })
           setIsStreaming(false)
@@ -83,7 +105,6 @@ export default function ChatPanel({ profile }: Props) {
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
       setIsStreaming(false)
-      // 移除错误的助手消息
       setMessages(prev => prev.slice(0, -1))
     }
   }

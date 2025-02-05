@@ -25,19 +25,18 @@ const getDatabase = async (profileId: string): Promise<Database.Database> => {
     db = new Database(dbPath)
     db.pragma('journal_mode = WAL')
     
-    // 创建消息表
+    // 创建消息表，使用自增ID
     db.exec(`
       CREATE TABLE IF NOT EXISTS messages (
-        id TEXT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         sender TEXT NOT NULL CHECK(sender IN ('user', 'agent')),
         content TEXT NOT NULL,
-        reply_to TEXT,
-        reply_offset INTEGER,
-        reply_length INTEGER,
-        topic TEXT,
+        reply_to INTEGER REFERENCES messages(id),
+        reply_offset INTEGER DEFAULT NULL,
+        reply_length INTEGER DEFAULT NULL,
+        topic TEXT DEFAULT NULL,
         timestamp INTEGER NOT NULL,
-        context_url TEXT,
-        FOREIGN KEY(reply_to) REFERENCES messages(id)
+        context_url TEXT DEFAULT NULL
       );
       
       CREATE INDEX IF NOT EXISTS idx_messages_timestamp ON messages(timestamp);
@@ -51,19 +50,19 @@ const getDatabase = async (profileId: string): Promise<Database.Database> => {
       
       CREATE TRIGGER IF NOT EXISTS messages_ai AFTER INSERT ON messages BEGIN
         INSERT INTO messages_fts(rowid, content, topic)
-        VALUES (new.id, new.content, new.topic);
+        VALUES (new.id, new.content, COALESCE(new.topic, ''));
       END;
       
       CREATE TRIGGER IF NOT EXISTS messages_ad AFTER DELETE ON messages BEGIN
         INSERT INTO messages_fts(messages_fts, rowid, content, topic)
-        VALUES('delete', old.id, old.content, old.topic);
+        VALUES('delete', old.id, old.content, COALESCE(old.topic, ''));
       END;
       
       CREATE TRIGGER IF NOT EXISTS messages_au AFTER UPDATE ON messages BEGIN
         INSERT INTO messages_fts(messages_fts, rowid, content, topic)
-        VALUES('delete', old.id, old.content, old.topic);
+        VALUES('delete', old.id, old.content, COALESCE(old.topic, ''));
         INSERT INTO messages_fts(rowid, content, topic)
-        VALUES (new.id, new.content, new.topic);
+        VALUES (new.id, new.content, COALESCE(new.topic, ''));
       END;
     `)
     
@@ -73,26 +72,32 @@ const getDatabase = async (profileId: string): Promise<Database.Database> => {
   return db
 }
 
-// 添加消息
-export const addMessage = async (profileId: string, message: Message): Promise<void> => {
+// 添加消息并返回新消息的ID
+export const addMessage = async (
+  profileId: string, 
+  message: Omit<Message, 'id'>
+): Promise<number> => {
   const db = await getDatabase(profileId)
   
-  db.prepare(`
+  const stmt = db.prepare(`
     INSERT INTO messages (
-      id, sender, content, reply_to, reply_offset, reply_length,
+      sender, content, reply_to, reply_offset, reply_length,
       topic, timestamp, context_url
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    message.id,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `)
+
+  const result = stmt.run(
     message.sender,
     message.content,
-    message.replyTo,
-    message.replyOffset,
-    message.replyLength,
-    message.topic,
+    message.replyTo || null,
+    message.replyOffset || null,
+    message.replyLength || null,
+    message.topic || null,
     message.timestamp,
-    message.contextUrl
+    message.contextUrl || null
   )
+
+  return result.lastInsertRowid as number
 }
 
 // 获取消息
@@ -106,9 +111,9 @@ export const getMessage = async (profileId: string, id: string): Promise<Message
       topic, timestamp, context_url as contextUrl
     FROM messages 
     WHERE id = ?
-  `).get(id)
+  `).get(id) as Message | undefined
   
-  return row || null;
+  return row || null
 }
 
 // 查询消息
@@ -180,6 +185,35 @@ export const queryMessages = async (
   }
   
   return db.prepare(sql).all(...params) as Message[]
+}
+
+// 更新消息
+export const updateMessage = async (
+  profileId: string,
+  message: Message
+): Promise<void> => {
+  const db = await getDatabase(profileId)
+  
+  const stmt = db.prepare(`
+    UPDATE messages 
+    SET content = ?, 
+        reply_to = ?, 
+        reply_offset = ?,
+        reply_length = ?,
+        topic = ?,
+        context_url = ?
+    WHERE id = ?
+  `)
+
+  stmt.run(
+    message.content,
+    message.replyTo || null,
+    message.replyOffset || null,
+    message.replyLength || null,
+    message.topic || null,
+    message.contextUrl || null,
+    message.id
+  )
 }
 
 // 关闭数据库连接
