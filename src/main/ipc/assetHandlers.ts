@@ -5,7 +5,7 @@ export const registerAssetHandlers = () => {
   // 保存 asset
   ipcMain.handle(
     'asset:save',
-    async (_, profileId: string, content: Buffer, mimeType: string) => {
+    async (_, profileId: string, content: ArrayBuffer, mimeType: string) => {
       return await AssetManager.saveAsset(profileId, content, mimeType)
     }
   )

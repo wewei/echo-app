@@ -2,14 +2,15 @@ import {
   AppBar, Toolbar, Avatar, Select, MenuItem, 
   IconButton, Menu, ListItemIcon, ListItemText,
   Dialog, DialogTitle, DialogContent, TextField,
-  DialogActions, Button
+  DialogActions, Button, Box
 } from '@mui/material'
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { Profile } from '../../shared/types/profile'
 import AddIcon from '@mui/icons-material/Add'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
+import PhotoIcon from '@mui/icons-material/Photo'
 
 interface Props {
   profiles: Profile[]
@@ -28,18 +29,62 @@ export default function ProfileSelector({
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [username, setUsername] = useState('')
-  const [avatarUrl, setAvatarUrl] = useState('')
+  const [avatarAssetId, setAvatarAssetId] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      const buffer = await file.arrayBuffer()
+      console.log('buffer', buffer)
+      const asset = await window.electron.asset.save(
+        currentProfile?.id || 'temp',
+        buffer,
+        file.type
+      )
+      setAvatarAssetId(asset.id)
+    } catch (error) {
+      console.error('Failed to upload avatar:', error)
+    }
+  }
 
   const handleCreateProfile = async () => {
-    const profile = await window.electron.profile.create(username, avatarUrl)
+    if (!avatarAssetId) return
+    const profile = await window.electron.profile.create(
+      username,
+      `echo-asset:///${currentProfile?.id || 'temp'}/${avatarAssetId}`
+    )
+    
+    // 将临时资源移动到新的 profile 下
+    try {
+      const content = await window.electron.asset.read('temp', avatarAssetId)
+      if (content) {
+        await window.electron.asset.save(
+          profile.id,
+          content.content,
+          content.metadata.mimeType
+        )
+      }
+    } catch (error) {
+      console.error('Failed to move avatar:', error)
+    }
+
     onProfilesChange([...profiles, profile])
     setDialogOpen(false)
     setUsername('')
-    setAvatarUrl('')
+    setAvatarAssetId('')
   }
 
   const handleUpdateProfile = async () => {
     if (!currentProfile) return
+    
+    let avatarUrl = currentProfile.avatar
+    if (avatarAssetId) {
+      avatarUrl = `echo-asset:///${currentProfile.id}/${avatarAssetId}`
+    }
+
     const updated = await window.electron.profile.update(
       currentProfile.id,
       { username, avatar: avatarUrl }
@@ -51,6 +96,7 @@ export default function ProfileSelector({
     }
     setDialogOpen(false)
     setEditMode(false)
+    setAvatarAssetId('')
   }
 
   const handleDeleteProfile = async () => {
@@ -63,7 +109,7 @@ export default function ProfileSelector({
   const handleEdit = () => {
     if (!currentProfile) return
     setUsername(currentProfile.username)
-    setAvatarUrl(currentProfile.avatar)
+    setAvatarAssetId('')
     setEditMode(true)
     setDialogOpen(true)
     setMenuAnchor(null)
@@ -134,19 +180,40 @@ export default function ProfileSelector({
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
-            <TextField
-              margin="dense"
-              label="头像 URL"
-              fullWidth
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-            />
+            <Box sx={{ 
+              mt: 2,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2
+            }}>
+              <Avatar
+                src={avatarAssetId ? 
+                  `echo-asset:///${currentProfile?.id || 'temp'}/${avatarAssetId}` :
+                  currentProfile?.avatar
+                }
+                sx={{ width: 64, height: 64 }}
+              />
+              <Button
+                variant="outlined"
+                startIcon={<PhotoIcon />}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                选择头像
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handleFileSelect}
+              />
+            </Box>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setDialogOpen(false)}>取消</Button>
             <Button 
               onClick={editMode ? handleUpdateProfile : handleCreateProfile}
-              disabled={!username || !avatarUrl}
+              disabled={!username || (!editMode && !avatarAssetId)}
             >
               {editMode ? '更新' : '创建'}
             </Button>

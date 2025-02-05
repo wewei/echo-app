@@ -13,6 +13,15 @@ export const rendererConfig: Configuration = {
     rules,
   },
   plugins,
+  devServer: {
+    headers: {
+      'Content-Security-Policy': `
+        default-src 'self' 'unsafe-inline' 'unsafe-eval' data: ws: echo-asset://*;
+        img-src 'self' echo-asset://*/;
+        connect-src 'self' ws:;
+      `.replace(/\s+/g, ' ').trim()
+    }
+  },
   resolve: {
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.css'],
   },

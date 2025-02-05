@@ -13,8 +13,8 @@ export interface IProfileAPI {
 }
 
 export interface IAssetAPI {
-  save: (profileId: string, content: Buffer, mimeType: string) => Promise<AssetMetadata>
-  read: (profileId: string, assetId: string) => Promise<{ content: Buffer; metadata: AssetMetadata } | null>
+  save: (profileId: string, content: ArrayBuffer, mimeType: string) => Promise<AssetMetadata>
+  read: (profileId: string, assetId: string) => Promise<{ content: ArrayBuffer; metadata: AssetMetadata } | null>
   delete: (profileId: string, assetId: string) => Promise<void>
   getUrl: (profileId: string, assetId: string) => string
 }

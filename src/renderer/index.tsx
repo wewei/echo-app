@@ -29,5 +29,12 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 
+// 禁用 ResizeObserver 警告
+const consoleWarn = console.warn.bind(console)
+console.warn = (...args) => {
+  if (args[0]?.includes?.('ResizeObserver')) return
+  consoleWarn(...args)
+}
+
 const root = createRoot(document.getElementById('root') as HTMLElement)
 root.render(<App />)

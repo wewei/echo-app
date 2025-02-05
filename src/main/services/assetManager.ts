@@ -45,7 +45,7 @@ const ensureAssetsDir = async (profileId: string) => {
 // 保存 asset
 export const saveAsset = async (
   profileId: string,
-  content: Buffer,
+  content: ArrayBuffer,
   mimeType: string
 ): Promise<AssetMetadata> => {
   await ensureAssetsDir(profileId)
@@ -57,7 +57,7 @@ export const saveAsset = async (
   })
   
   // 保存文件
-  await fs.writeFile(getAssetPath(profileId, metadata.id), content)
+  await fs.writeFile(getAssetPath(profileId, metadata.id), Buffer.from(content))
   
   // 更新元数据
   const assetsMetadata = await readAssetsMetadata(profileId)
@@ -71,7 +71,7 @@ export const saveAsset = async (
 export const readAsset = async (
   profileId: string,
   assetId: string
-): Promise<{ content: Buffer; metadata: AssetMetadata } | null> => {
+): Promise<{ content: ArrayBuffer; metadata: AssetMetadata } | null> => {
   try {
     const assetsMetadata = await readAssetsMetadata(profileId)
     const metadata = assetsMetadata.assets[assetId]
@@ -112,7 +112,6 @@ export const registerAssetProtocol = () => {
     try {
       const url = new URL(request.url)
       const [, profileId, assetId] = url.pathname.split('/')
-      
       if (!profileId || !assetId) {
         return new Response('Not Found', { status: 404 })
       }
