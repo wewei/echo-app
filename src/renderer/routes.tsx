@@ -4,6 +4,7 @@ import ChatPanel from "./components/ChatPanel";
 import SettingsPanel from "./components/SettingsPanel";
 import DefaultView from "./components/DefaultView";
 import AppHeader from "./components/AppHeader";
+import { Box } from "@mui/material";
 
 const Layout = () => {
   return (
@@ -11,13 +12,22 @@ const Layout = () => {
       <Route
         path="/profile/:profileId/*"
         element={
-          <>
+          <Box
+            sx={{
+              height: '100vh',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden'
+            }}
+          >
             <AppHeader />
-            <Routes>
-              <Route path="chat" element={<ChatPanel />} />
-              <Route path="settings" element={<SettingsPanel />} />
-            </Routes>
-          </>
+            <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
+              <Routes>
+                <Route path="chat" element={<ChatPanel />} />
+                <Route path="settings" element={<SettingsPanel />} />
+              </Routes>
+            </Box>
+          </Box>
         }
       />
       <Route path="*" element={<DefaultView />} />
