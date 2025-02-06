@@ -7,23 +7,23 @@ import type { Profile } from '../../shared/types/profile'
 import { useTranslation } from 'react-i18next'
 import MessageList from './MessageList'
 import MessageInput from './MessageInput'
+import { useParams, useSearchParams } from 'react-router-dom'
 
-interface Props {
-  profile: Profile
-}
-
-export default function ChatPanel({ profile }: Props) {
+export default function ChatPanel() {
   const { t } = useTranslation()
   const [messages, setMessages] = useState<Message[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const cancelStreamRef = useRef<(() => void) | null>(null)
+  const { profileId } = useParams<{ profileId: string }>()
+  const [searchParams] = useSearchParams()
+  const contextUrl = searchParams.get('context')
 
   // 加载历史消息
   useEffect(() => {
     const loadMessages = async () => {
       try {
-        const history = await window.electron.message.query(profile.id, {
+        const history = await window.electron.message.query(profileId, {
           take: 50,  // 最近50条消息
           skip: 0
         })
@@ -35,7 +35,7 @@ export default function ChatPanel({ profile }: Props) {
     }
     
     loadMessages()
-  }, [profile.id, t])
+  }, [profileId, t])
 
   const handleSend = useCallback(async (content: string) => {
     setError(null)
@@ -52,7 +52,7 @@ export default function ChatPanel({ profile }: Props) {
         content,
         timestamp: Date.now(),
       }
-      await window.electron.message.add(profile.id, userMessage)
+      await window.electron.message.add(profileId, userMessage)
       const assistantMessageId = uuidv4()
 
       // 创建一个临时的助手消息用于流式更新
@@ -64,12 +64,12 @@ export default function ChatPanel({ profile }: Props) {
       }])
       setIsStreaming(true)
 
-      const chatSettings = ChatSettingsSchema.parse(await window.electron.settings.read(profile.id, CHAT_SETTINGS))
+      const chatSettings = ChatSettingsSchema.parse(await window.electron.settings.read(profileId, CHAT_SETTINGS))
       const { model } = chatSettings[chatSettings.provider]
 
       // 开始流式响应
       cancelStreamRef.current = window.electron.chat.stream(
-        profile.id,
+        profileId,
         {
           messages: [...messages, userMessage].map(msg => ({
             role: msg.sender === 'user' ? 'user' : 'assistant',
@@ -96,7 +96,7 @@ export default function ChatPanel({ profile }: Props) {
           setMessages(prev => {
             const updated = prev.map(msg => {
               if (msg.uuid === assistantMessageId) {
-                window.electron.message.add(profile.id, msg)
+                window.electron.message.add(profileId, msg)
                 return {
                   ...msg,
                   content: msg.content,
@@ -124,7 +124,7 @@ export default function ChatPanel({ profile }: Props) {
       setIsStreaming(false)
       setMessages(prev => prev.slice(0, -1))
     }
-  }, [profile.id, messages, cancelStreamRef.current])
+  }, [profileId, messages, cancelStreamRef.current])
 
   return (
     <Box sx={{ 

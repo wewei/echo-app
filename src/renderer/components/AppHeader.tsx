@@ -8,38 +8,29 @@ import {
 import SettingsIcon from '@mui/icons-material/Settings'
 import AddIcon from '@mui/icons-material/Add'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import MenuIcon from '@mui/icons-material/Menu'
 import { useTranslation } from 'react-i18next'
-import { Profile } from '../../shared/types/profile'
+import { useNavigate, useLocation, useParams } from 'react-router-dom'
+import { useProfile, useProfiles } from '../utils/profile'
 
-interface Props {
-  currentProfile: Profile | null
-  profiles: Profile[]
-  onProfileChange: (profileId: string) => void
-  onProfileCreate: (profile: Profile) => void
-  onSettingsClick: () => void
-  showSettings?: boolean
-  onBackFromSettings?: () => void
-}
-
-export default function AppHeader({
-  currentProfile,
-  profiles,
-  onProfileChange,
-  onProfileCreate,
-  onSettingsClick,
-  showSettings,
-  onBackFromSettings
-}: Props) {
+export default function AppHeader() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { profileId } = useParams<{ profileId: string }>()
+  const [profile] = useProfile(profileId)
+  const [profiles, createProfile] = useProfiles()
 
-  if (showSettings) {
+  const isSettingsPage = location.pathname.endsWith('/settings')
+
+  if (isSettingsPage && profileId) {
     return (
       <AppBar position="static">
         <Toolbar>
           <IconButton 
             edge="start" 
-            onClick={onBackFromSettings}
+            onClick={() => navigate(`/profile/${profileId}/chat`)}
             sx={{ mr: 2 }}
           >
             <ArrowBackIcon />
@@ -59,17 +50,19 @@ export default function AppHeader({
           {t('app.name')}
         </Typography>
         
-        {currentProfile && (
-          <IconButton 
-            onClick={() => setDrawerOpen(true)}
-            sx={{ p: 0.5 }}
-          >
+        <IconButton 
+          onClick={() => setDrawerOpen(true)}
+          sx={{ p: 0.5 }}
+        >
+          {profile ? (
             <Avatar
-              src={currentProfile.avatar}
+              src={profile.avatar}
               sx={{ width: 40, height: 40 }}
             />
-          </IconButton>
-        )}
+          ) : (
+            <MenuIcon />
+          )}
+        </IconButton>
 
         <Drawer
           anchor="right"
@@ -77,7 +70,7 @@ export default function AppHeader({
           onClose={() => setDrawerOpen(false)}
         >
           <Box sx={{ width: 320, pt: 2 }}>
-            {currentProfile && (
+            {profile ? (
               <Box sx={{ px: 2, mb: 2 }}>
                 <Box sx={{ 
                   display: 'flex',
@@ -86,12 +79,12 @@ export default function AppHeader({
                   mb: 2
                 }}>
                   <Avatar
-                    src={currentProfile.avatar}
+                    src={profile.avatar}
                     sx={{ width: 64, height: 64 }}
                   />
                   <Box>
                     <Typography variant="h6">
-                      {currentProfile.username}
+                      {profile.username}
                     </Typography>
                     <Typography 
                       variant="body2" 
@@ -105,7 +98,7 @@ export default function AppHeader({
                 <ListItem 
                   component="button"
                   onClick={() => {
-                    onSettingsClick()
+                    navigate(`/profile/${profile.id}/settings`)
                     setDrawerOpen(false)
                   }}
                   sx={{
@@ -124,17 +117,23 @@ export default function AppHeader({
                   <ListItemText primary={t('common.settings')} />
                 </ListItem>
               </Box>
+            ) : (
+              <Box sx={{ px: 2, mb: 2 }}>
+                <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                  {t('profile.noProfile')}
+                </Typography>
+              </Box>
             )}
 
-            <Divider />
+            {(profiles.length > 0) && <Divider />}
 
             <List sx={{ pt: 0 }}>
               {profiles
-                .filter(p => p.id !== currentProfile?.id)
-                .map(profile => (
+                .filter(p => p.id !== profile?.id)
+                .map(p => (
                   <ListItem
                     component="button"
-                    key={profile.id}
+                    key={p.id}
                     sx={{
                       width: '100%',
                       border: 'none',
@@ -145,15 +144,15 @@ export default function AppHeader({
                       }
                     }}
                     onClick={() => {
-                      onProfileChange(profile.id)
+                      navigate(`/profile/${p.id}/chat`)
                       setDrawerOpen(false)
                     }}
                   >
                     <ListItemAvatar>
-                      <Avatar src={profile.avatar} />
+                      <Avatar src={p.avatar} />
                     </ListItemAvatar>
                     <ListItemText 
-                      primary={profile.username}
+                      primary={p.username}
                       secondary={t('profile.switchTo')}
                     />
                   </ListItem>
@@ -172,12 +171,8 @@ export default function AppHeader({
                   }
                 }}
                 onClick={async () => {
-                  // 创建新用户
-                  const profile = await window.electron.profile.create(
-                    t('profile.defaultName'),
-                    ''  // 空头像
-                  )
-                  onProfileCreate(profile)
+                  const newProfile = await createProfile()
+                  navigate(`/profile/${newProfile.id}/settings`)
                   setDrawerOpen(false)
                 }}
               >

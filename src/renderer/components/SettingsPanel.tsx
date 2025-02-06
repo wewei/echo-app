@@ -15,38 +15,37 @@ import PhotoIcon from '@mui/icons-material/Photo'
 import DoneIcon from '@mui/icons-material/Done'
 import CloseIcon from '@mui/icons-material/Close'
 import LogoutIcon from '@mui/icons-material/Logout'
-import { Profile } from '../../shared/types/profile'
 import { ChatSettings, ChatSettingsSchema, ChatProvider, CHAT_SETTINGS } from '../../shared/types/chatSettings'
 import OpenAISettingsPanel from './settings/OpenAISettings'
 import DeepSeekSettingsPanel from './settings/DeepSeekSettings'
 import AzureSettingsPanel from './settings/AzureSettings'
+import { useParams, useNavigate } from 'react-router-dom'
+import { useProfile } from '../utils/profile'
 
 // 添加AI供应商类型定义
-interface Props {
-  profile: Profile
-  onLogout: () => void
-  onProfileUpdate: (profile: Profile) => void
-}
-
-export default function SettingsPanel({ profile, onLogout, onProfileUpdate }: Props) {
+export default function SettingsPanel() {
   const { t } = useTranslation()
   const [isEditing, setIsEditing] = useState(false)
-  const [username, setUsername] = useState(profile.username)
   const [avatarAssetId, setAvatarAssetId] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
   const [chatSettings, setChatSettings] = useState<ChatSettings>(ChatSettingsSchema.parse({}))
+  const { profileId } = useParams<{ profileId: string }>()
+  const [profile, setProfile] = useProfile(profileId)
+  const [username, setUsername] = useState(profile?.username || '')
+
+  const navigate = useNavigate()
 
   // 获取已保存的设置
   useEffect(() => {
     const loadAISettings = async () => {
-      const settings = await window.electron.settings.read(profile.id, CHAT_SETTINGS)
+      const settings = await window.electron.settings.read(profile?.id, CHAT_SETTINGS)
       if (settings) {
         setChatSettings(ChatSettingsSchema.parse(settings))
       }
     }
     loadAISettings()
-  }, [profile.id])
+  }, [profile?.id])
 
   // 保存AI设置
   const handleAISettingsChange = async (
@@ -65,7 +64,7 @@ export default function SettingsPanel({ profile, onLogout, onProfileUpdate }: Pr
     }
     
     setChatSettings(newSettings)
-    await window.electron.settings.write(profile.id, CHAT_SETTINGS, newSettings)
+    await window.electron.settings.write(profile?.id, CHAT_SETTINGS, newSettings)
   }
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,7 +74,7 @@ export default function SettingsPanel({ profile, onLogout, onProfileUpdate }: Pr
     try {
       const buffer = await file.arrayBuffer()
       const asset = await window.electron.asset.save(
-        profile.id,
+        profile?.id,
         buffer,
         file.type
       )
@@ -86,38 +85,27 @@ export default function SettingsPanel({ profile, onLogout, onProfileUpdate }: Pr
   }
 
   const handleUpdateProfile = async () => {
-    let avatarUrl = profile.avatar
+    let avatarUrl = profile?.avatar
     if (avatarAssetId) {
-      avatarUrl = `echo-asset:///${profile.id}/${avatarAssetId}`
+      avatarUrl = `echo-asset:///${profile?.id}/${avatarAssetId}`
     }
 
-    const updatedProfile = {
-      ...profile,
-      username,
-      avatar: avatarUrl
-    }
-
-    await window.electron.profile.update(
-      profile.id,
-      { username, avatar: avatarUrl },
-    )
     setIsEditing(false)
     setAvatarAssetId('')
-    onProfileUpdate(updatedProfile)
+    setProfile(prev => ({ ...prev, username, avatar: avatarUrl }))
   }
 
   const handleCancel = () => {
     setIsEditing(false)
-    setUsername(profile.username)
+    setUsername(profile?.username || '')
     setAvatarAssetId('')
   }
 
   const handleLogout = async () => {
     try {
-      await window.electron.profile.delete(profile.id)
-      
+      await window.electron.profile.delete(profile?.id)
       setLogoutDialogOpen(false)
-      onLogout()
+      navigate('/noprofile')
     } catch (error) {
       console.error('Failed to logout:', error)
     }
@@ -132,7 +120,7 @@ export default function SettingsPanel({ profile, onLogout, onProfileUpdate }: Pr
             onChange={(settings) => {
               const newSettings = { ...chatSettings, openai: settings }
               setChatSettings(newSettings)
-              window.electron.settings.write(profile.id, CHAT_SETTINGS, newSettings)
+              window.electron.settings.write(profile?.id, CHAT_SETTINGS, newSettings)
             }}
           />
         )
@@ -143,7 +131,7 @@ export default function SettingsPanel({ profile, onLogout, onProfileUpdate }: Pr
             onChange={(settings) => {
               const newSettings = { ...chatSettings, deepseek: settings }
               setChatSettings(newSettings)
-              window.electron.settings.write(profile.id, CHAT_SETTINGS, newSettings)
+              window.electron.settings.write(profile?.id, CHAT_SETTINGS, newSettings)
             }}
           />
         )
@@ -154,7 +142,7 @@ export default function SettingsPanel({ profile, onLogout, onProfileUpdate }: Pr
             onChange={(settings) => {
               const newSettings = { ...chatSettings, azure: settings }
               setChatSettings(newSettings)
-              window.electron.settings.write(profile.id, CHAT_SETTINGS, newSettings)
+              window.electron.settings.write(profile?.id, CHAT_SETTINGS, newSettings)
             }}
           />
         )
@@ -192,8 +180,8 @@ export default function SettingsPanel({ profile, onLogout, onProfileUpdate }: Pr
               <Box sx={{ position: 'relative' }}>
                 <Avatar
                   src={avatarAssetId ? 
-                    `echo-asset:///${profile.id}/${avatarAssetId}` :
-                    profile.avatar
+                    `echo-asset:///${profile?.id}/${avatarAssetId}` :
+                    profile?.avatar
                   }
                   sx={{ 
                     width: 56,
@@ -233,7 +221,7 @@ export default function SettingsPanel({ profile, onLogout, onProfileUpdate }: Pr
                 ) : (
                   <>
                     <Typography variant="subtitle1">
-                      {profile.username}
+                      {profile?.username}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       {t('profile.current')}
@@ -260,7 +248,7 @@ export default function SettingsPanel({ profile, onLogout, onProfileUpdate }: Pr
               ) : (
                 <IconButton 
                   onClick={() => {
-                    setUsername(profile.username)
+                    setUsername(profile?.username || '')
                     setIsEditing(true)
                   }}
                   size="small"
