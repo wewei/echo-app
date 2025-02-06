@@ -1,7 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Box, Alert, Collapse } from '@mui/material'
-import { Message } from '../../shared/types/message'
-import { Profile } from '../../shared/types/profile'
+import { v4 as uuidv4 } from 'uuid'
+import { CHAT_SETTINGS, ChatSettingsSchema } from '../../shared/types/chatSettings'
+import type { Message } from '../../shared/types/message'
+import type { Profile } from '../../shared/types/profile'
 import { useTranslation } from 'react-i18next'
 import MessageList from './MessageList'
 import MessageInput from './MessageInput'
@@ -15,7 +17,7 @@ export default function ChatPanel({ profile }: Props) {
   const [messages, setMessages] = useState<Message[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const streamCleanupRef = useRef<(() => void) | null>(null)
+  const cancelStreamRef = useRef<(() => void) | null>(null)
 
   // 加载历史消息
   useEffect(() => {
@@ -25,7 +27,7 @@ export default function ChatPanel({ profile }: Props) {
           take: 50,  // 最近50条消息
           skip: 0
         })
-        setMessages(history)
+        setMessages(history.reverse())
       } catch (err) {
         console.error('Failed to load messages:', err)
         setError(t('chat.error.loadHistory'))
@@ -35,62 +37,77 @@ export default function ChatPanel({ profile }: Props) {
     loadMessages()
   }, [profile.id, t])
 
-  const handleSend = async (content: string) => {
+  const handleSend = useCallback(async (content: string) => {
     setError(null)
+    if (cancelStreamRef.current) {
+      cancelStreamRef.current()
+      cancelStreamRef.current = null
+    }
 
     try {
       // 添加用户消息
-      const userMessage: Omit<Message, 'id'> = {
+      const userMessage: Message = {
+        uuid: uuidv4(),
         sender: 'user',
         content,
         timestamp: Date.now(),
       }
-      const userMessageId = await window.electron.message.add(profile.id, userMessage)
-      const savedUserMessage = { ...userMessage, id: userMessageId }
+      await window.electron.message.add(profile.id, userMessage)
+      const assistantMessageId = uuidv4()
 
       // 创建一个临时的助手消息用于流式更新
-      const assistantMessage: Message = {
-        id: -1, // 临时ID
+      setMessages(prev => [...prev, userMessage, {
+        uuid: assistantMessageId,
         sender: 'agent',
         content: '',
         timestamp: Date.now(),
-      }
-      setMessages(prev => [...prev, savedUserMessage, assistantMessage])
+      }])
       setIsStreaming(true)
 
+      const chatSettings = ChatSettingsSchema.parse(await window.electron.settings.read(profile.id, CHAT_SETTINGS))
+      const { model } = chatSettings[chatSettings.provider]
+
       // 开始流式响应
-      streamCleanupRef.current = window.electron.chat.stream(
-        profile,
-        [...messages, savedUserMessage].map(msg => ({
-          id: msg.id?.toString() || crypto.randomUUID(),
-          role: msg.sender === 'user' ? 'user' : 'assistant',
-          content: msg.content,
-          timestamp: msg.timestamp
-        })),
-        // 处理增量更新
-        (delta: string) => {
+      cancelStreamRef.current = window.electron.chat.stream(
+        profile.id,
+        {
+          messages: [...messages, userMessage].map(msg => ({
+            role: msg.sender === 'user' ? 'user' : 'assistant',
+            content: msg.content,
+          })),
+          model,
+          stream: true,
+        },
+        (chunk) => {
           setMessages(prev => {
-            const updated = [...prev]
-            const last = updated[updated.length - 1]
-            last.content += delta
-            return updated
+            const content = chunk.choices[0]?.delta?.content || '';
+            if (content) {
+              const updated = [...prev]
+              const last = updated[updated.length - 1]
+              last.content += content
+              return updated
+            }
+            return prev
           })
         },
         // 处理完成
-        async (response) => {
+        async () => {
           // 保存完整的助手消息
-          const assistantMessage: Omit<Message, 'id'> = {
-            sender: 'agent',
-            content: response.message.content,
-            timestamp: response.message.timestamp,
-          }
-          const assistantMessageId = await window.electron.message.add(profile.id, assistantMessage)
-          
           setMessages(prev => {
-            const updated = [...prev]
-            updated[updated.length - 1] = { ...assistantMessage, id: assistantMessageId }
+            const updated = prev.map(msg => {
+              if (msg.uuid === assistantMessageId) {
+                window.electron.message.add(profile.id, msg)
+                return {
+                  ...msg,
+                  content: msg.content,
+                  timestamp: Date.now(),
+                }
+              }
+              return msg
+            })
             return updated
           })
+          
           setIsStreaming(false)
         },
         // 处理错误
@@ -107,7 +124,7 @@ export default function ChatPanel({ profile }: Props) {
       setIsStreaming(false)
       setMessages(prev => prev.slice(0, -1))
     }
-  }
+  }, [profile.id, messages, cancelStreamRef.current])
 
   return (
     <Box sx={{ 

@@ -1,31 +1,28 @@
 import { ipcMain } from 'electron'
-import { Profile } from '../../shared/types/profile'
-import { ChatMessage, ChatOptions } from '../../shared/types/chat'
-import * as chatService from '../services/chat'
+import type OpenAI from 'openai'
+import { getClient } from '../services/chatManager'
 
 export const registerChatHandlers = () => {
   ipcMain.handle(
     'chat:send',
-    async (_, profile: Profile, messages: ChatMessage[], options?: ChatOptions) => {
-      return await chatService.chat(profile, messages, options)
+    async (_, profileId: string, params: OpenAI.Chat.Completions.ChatCompletionCreateParams) => {
+      const client = await getClient(profileId)
+      return client.chat.completions.create(params)
     }
   )
 
   ipcMain.handle(
     'chat:stream',
-    async (event, streamId: string, profile: Profile, messages: ChatMessage[], options?: ChatOptions) => {
+    async (event, streamId: string, profileId: string, params: OpenAI.Chat.Completions.ChatCompletionCreateParams) => {
+      const client = await getClient(profileId)
+
       try {
-        await chatService.streamChat(
-          profile,
-          messages,
-          (delta) => {
-            event.sender.send('chat:stream:delta', streamId, delta)
-          },
-          (response) => {
-            event.sender.send('chat:stream:done', streamId, response)
-          },
-          options
-        )
+        const stream = await client.chat.completions.create({ ...params, stream: true })
+
+        for await (const chunk of stream) {
+          event.sender.send('chat:stream:delta', streamId, chunk)
+        }
+        event.sender.send('chat:stream:done', streamId)
       } catch (error) {
         event.sender.send('chat:stream:error', streamId, error.message)
         throw error // 重新抛出错误以便 preload 脚本可以处理

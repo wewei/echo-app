@@ -1,8 +1,8 @@
 import Database from 'better-sqlite3'
-import path from 'path'
-import fs from 'fs/promises'
+import path from 'node:path'
+import fs from 'node:fs/promises'
 import { app } from 'electron'
-import { Message, MessageQuery } from '../../shared/types/message'
+import type { Message, MessageQuery } from '../../shared/types/message'
 
 
 // 缓存数据库连接
@@ -29,9 +29,10 @@ const getDatabase = async (profileId: string): Promise<Database.Database> => {
     db.exec(`
       CREATE TABLE IF NOT EXISTS messages (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        uuid TEXT NOT NULL,
         sender TEXT NOT NULL CHECK(sender IN ('user', 'agent')),
         content TEXT NOT NULL,
-        reply_to INTEGER REFERENCES messages(id),
+        reply_to TEXT DEFAULT NULL,
         reply_offset INTEGER DEFAULT NULL,
         reply_length INTEGER DEFAULT NULL,
         topic TEXT DEFAULT NULL,
@@ -39,9 +40,11 @@ const getDatabase = async (profileId: string): Promise<Database.Database> => {
         context_url TEXT DEFAULT NULL
       );
       
+      CREATE INDEX IF NOT EXISTS idx_messages_uuid ON messages(uuid);
       CREATE INDEX IF NOT EXISTS idx_messages_timestamp ON messages(timestamp);
       CREATE INDEX IF NOT EXISTS idx_messages_reply_to ON messages(reply_to);
       CREATE INDEX IF NOT EXISTS idx_messages_context_url ON messages(context_url);
+
       CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(
         content, topic,
         content=messages,
@@ -72,21 +75,22 @@ const getDatabase = async (profileId: string): Promise<Database.Database> => {
   return db
 }
 
-// 添加消息并返回新消息的ID
+// 添加消息并不返回任何值
 export const addMessage = async (
   profileId: string, 
-  message: Omit<Message, 'id'>
-): Promise<number> => {
+  message: Message
+): Promise<void> => {
   const db = await getDatabase(profileId)
   
   const stmt = db.prepare(`
     INSERT INTO messages (
-      sender, content, reply_to, reply_offset, reply_length,
+      uuid, sender, content, reply_to, reply_offset, reply_length,
       topic, timestamp, context_url
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `)
 
-  const result = stmt.run(
+  stmt.run(
+    message.uuid,
     message.sender,
     message.content,
     message.replyTo || null,
@@ -96,22 +100,20 @@ export const addMessage = async (
     message.timestamp,
     message.contextUrl || null
   )
-
-  return result.lastInsertRowid as number
 }
 
 // 获取消息
-export const getMessage = async (profileId: string, id: string): Promise<Message | null> => {
+export const getMessage = async (profileId: string, uuid: string): Promise<Message | null> => {
   const db = await getDatabase(profileId)
   
   const row = db.prepare(`
     SELECT 
-      id, sender, content, reply_to as replyTo,
+      uuid, sender, content, reply_to as replyTo,
       reply_offset as replyOffset, reply_length as replyLength,
       topic, timestamp, context_url as contextUrl
     FROM messages 
-    WHERE id = ?
-  `).get(id) as Message | undefined
+    WHERE uuid = ?
+  `).get(uuid) as Message | undefined
   
   return row || null
 }
@@ -125,13 +127,13 @@ export const queryMessages = async (
   
   let sql = `
     SELECT 
-      id, sender, content, reply_to as replyTo,
+      uuid, sender, content, reply_to as replyTo,
       reply_offset as replyOffset, reply_length as replyLength,
       topic, timestamp, context_url as contextUrl
     FROM messages
     WHERE 1=1
   `
-  const params: any[] = []
+  const params: (number | string)[] = []
   
   if (query.startTime !== undefined) {
     sql += ' AND timestamp >= ?'
@@ -202,7 +204,7 @@ export const updateMessage = async (
         reply_length = ?,
         topic = ?,
         context_url = ?
-    WHERE id = ?
+    WHERE uuid = ?
   `)
 
   stmt.run(
@@ -212,7 +214,7 @@ export const updateMessage = async (
     message.replyLength || null,
     message.topic || null,
     message.contextUrl || null,
-    message.id
+    message.uuid
   )
 }
 

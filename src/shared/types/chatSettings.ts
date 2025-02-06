@@ -36,3 +36,5 @@ export type DeepSeekSettings = z.infer<typeof DeepSeekSettingsSchema>
 export type AzureSettings = z.infer<typeof AzureSettingsSchema>
 
 export type ChatSettings = z.infer<typeof ChatSettingsSchema>
+
+export const CHAT_SETTINGS = 'chat'

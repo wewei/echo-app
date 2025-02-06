@@ -1,39 +1,36 @@
 import { ipcRenderer } from 'electron'
-import { Profile } from '../shared/types/profile'
-import { ChatMessage, ChatOptions, ChatResponse } from '../shared/types/chat'
+import type OpenAI from 'openai'
 import { v4 as uuid } from 'uuid'
 
 export const chatAPI = {
   send: (
-    profile: Profile,
-    messages: ChatMessage[],
-    options?: ChatOptions
-  ): Promise<ChatResponse> => {
-    return ipcRenderer.invoke('chat:send', profile, messages, options)
+    profileId: string,
+    params: OpenAI.Chat.Completions.ChatCompletionCreateParams,
+  ): Promise<OpenAI.Chat.Completions.ChatCompletion> => {
+    return ipcRenderer.invoke('chat:send', profileId, params)
   },
 
   stream: (
-    profile: Profile,
-    messages: ChatMessage[],
-    onMessage: (delta: string) => void,
-    onDone: (response: ChatResponse) => void,
+    profileId: string,
+    params: OpenAI.Chat.Completions.ChatCompletionCreateParams,
+    onChunk: (chunk: OpenAI.Chat.Completions.ChatCompletionChunk) => void,
+    onDone: () => void,
     onError: (error: Error) => void,
-    options?: ChatOptions
   ): () => void => {
     const streamId = uuid();
     
-    const deltaHandler = (_: any, id: string, delta: string) => {
-      if (id === streamId) onMessage(delta)
+    const chunkHandler = (_: unknown, id: string, chunk: OpenAI.Chat.Completions.ChatCompletionChunk) => {
+      if (id === streamId) onChunk(chunk)
     }
-    
-    const doneHandler = (_: any, id: string, response: ChatResponse) => {
+
+    const doneHandler = (_: unknown, id: string) => {
       if (id === streamId) {
-        onDone(response)
+        onDone()
         cleanup()
       }
     }
     
-    const errorHandler = (_: any, id: string, error: string) => {
+    const errorHandler = (_: unknown, id: string, error: string) => {
       if (id === streamId) {
         onError(new Error(error))
         cleanup()
@@ -41,16 +38,16 @@ export const chatAPI = {
     }
 
     const cleanup = () => {
-      ipcRenderer.removeListener('chat:stream:delta', deltaHandler)
+      ipcRenderer.removeListener('chat:stream:delta', chunkHandler)
       ipcRenderer.removeListener('chat:stream:done', doneHandler)
       ipcRenderer.removeListener('chat:stream:error', errorHandler)
     }
 
-    ipcRenderer.on('chat:stream:delta', deltaHandler)
+    ipcRenderer.on('chat:stream:delta', chunkHandler)
     ipcRenderer.on('chat:stream:done', doneHandler)
     ipcRenderer.on('chat:stream:error', errorHandler)
 
-    ipcRenderer.invoke('chat:stream', streamId, profile, messages, options)
+    ipcRenderer.invoke('chat:stream', streamId, profileId, params)
       .catch(error => {
         onError(error)
         cleanup()

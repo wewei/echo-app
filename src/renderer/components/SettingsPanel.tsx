@@ -16,11 +16,10 @@ import DoneIcon from '@mui/icons-material/Done'
 import CloseIcon from '@mui/icons-material/Close'
 import LogoutIcon from '@mui/icons-material/Logout'
 import { Profile } from '../../shared/types/profile'
-import { ChatSettings, ChatSettingsSchema, ChatProvider } from '../../shared/types/chatSettings'
+import { ChatSettings, ChatSettingsSchema, ChatProvider, CHAT_SETTINGS } from '../../shared/types/chatSettings'
 import OpenAISettingsPanel from './settings/OpenAISettings'
 import DeepSeekSettingsPanel from './settings/DeepSeekSettings'
 import AzureSettingsPanel from './settings/AzureSettings'
-import { CHAT_SETTINGS } from '../../shared/types/chat'
 
 // 添加AI供应商类型定义
 interface Props {

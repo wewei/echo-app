@@ -1,7 +1,7 @@
-import { Profile } from '../shared/types/profile'
-import { AssetMetadata } from '../shared/types/asset'
-import { Settings } from '../shared/types/settings'
-import { ChatMessage, ChatOptions, ChatResponse } from '../shared/types/chat'
+import type OpenAI from 'openai'
+import type { Profile } from '../shared/types/profile'
+import type { AssetMetadata } from '../shared/types/asset'
+import type { Settings } from '../shared/types/settings'
 import type { Message, MessageQuery } from '../shared/types/message'
 
 export interface IProfileAPI {
@@ -29,20 +29,22 @@ export interface ISettingsAPI {
 }
 
 export interface IChatAPI {
-  send: (profile: Profile, messages: ChatMessage[], options?: ChatOptions) => Promise<ChatResponse>
+  send: (
+    profileId: string,
+    params: OpenAI.Chat.Completions.ChatCompletionCreateParams
+  ) => Promise<OpenAI.Chat.Completions.ChatCompletion>;
   stream: (
-    profile: Profile,
-    messages: ChatMessage[],
-    onMessage: (delta: string) => void,
-    onDone: (response: ChatResponse) => void,
-    onError: (error: Error) => void,
-    options?: ChatOptions
-  ) => () => void
+    profileId: string,
+    params: OpenAI.Chat.Completions.ChatCompletionCreateParams,
+    onChunk: (delta: OpenAI.Chat.Completions.ChatCompletionChunk) => void,
+    onDone: () => void,
+    onError: (error: Error) => void
+  ) => () => void;
 }
 
 export interface IMessageAPI {
-  add: (profileId: string, message: Omit<Message, 'id'>) => Promise<number>
-  get: (profileId: string, id: number) => Promise<Message | null>
+  add: (profileId: string, message: Message) => Promise<void>
+  get: (profileId: string, uuid: string) => Promise<Message | null>
   query: (profileId: string, query: MessageQuery) => Promise<Message[]>
   update: (profileId: string, message: Message) => Promise<void>
 }

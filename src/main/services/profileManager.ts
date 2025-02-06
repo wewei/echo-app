@@ -1,8 +1,8 @@
 import { app } from 'electron'
-import path from 'path'
-import fs from 'fs/promises'
+import path from 'node:path'
+import fs from 'node:fs/promises'
 import { v4 as uuidv4 } from 'uuid'
-import { Profile, ProfileSchema, ProfilesSchema } from '../../shared/types/profile'
+import { type Profile, ProfileSchema, ProfilesSchema } from '../../shared/types/profile'
 
 const PROFILES_FILE = 'profiles.json'
 

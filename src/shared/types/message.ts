@@ -4,10 +4,10 @@ export const MessageSenderSchema = z.enum(['user', 'agent'])
 export type MessageSender = z.infer<typeof MessageSenderSchema>
 
 export const MessageSchema = z.object({
-  id: z.number().optional(),
+  uuid: z.string().uuid(),
   sender: MessageSenderSchema,
   content: z.string(),
-  replyTo: z.number().optional(),
+  replyTo: z.string().optional(),
   replyOffset: z.number().optional(),
   replyLength: z.number().optional(),
   topic: z.string().optional(),
@@ -22,7 +22,7 @@ export const MessageQuerySchema = z.object({
   endTime: z.number().optional(),
   skip: z.number().optional(),
   take: z.number().optional(),
-  replyTo: z.number().optional(),
+  replyTo: z.string().optional(),
   contextUrl: z.string().optional(),
   keyword: z.string().optional(),
 })

@@ -2,12 +2,12 @@ import { ipcRenderer } from 'electron'
 import type { Message, MessageQuery } from '../shared/types/message'
 
 export const messageAPI = {
-  add: (profileId: string, message: Message): Promise<number> => {
+  add: (profileId: string, message: Message): Promise<void> => {
     return ipcRenderer.invoke('message:add', profileId, message)
   },
 
-  get: (profileId: string, id: string): Promise<Message | null> => {
-    return ipcRenderer.invoke('message:get', profileId, id)
+  get: (profileId: string, uuid: string): Promise<Message | null> => {
+    return ipcRenderer.invoke('message:get', profileId, uuid)
   },
 
   query: (profileId: string, query: MessageQuery): Promise<Message[]> => {

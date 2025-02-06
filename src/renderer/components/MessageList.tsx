@@ -29,7 +29,7 @@ export default function MessageList({ messages, isStreaming }: Props) {
     }}>
       {messages.map((message, index) => (
         <Box
-          key={message.id}
+          key={message.uuid}
           sx={{
             display: 'flex',
             gap: 2,

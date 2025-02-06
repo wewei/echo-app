@@ -1,12 +1,12 @@
 import { app } from 'electron'
-import path from 'path'
-import fs from 'fs/promises'
-import { Settings, SettingsSchema } from '../../shared/types/settings'
+import path from 'node:path'
+import fs from 'node:fs/promises'
+import { type Settings, SettingsSchema } from '../../shared/types/settings'
 
 const SETTINGS_DIR = 'settings'
 
 // 获取 settings 目录路径
-const getSettingsDir = (profileId: string) => 
+const getSettingsDir = (profileId: string) =>
   path.join(app.getPath('userData'), 'profiles', profileId, SETTINGS_DIR)
 
 // 获取特定 scope 的 settings 文件路径
@@ -53,7 +53,9 @@ export const updateSettings = async (
   const current = await readSettings(profileId, scope)
   const updated = { ...current, ...updates }
   await writeSettings(profileId, scope, updated)
-  settingsListeners.get(scope)?.forEach(callback => callback(profileId, updated))
+  for (const callback of (settingsListeners.get(scope) || [])) {
+    callback(profileId, updated)
+  }
   return updated
 }
 
