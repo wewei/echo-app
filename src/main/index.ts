@@ -29,7 +29,7 @@ const createWindow = (): void => {
       nodeIntegration: true,
       contextIsolation: true,
       webSecurity: true,
-      webviewTag: false,
+      webviewTag: true,
       sandbox: false
     },
   });
@@ -74,3 +74,12 @@ app.on('activate', () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 console.log(app.getPath('userData'))
+
+app.on('web-contents-created', (event, contents) => {
+  if (contents.getType() === 'webview') {
+    // 限制 webview 的功能
+    contents.on('will-navigate', (event, url) => {
+      // 可以在这里处理导航事件
+    })
+  }
+})

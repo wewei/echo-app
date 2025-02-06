@@ -10,15 +10,17 @@ import type { Message } from "../../shared/types/message";
 import { useTranslation } from "react-i18next";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { useMessages } from "../data/messages";
 import { useSettings } from "../data/settings";
+import SplitView from "./SplitView";
+import { useTheme } from "@mui/material/styles";
 
 export default function ChatPanel() {
   const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const { profileId } = useParams<{ profileId: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const contextUrl = searchParams.get("context");
   const [messages, addMessage] = useMessages(profileId);
   const [streamingMessage, setStreamingMessage] = useState<Message | null>(
@@ -27,6 +29,8 @@ export default function ChatPanel() {
   const cancelStreamRef = useRef<(() => void) | null>(null);
   const [chatSettings] = useSettings(profileId, CHAT_SETTINGS, ChatSettingsSchema)
   const model = chatSettings?.[chatSettings?.provider]?.model
+  const navigate = useNavigate();
+  const theme = useTheme();
 
   useEffect(() => () => cancelStreamRef.current?.(), [cancelStreamRef]);
 
@@ -91,7 +95,39 @@ export default function ChatPanel() {
     });
   };
 
-  return (
+  const handleLinkClick = (url: string) => {
+    setSearchParams({ context: url })
+  }
+
+  const WebView = () => {
+    const webviewRef = useRef<HTMLWebViewElement>(null)
+
+    return (
+      <Box sx={{ 
+        width: '100%', 
+        height: '100%',
+        bgcolor: 'background.paper',
+        '& webview': {
+          width: '100%',
+          height: '100%',
+          bgcolor: 'background.paper',
+          opacity: 0.95,
+        }
+      }}>
+        <webview
+          ref={webviewRef}
+          src={contextUrl || ''}
+          style={{ 
+            width: '100%', 
+            height: '100%',
+            backgroundColor: 'white'
+          }}
+        />
+      </Box>
+    )
+  }
+
+  const ChatView = () => (
     <Box
       sx={{
         display: "flex",
@@ -100,6 +136,7 @@ export default function ChatPanel() {
         maxWidth: 800,
         mx: "auto",
         width: "100%",
+        p: 2,
       }}
     >
       <Collapse in={!!error}>
@@ -107,8 +144,20 @@ export default function ChatPanel() {
           {error || t("chat.error.unknown")}
         </Alert>
       </Collapse>
-      <MessageList messages={messages} streamingMessage={streamingMessage} />
+      <MessageList 
+        messages={messages} 
+        streamingMessage={streamingMessage}
+        onLinkClick={handleLinkClick}
+      />
       <MessageInput onSend={handleSend} disabled={streamingMessage !== null} />
     </Box>
-  );
+  )
+
+  return (
+    <SplitView
+      contextUrl={contextUrl}
+      leftContent={<WebView />}
+      rightContent={<ChatView />}
+    />
+  )
 }

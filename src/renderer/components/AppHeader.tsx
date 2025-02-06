@@ -26,7 +26,7 @@ export default function AppHeader() {
 
   if (isSettingsPage && profileId) {
     return (
-      <AppBar position="static">
+      <AppBar position="fixed">
         <Toolbar>
           <IconButton 
             edge="start" 
@@ -44,7 +44,7 @@ export default function AppHeader() {
   }
 
   return (
-    <AppBar position="static">
+    <AppBar position="fixed">
       <Toolbar>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           {t('app.name')}
