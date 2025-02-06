@@ -11,7 +11,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import MenuIcon from '@mui/icons-material/Menu'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
-import { useProfile, useProfiles } from '../utils/profile'
+import { useProfile, useProfiles } from '../data/profile'
 
 export default function AppHeader() {
   const [drawerOpen, setDrawerOpen] = useState(false)

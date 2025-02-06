@@ -18,7 +18,6 @@ export const chatAPI = {
     onError: (error: Error) => void,
   ): () => void => {
     const streamId = uuid();
-    
     const chunkHandler = (_: unknown, id: string, chunk: OpenAI.Chat.Completions.ChatCompletionChunk) => {
       if (id === streamId) onChunk(chunk)
     }

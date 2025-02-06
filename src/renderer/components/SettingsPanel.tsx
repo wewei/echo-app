@@ -20,7 +20,7 @@ import OpenAISettingsPanel from './settings/OpenAISettings'
 import DeepSeekSettingsPanel from './settings/DeepSeekSettings'
 import AzureSettingsPanel from './settings/AzureSettings'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useProfile } from '../utils/profile'
+import { useProfile } from '../data/profile'
 
 // 添加AI供应商类型定义
 export default function SettingsPanel() {
