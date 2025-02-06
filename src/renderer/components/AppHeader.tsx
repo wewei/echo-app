@@ -7,6 +7,7 @@ import {
 import SettingsIcon from '@mui/icons-material/Settings'
 import AddIcon from '@mui/icons-material/Add'
 import MenuIcon from '@mui/icons-material/Menu'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
 import { useProfile, useProfiles } from '../data/profile'
@@ -23,7 +24,30 @@ export default function AppHeader() {
   const isSettingsPage = location.pathname.endsWith('/settings')
 
   if (isSettingsPage && profileId) {
-    return null
+    return (
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 16,
+          left: 16,
+          zIndex: 1200,
+        }}
+      >
+        <IconButton
+          onClick={() => navigate(`/profile/${profileId}/chat`)}
+          sx={{ 
+            p: 0.5,
+            bgcolor: 'background.paper',
+            boxShadow: 2,
+            '&:hover': {
+              bgcolor: 'background.paper',
+            }
+          }}
+        >
+          <ArrowBackIcon />
+        </IconButton>
+      </Box>
+    )
   }
 
   return (
