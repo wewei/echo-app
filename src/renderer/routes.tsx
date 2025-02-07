@@ -1,7 +1,6 @@
 import React from "react";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import ChatPanel from "./components/ChatPage";
-import SettingsPanel from "./components/SettingsPanel";
 import DefaultView from "./components/DefaultView";
 import AppHeader from "./components/AppHeader";
 import { Box } from "@mui/material";
@@ -21,12 +20,7 @@ const Layout = () => {
             }}
           >
             <AppHeader />
-            <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
-              <Routes>
-                <Route path="chat?" element={<ChatPanel />} />
-                <Route path="settings" element={<SettingsPanel />} />
-              </Routes>
-            </Box>
+            <ChatPanel />
           </Box>
         }
       />
