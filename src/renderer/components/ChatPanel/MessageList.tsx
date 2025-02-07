@@ -1,11 +1,14 @@
 import React, { useRef, useEffect, useState } from 'react'
-import { Box, Typography, Avatar, CircularProgress } from "@mui/material";
+import { Box, Typography, Avatar, CircularProgress, IconButton } from "@mui/material";
 import { Message } from "../../../shared/types/message";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import PersonIcon from "@mui/icons-material/Person";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm'
 import { Link } from '@mui/material'
+import OpenInFullIcon from '@mui/icons-material/OpenInFull';
+import { useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
 interface Props {
   messages: Message[];
@@ -23,6 +26,10 @@ function MessageItem({
   isStreaming: boolean;
   onLinkClick?: (url: string) => void;
 }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const { profileId } = useParams<{ profileId: string }>();
+  const [, setSearchParams] = useSearchParams();
+
   return (
     <Box
       key={message.uuid}
@@ -33,7 +40,10 @@ function MessageItem({
         opacity: isStreaming ? 0.7 : 1,
         marginTop: 2,
         marginBottom: 2,
+        position: 'relative',
       }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <Avatar
         sx={{
@@ -98,6 +108,28 @@ function MessageItem({
           </ReactMarkdown>
         </Typography>
       </Box>
+      
+      {/* 全屏展开角标 */}
+      {isHovered && !isStreaming && (
+        <IconButton
+          size="small"
+          sx={{
+            position: 'absolute',
+            right: 8,
+            bottom: 8,
+            backgroundColor: 'background.paper',
+            boxShadow: 1,
+            '&:hover': {
+              backgroundColor: 'action.hover',
+            },
+          }}
+          onClick={() => {
+            setSearchParams({ context: `echo-message:///${profileId}/${message.uuid}` })
+          }}
+        >
+          <OpenInFullIcon fontSize="small" />
+        </IconButton>
+      )}
     </Box>
   );
 }

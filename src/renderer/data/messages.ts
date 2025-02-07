@@ -19,3 +19,15 @@ export const useMessages = (profileId: string): [Message[], (message: Message) =
     return window.electron.message.add(profileId, message)
   }]
 }
+
+export const useMessage = (profileId: string, messageId: string): Message | null=> {
+  const [message, setMessage] = useState<Message | null>(null);
+  useEffect(() => {
+    const loadMessage = async () => {
+      const message = await window.electron.message.get(profileId, messageId);
+      setMessage(message);
+    }
+    loadMessage();
+  }, [profileId, messageId]);
+  return message;
+}
