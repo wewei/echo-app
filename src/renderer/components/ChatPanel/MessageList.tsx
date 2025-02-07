@@ -1,6 +1,6 @@
-import React, { useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { Box, Typography, Avatar, CircularProgress } from "@mui/material";
-import { Message } from "../../shared/types/message";
+import { Message } from "../../../shared/types/message";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import PersonIcon from "@mui/icons-material/Person";
 import ReactMarkdown from "react-markdown";
@@ -11,6 +11,7 @@ interface Props {
   messages: Message[];
   streamingMessage?: Message | null;
   onLinkClick?: (url: string) => void;
+  loading?: boolean;
 }
 
 function MessageItem({
@@ -99,23 +100,65 @@ function MessageItem({
   );
 }
 
-export default function MessageList({ messages, streamingMessage, onLinkClick }: Props) {
-  const bottomRef = useRef<HTMLDivElement>(null);
+export default function MessageList({ messages, streamingMessage, onLinkClick, loading }: Props) {
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
+  const lastMessageLengthRef = useRef(0)
 
-  // 自动滚动到底部
+  // 检查是否在底部附近
+  const isNearBottom = () => {
+    const container = containerRef.current
+    if (!container) return true
+
+    const threshold = 100 // 距离底部100px以内都认为是在底部
+    return container.scrollHeight - container.scrollTop - container.clientHeight <= threshold
+  }
+
+  // 处理滚动事件
+  const handleScroll = () => {
+    setShouldAutoScroll(isNearBottom())
+  }
+
+  // 滚动到底部
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const container = containerRef.current
+    if (container) {
+      container.addEventListener('scroll', handleScroll)
+      return () => container.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
+  useEffect(() => {
+    // 只在以下情况自动滚动：
+    // 1. shouldAutoScroll 为 true（用户没有手动滚动上去）
+    // 2. 消息数量增加或最后一条消息长度变化（正在流式响应）
+    const lastMessage = messages[messages.length - 1]
+    const lastMessageLength = lastMessage?.content.length || 0
+    
+    if (shouldAutoScroll && (
+      messages.length > lastMessageLengthRef.current ||
+      lastMessageLength > lastMessageLengthRef.current
+    )) {
+      scrollToBottom()
+    }
+    
+    // 更新最后消息的长度
+    lastMessageLengthRef.current = lastMessageLength
+  }, [messages, shouldAutoScroll])
 
   return (
     <Box
+      ref={containerRef}
       sx={{
-        flexGrow: 1,
-        overflow: "auto",
-        p: 2,
-        display: "flex",
-        flexDirection: "column",
-        gap: 2,
+        height: '100%',
+        overflow: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       {messages.map((message) => (
@@ -134,7 +177,12 @@ export default function MessageList({ messages, streamingMessage, onLinkClick }:
           onLinkClick={onLinkClick}
         />
       )}
-      <div ref={bottomRef} />
+      <div ref={messagesEndRef} style={{ height: 20 }} />
+      {loading && (
+        <Box sx={{ p: 2, textAlign: 'center' }}>
+          <CircularProgress size={20} />
+        </Box>
+      )}
     </Box>
   );
 } 

@@ -1,22 +1,18 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Box, Alert, Collapse } from "@mui/material";
-import { v4 as uuidv4 } from "uuid";
-import {
-  CHAT_SETTINGS,
-  ChatSettingsSchema,
-} from "../../shared/types/chatSettings";
-import OpenAI from "openai";
-import type { Message } from "../../shared/types/message";
-import { useTranslation } from "react-i18next";
-import MessageList from "./MessageList";
-import MessageInput from "./MessageInput";
-import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { useMessages } from "../data/messages";
-import { useSettings } from "../data/settings";
-import SplitView from "./SplitView";
-import { useTheme } from "@mui/material/styles";
+import React, { useEffect, useState, useRef } from 'react'
+import { Box, Collapse, Alert, useTheme } from '@mui/material'
+import MessageList from './MessageList'
+import MessageInput from './MessageInput'
+import { useTranslation } from 'react-i18next'
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
+import { useMessages } from '../../data/messages'
+import { useSettings } from '../../data/settings'
+import { CHAT_SETTINGS, ChatSettingsSchema } from '../../../shared/types/chatSettings'
+import { Message } from '../../../shared/types/message'
+import { v4 as uuidv4 } from 'uuid'
+import type { OpenAI } from 'openai'
 
-export default function ChatPanel() {
+
+const ChatPanel = ({ handleLinkClick }: { handleLinkClick: (url: string) => void }) => {
   const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const { profileId } = useParams<{ profileId: string }>();
@@ -35,6 +31,7 @@ export default function ChatPanel() {
   useEffect(() => () => cancelStreamRef.current?.(), [cancelStreamRef]);
 
   useEffect(() => {
+    console.log('streamingMessage');
     if (streamingMessage && model && !cancelStreamRef.current && messages[messages.length - 1].sender === "user") {
       let content = ""
       cancelStreamRef.current = window.electron.chat.stream(
@@ -47,7 +44,6 @@ export default function ChatPanel() {
             model
           },
           (chunk: OpenAI.ChatCompletionChunk) => {
-            console.log('chunk', chunk.choices[0]?.delta?.content)
             const delta = chunk.choices[0]?.delta?.content || ""
             if (delta) {
               content += delta
@@ -78,7 +74,7 @@ export default function ChatPanel() {
           }
       );
     }
-  }, [streamingMessage, cancelStreamRef, messages]);
+  }, [cancelStreamRef.current, messages]);
 
   const handleSend = (content: string) => {
     addMessage({
@@ -95,39 +91,8 @@ export default function ChatPanel() {
     });
   };
 
-  const handleLinkClick = (url: string) => {
-    setSearchParams({ context: url })
-  }
 
-  const WebView = () => {
-    const webviewRef = useRef<HTMLWebViewElement>(null)
-
-    return (
-      <Box sx={{ 
-        width: '100%', 
-        height: '100%',
-        bgcolor: 'background.paper',
-        '& webview': {
-          width: '100%',
-          height: '100%',
-          bgcolor: 'background.paper',
-          opacity: 0.95,
-        }
-      }}>
-        <webview
-          ref={webviewRef}
-          src={contextUrl || ''}
-          style={{ 
-            width: '100%', 
-            height: '100%',
-            backgroundColor: 'white'
-          }}
-        />
-      </Box>
-    )
-  }
-
-  const ChatView = () => (
+  return (
     <Box
       sx={{
         display: "flex",
@@ -144,20 +109,14 @@ export default function ChatPanel() {
           {error || t("chat.error.unknown")}
         </Alert>
       </Collapse>
-      <MessageList 
-        messages={messages} 
+      <MessageList
+        messages={messages}
         streamingMessage={streamingMessage}
         onLinkClick={handleLinkClick}
       />
       <MessageInput onSend={handleSend} disabled={streamingMessage !== null} />
     </Box>
-  )
+  );
+};
 
-  return (
-    <SplitView
-      contextUrl={contextUrl}
-      leftContent={<WebView />}
-      rightContent={<ChatView />}
-    />
-  )
-}
+export default ChatPanel;
