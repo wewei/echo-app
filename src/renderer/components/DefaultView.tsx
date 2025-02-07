@@ -2,23 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Box, Button, CircularProgress, Typography } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-
-function Loading() {
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100vh',
-        gap: 2
-      }}
-    >
-      <CircularProgress />
-    </Box>
-  )
-}
+import Loading from './Loading'
 
 export default function DefaultView() {
   const { t } = useTranslation()

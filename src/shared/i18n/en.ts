@@ -49,6 +49,16 @@ export default {
         apiVersion: 'API Version',
         deployment: 'Deployment Name'
       }
+    },
+    search: {
+      title: 'Search Settings',
+      provider: 'Search Provider',
+      providers: {
+        bing: 'Bing Search'
+      },
+      bing: {
+        apiKey: 'Bing API Key'
+      }
     }
   },
   welcome: {

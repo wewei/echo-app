@@ -31,7 +31,6 @@ const ChatPanel = ({ handleLinkClick }: { handleLinkClick: (url: string) => void
   useEffect(() => () => cancelStreamRef.current?.(), [cancelStreamRef]);
 
   useEffect(() => {
-    console.log('streamingMessage');
     if (streamingMessage && model && !cancelStreamRef.current && messages[messages.length - 1].sender === "user") {
       let content = ""
       cancelStreamRef.current = window.electron.chat.stream(

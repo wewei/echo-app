@@ -31,6 +31,8 @@ function MessageItem({
         gap: 2,
         alignItems: "flex-start",
         opacity: isStreaming ? 0.7 : 1,
+        marginTop: 2,
+        marginBottom: 2,
       }}
     >
       <Avatar

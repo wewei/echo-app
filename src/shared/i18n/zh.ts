@@ -49,6 +49,16 @@ export default {
         apiVersion: 'API 版本',
         deployment: '部署名称'
       }
+    },
+    search: {
+      title: '搜索设置',
+      provider: '搜索供应商',
+      providers: {
+        bing: 'Bing 搜索'
+      },
+      bing: {
+        apiKey: 'Bing API 密钥'
+      }
     }
   },
   welcome: {
