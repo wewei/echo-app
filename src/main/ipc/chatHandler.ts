@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron'
-import type OpenAI from 'openai'
+import type { OpenAI } from 'openai'
 import { getClient } from '../services/chatManager'
 
 export const registerChatHandlers = () => {

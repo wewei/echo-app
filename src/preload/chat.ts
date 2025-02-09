@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron'
-import type OpenAI from 'openai'
+import { OpenAI } from 'openai'
 import { v4 as uuid } from 'uuid'
 
 export const chatAPI = {

@@ -1,7 +1,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import BaseAISettings from './BaseAISettings'
-import { OpenAISettings } from '../../../../shared/types/chatSettings'
+import { OpenAISettings } from '@/shared/types/chatSettings'
 
 interface Props {
   settings: OpenAISettings

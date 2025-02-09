@@ -1,14 +1,14 @@
-import Database from 'better-sqlite3'
+import Sqlite from 'better-sqlite3'
 import path from 'node:path'
 import fs from 'node:fs/promises'
 import { app } from 'electron'
-import type { Message, MessageQuery } from '../../shared/types/message'
+import type { Message, MessageQuery } from '@/shared/types/message'
 
 
 // 缓存数据库连接
-const dbCache = new Map<string, Database.Database>()
+const dbCache = new Map<string, Sqlite.Database>()
 
-const getDatabase = async (profileId: string): Promise<Database.Database> => {
+const getDatabase = async (profileId: string): Promise<Sqlite.Database> => {
   let db = dbCache.get(profileId)
   
   if (!db) {
@@ -22,7 +22,7 @@ const getDatabase = async (profileId: string): Promise<Database.Database> => {
     
     await fs.mkdir(path.dirname(dbPath), { recursive: true })
     
-    db = new Database(dbPath)
+    db = new Sqlite(dbPath)
     db.pragma('journal_mode = WAL')
     
     // 创建消息表，使用自增ID

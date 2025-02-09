@@ -1,10 +1,11 @@
 import React from 'react'
 import { Box, TextField, FormControl, InputLabel, Select, MenuItem, Paper, List, ListItem, Typography } from '@mui/material'
 import { useTranslation } from 'react-i18next'
-import { Profile } from '../../../shared/types/profile'
-import { SearchSettingsSchema, SEARCH_SETTINGS, type SearchSettings } from '../../../shared/types/searchSettings'
-import { useSettings } from '../../data/settings'
-import Loading from '../Loading'
+
+import { Profile } from '@/shared/types/profile'
+import { SearchSettingsSchema, SEARCH_SETTINGS, type SearchSettings } from '@/shared/types/searchSettings'
+import { useSettings } from '@/renderer/data/settings'
+import Loading from '@/renderer/components/Loading'
 
 interface Props {
   profile: Profile

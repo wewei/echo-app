@@ -78,7 +78,7 @@ console.log(app.getPath('userData'))
 app.on('web-contents-created', (event, contents) => {
   if (contents.getType() === 'webview') {
     // 限制 webview 的功能
-    contents.on('will-navigate', (event, url) => {
+    contents.on('will-navigate', (/* event, url */) => {
       // 可以在这里处理导航事件
     })
   }

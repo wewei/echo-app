@@ -2,7 +2,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { TextField } from '@mui/material'
 import BaseAISettings from './BaseAISettings'
-import { AzureSettings } from '../../../../shared/types/chatSettings'
+import { AzureSettings } from '@/shared/types/chatSettings'
 
 interface Props {
   settings: AzureSettings

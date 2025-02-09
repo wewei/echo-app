@@ -10,7 +10,9 @@ import MenuIcon from '@mui/icons-material/Menu'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
-import { useProfile, useProfiles } from '../data/profile'
+
+import { useProfile, useProfiles } from '@/renderer/data/profile'
+
 import SettingsPanel from './SettingsPanel'
 
 export default function AppHeader() {

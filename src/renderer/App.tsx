@@ -1,7 +1,7 @@
 import React from 'react'
 import { AppRouter } from './routes'
 import { Box, CssBaseline, ThemeProvider, createTheme } from '@mui/material'
-import '../shared/i18n'
+import '@/shared/i18n'
 
 const theme = createTheme({
   palette: {

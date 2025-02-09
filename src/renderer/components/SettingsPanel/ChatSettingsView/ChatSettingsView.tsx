@@ -11,18 +11,21 @@ import {
   MenuItem,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import OpenAISettings from "./OpenAISettings";
-import DeepSeekSettingsPanel from "./DeepSeekSettings";
-import AzureSettingsPanel from "./AzureSettings";
+
 import {
   ChatSettingsSchema,
   CHAT_SETTINGS,
   type ChatSettings,
   type ChatProvider,
-} from "../../../../shared/types/chatSettings";
-import { Profile } from "../../../../shared/types/profile";
-import { useSettings } from "../../../data/settings";
-import Loading from "../../Loading";
+} from "@/shared/types/chatSettings";
+import { Profile } from "@/shared/types/profile";
+import { useSettings } from "@/renderer/data/settings";
+import Loading from "@/renderer/components/Loading";
+
+import OpenAISettings from "./OpenAISettings";
+import DeepSeekSettingsPanel from "./DeepSeekSettings";
+import AzureSettingsPanel from "./AzureSettings";
+
 type Props = {
   profile: Profile;
 };

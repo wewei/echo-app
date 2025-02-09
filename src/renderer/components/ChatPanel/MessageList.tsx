@@ -1,14 +1,13 @@
 import React, { useRef, useEffect, useState } from 'react'
-import { Box, Typography, Avatar, CircularProgress, IconButton } from "@mui/material";
-import { Message } from "../../../shared/types/message";
+import { Box, Typography, Avatar, CircularProgress, IconButton, Link } from "@mui/material";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import PersonIcon from "@mui/icons-material/Person";
+import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import ReactMarkdown from "react-markdown";
 import remarkGfm from 'remark-gfm'
-import { Link } from '@mui/material'
-import OpenInFullIcon from '@mui/icons-material/OpenInFull';
-import { useParams } from 'react-router-dom';
-import { useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
+
+import { Message } from "@/shared/types/message";
 
 interface Props {
   messages: Message[];
@@ -92,7 +91,7 @@ function MessageItem({
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              a: ({ node, ...props }) => (
+              a: ({ ...props }) => (
                 <Link
                   component="a"
                   onClick={(e) => {

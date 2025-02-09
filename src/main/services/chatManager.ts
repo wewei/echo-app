@@ -1,5 +1,5 @@
-import OpenAI, { AzureOpenAI } from 'openai'
-import { type ChatSettings, CHAT_SETTINGS } from '../../shared/types/chatSettings'
+import { OpenAI, AzureOpenAI } from 'openai'
+import { type ChatSettings, CHAT_SETTINGS } from '@/shared/types/chatSettings'
 import { readSettings, onSettingsUpdate } from './settingsManager'
 
 // 缓存 OpenAI clients

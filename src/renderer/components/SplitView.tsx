@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { Box, IconButton, Fade, ButtonGroup } from '@mui/material'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
@@ -11,7 +11,7 @@ interface Props {
   onNavigate?: (url: string) => void
 }
 
-export default function SplitView({ leftContent, rightContent, onNavigate }: Props) {
+export default function SplitView({ leftContent, rightContent }: Props) {
   const [mode, setMode] = useState<ViewMode>(leftContent ? rightContent ? 'split' : 'left' : 'right')
   const [splitRatio, setSplitRatio] = useState(0.5) // 0.5 表示 50%
   const [splitRadioSave, setSplitRadioSave] = useState(0.5) // 0.5 表示 50%
@@ -59,7 +59,7 @@ export default function SplitView({ leftContent, rightContent, onNavigate }: Pro
     }
   }, [isLeftNarrow, isRightNarrow, splitRadioSave])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (mode === 'split') {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
@@ -79,7 +79,7 @@ export default function SplitView({ leftContent, rightContent, onNavigate }: Pro
   }
 
   // 当有新的链接时，自动展开左侧面板
-  React.useEffect(() => {
+  useEffect(() => {
     if (leftContent && rightContent) {
       setMode('split')
     } else if (leftContent) {

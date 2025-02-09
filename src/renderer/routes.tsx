@@ -1,9 +1,11 @@
 import React from "react";
 import { HashRouter, Routes, Route } from "react-router-dom";
+
+import { Box } from "@mui/material";
+
 import ChatPanel from "./components/ChatPage";
 import DefaultView from "./components/DefaultView";
 import AppHeader from "./components/AppHeader";
-import { Box } from "@mui/material";
 
 const Layout = () => {
   return (

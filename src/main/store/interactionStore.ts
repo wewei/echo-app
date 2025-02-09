@@ -1,7 +1,7 @@
 import BetterSqlite3  from 'better-sqlite3'
 import path from 'path'
 import fs from 'fs'
-import { QueryInput, ResponseInput, Query, Response } from '../../shared/types/echo'
+import { QueryInput, ResponseInput, Query, Response } from '@/shared/types/interactions'
 
 // 数据库初始化函数
 const initializeDb = (db: BetterSqlite3.Database): void => {
@@ -33,7 +33,21 @@ const initializeDb = (db: BetterSqlite3.Database): void => {
       FOREIGN KEY (response_id) REFERENCES responses(id) ON DELETE CASCADE,
       UNIQUE(query_id, response_id)
     );
-  `)
+
+    CREATE VIEW IF NOT EXISTS interaction_view AS
+    SELECT
+      q.id AS query_id,
+      q.content AS query_content,
+      q.timestamp AS query_timestamp,
+      q.type AS query_type,
+      r.id AS response_id,
+      r.content AS response_content,
+      r.timestamp AS response_timestamp,
+      r.agents AS response_agents
+    FROM queries q
+    LEFT JOIN responses r ON q.id = r.query
+    LEFT JOIN references ref ON q.id = ref.query_id
+  `);
 }
 
 // 创建数据库连接

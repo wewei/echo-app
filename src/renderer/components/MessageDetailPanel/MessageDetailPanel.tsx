@@ -1,14 +1,14 @@
 import React from "react";
-import { Box, Paper, Typography, Avatar, IconButton } from "@mui/material";
-import { useMessage } from "../../data/messages";
-import Loading from "../Loading";
+import { useSearchParams } from "react-router-dom";
+import { Box, Paper, Typography, Avatar, IconButton, Link } from "@mui/material";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import PersonIcon from "@mui/icons-material/Person";
 import CloseIcon from "@mui/icons-material/Close";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Link } from "@mui/material";
-import { useSearchParams } from "react-router-dom";
+
+import { useMessage } from "@/renderer/data/messages";
+import Loading from "@/renderer/components/Loading";
 
 function MessageDetailPanel({ profileId, messageId }: { profileId: string; messageId: string }) {
   const message = useMessage(profileId, messageId);
@@ -103,7 +103,7 @@ function MessageDetailPanel({ profileId, messageId }: { profileId: string; messa
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              a: ({ node, ...props }) => (
+              a: ({ ...props }) => (
                 <Link {...props} />
               ),
             }}

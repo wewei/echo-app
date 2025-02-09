@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Message } from "../../shared/types/message"
+import { Message } from "@/shared/types/message"
 
 export const useMessages = (profileId: string): [Message[], (message: Message) => Promise<void>] => {
   const [messages, setMessages] = useState<Message[]>([])

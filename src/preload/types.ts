@@ -1,8 +1,8 @@
-import type OpenAI from 'openai'
-import type { Profile } from '../shared/types/profile'
-import type { AssetMetadata } from '../shared/types/asset'
-import type { Settings } from '../shared/types/settings'
-import type { Message, MessageQuery } from '../shared/types/message'
+import { OpenAI } from 'openai'
+import type { Profile } from '@/shared/types/profile'
+import type { AssetMetadata } from '@/shared/types/asset'
+import type { Settings } from '@/shared/types/settings'
+import type { Message, MessageQuery } from '@/shared/types/message'
 
 export interface IProfileAPI {
   create: (username: string, avatar: string) => Promise<Profile>

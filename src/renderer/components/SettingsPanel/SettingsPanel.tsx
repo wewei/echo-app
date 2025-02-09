@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import {
   Box,
   Paper,
@@ -9,7 +9,11 @@ import {
   IconButton,
   TextField,
   Typography,
-  useTheme,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import EditIcon from "@mui/icons-material/Edit";
@@ -18,10 +22,12 @@ import DoneIcon from "@mui/icons-material/Done";
 import CloseIcon from "@mui/icons-material/Close";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useParams, useNavigate } from "react-router-dom";
-import { useProfile } from "../../data/profile";
+
+import { useProfile } from "@/renderer/data/profile";
+import Loading from "@/renderer/components/Loading";
+
 import SearchSettingsView from './SearchSettingsView'
 import ChatSettingsView from './ChatSettingsView'
-import Loading from "../Loading";
 
 export default function SettingsPanel() {
   const { t } = useTranslation();
@@ -32,7 +38,6 @@ export default function SettingsPanel() {
   const { profileId } = useParams<{ profileId: string }>();
   const [profile, setProfile] = useProfile(profileId);
   const [username, setUsername] = useState(profile?.username || "");
-  const theme = useTheme();
 
   const navigate = useNavigate();
 
@@ -239,6 +244,23 @@ export default function SettingsPanel() {
           </ListItem>
         </List>
       </Paper>
+
+      <Dialog open={logoutDialogOpen} onClose={() => setLogoutDialogOpen(false)}>
+        <DialogTitle>{t("settings.logout.confirm.title")}</DialogTitle>
+        <DialogContent>
+          <Typography>
+            {t("settings.logout.confirm.message")}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLogoutDialogOpen(false)}>
+            {t("common.cancel")}
+          </Button>
+          <Button onClick={handleLogout} color="error" autoFocus>
+            {t("settings.logout")}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   ) : (
     <Loading />

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { Box, Button, CircularProgress, Typography } from '@mui/material'
+import { Box, Button, Typography } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import Loading from './Loading'
+import Loading from '@/renderer/components/Loading'
 
 export default function DefaultView() {
   const { t } = useTranslation()

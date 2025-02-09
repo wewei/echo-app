@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-import type { Profile } from "../../shared/types/profile";
+import type { Profile } from "@/shared/types/profile";
 
 const profiles = new Map<string, Profile>();
 
