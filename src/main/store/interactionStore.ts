@@ -1,14 +1,15 @@
-import BetterSqlite3  from 'better-sqlite3'
+import Sqlite, { Database } from 'better-sqlite3'
 import path from 'path'
 import fs from 'fs'
+import { v4 as uuidv4 } from 'uuid'
 import { QueryInput, ResponseInput, Query, Response } from '@/shared/types/interactions'
 
 // 数据库初始化函数
-const initializeDb = (db: BetterSqlite3.Database): void => {
+const initializeDb = (db: Database): void => {
   db.exec(`
     CREATE TABLE IF NOT EXISTS queries (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      context INTEGER,
+      id TEXT PRIMARY KEY,
+      context TEXT,
       content TEXT NOT NULL,
       timestamp INTEGER NOT NULL,
       isDeleted BOOLEAN NOT NULL DEFAULT 0,
@@ -17,8 +18,8 @@ const initializeDb = (db: BetterSqlite3.Database): void => {
     );
 
     CREATE TABLE IF NOT EXISTS responses (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      query INTEGER NOT NULL,
+      id TEXT PRIMARY KEY,
+      query TEXT NOT NULL,
       content TEXT NOT NULL,
       timestamp INTEGER NOT NULL,
       agents TEXT NOT NULL,
@@ -26,9 +27,9 @@ const initializeDb = (db: BetterSqlite3.Database): void => {
     );
 
     CREATE TABLE IF NOT EXISTS references (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      query_id INTEGER NOT NULL,
-      response_id INTEGER NOT NULL,
+      id TEXT PRIMARY KEY,
+      query_id TEXT NOT NULL,
+      response_id TEXT NOT NULL,
       FOREIGN KEY (query_id) REFERENCES queries(id) ON DELETE CASCADE,
       FOREIGN KEY (response_id) REFERENCES responses(id) ON DELETE CASCADE,
       UNIQUE(query_id, response_id)
@@ -51,28 +52,29 @@ const initializeDb = (db: BetterSqlite3.Database): void => {
 }
 
 // 创建数据库连接
-const createConnection = (profileFolder: string): BetterSqlite3.Database => {
+const createConnection = (profileFolder: string): Database => {
   const dbPath = path.join(profileFolder, 'sqlite')
   if (!fs.existsSync(dbPath)) {
     fs.mkdirSync(dbPath, { recursive: true })
   }
   
-  const db = new BetterSqlite3(path.join(dbPath, 'echo.sqlite'))
+  const db = new Sqlite(path.join(dbPath, 'echo.sqlite'))
   initializeDb(db)
   return db
 }
 
 // Query 相关操作
-const createQuery = (db: BetterSqlite3.Database) => (input: QueryInput): Query => {
+const createQuery = (db: Database) => (input: QueryInput): Query => {
+  const id = uuidv4()
   const stmt = db.prepare(`
-    INSERT INTO queries (context, content, timestamp, isDeleted, type)
-    VALUES (@context, @content, @timestamp, @isDeleted, @type)
+    INSERT INTO queries (id, context, content, timestamp, isDeleted, type)
+    VALUES (@id, @context, @content, @timestamp, @isDeleted, @type)
   `)
-  const result = stmt.run(input)
-  return { ...input, id: result.lastInsertRowid as number }
+  stmt.run({ ...input, id })
+  return { ...input, id }
 }
 
-const updateQuery = (db: BetterSqlite3.Database) => (id: number, input: Partial<QueryInput>): void => {
+const updateQuery = (db: Database) => (id: string, input: Partial<QueryInput>): void => {
   const sets = Object.keys(input)
     .map(key => `${key} = @${key}`)
     .join(', ')
@@ -80,32 +82,33 @@ const updateQuery = (db: BetterSqlite3.Database) => (id: number, input: Partial<
   stmt.run({ ...input, id })
 }
 
-const getQuery = (db: BetterSqlite3.Database) => (id: number): Query | undefined => {
+const getQuery = (db: Database) => (id: string): Query | undefined => {
   const stmt = db.prepare('SELECT * FROM queries WHERE id = ?')
   return stmt.get(id) as Query | undefined
 }
 
-const softDeleteQuery = (db: BetterSqlite3.Database) => (id: number): void => {
+const softDeleteQuery = (db: Database) => (id: string): void => {
   const stmt = db.prepare('UPDATE queries SET isDeleted = 1 WHERE id = ?')
   stmt.run(id)
 }
 
-const hardDeleteQuery = (db: BetterSqlite3.Database) => (id: number): void => {
+const hardDeleteQuery = (db: Database) => (id: string): void => {
   const stmt = db.prepare('DELETE FROM queries WHERE id = ?')
   stmt.run(id)
 }
 
 // Response 相关操作
-const createResponse = (db: BetterSqlite3.Database) => (input: ResponseInput): Response => {
+const createResponse = (db: Database) => (input: ResponseInput): Response => {
+  const id = uuidv4()
   const stmt = db.prepare(`
-    INSERT INTO responses (query, content, timestamp, agents)
-    VALUES (@query, @content, @timestamp, @agents)
+    INSERT INTO responses (id, query, content, timestamp, agents)
+    VALUES (@id, @query, @content, @timestamp, @agents)
   `)
-  const result = stmt.run(input)
-  return { ...input, id: result.lastInsertRowid as number }
+  stmt.run({ ...input, id })
+  return { ...input, id }
 }
 
-const updateResponse = (db: BetterSqlite3.Database) => (id: number, input: Partial<ResponseInput>): void => {
+const updateResponse = (db: Database) => (id: string, input: Partial<ResponseInput>): void => {
   const sets = Object.keys(input)
     .map(key => `${key} = @${key}`)
     .join(', ')
@@ -113,42 +116,42 @@ const updateResponse = (db: BetterSqlite3.Database) => (id: number, input: Parti
   stmt.run({ ...input, id })
 }
 
-const getResponse = (db: BetterSqlite3.Database) => (id: number): Response | undefined => {
+const getResponse = (db: Database) => (id: string): Response | undefined => {
   const stmt = db.prepare('SELECT * FROM responses WHERE id = ?')
   return stmt.get(id) as Response | undefined
 }
 
-const deleteResponse = (db: BetterSqlite3.Database) => (id: number): void => {
+const deleteResponse = (db: Database) => (id: string): void => {
   const stmt = db.prepare('DELETE FROM responses WHERE id = ?')
   stmt.run(id)
 }
 
 // 查询相关操作
-const getQueryResponses = (db: BetterSqlite3.Database) => (queryId: number): Response[] => {
+const getQueryResponses = (db: Database) => (queryId: string): Response[] => {
   const stmt = db.prepare('SELECT * FROM responses WHERE query = ? ORDER BY timestamp ASC')
   return stmt.all(queryId) as Response[]
 }
 
-const getQueryWithContext = (db: BetterSqlite3.Database) => (contextId: number): Query[] => {
+const getQueryWithContext = (db: Database) => (contextId: string): Query[] => {
   const stmt = db.prepare('SELECT * FROM queries WHERE context = ? ORDER BY timestamp ASC')
   return stmt.all(contextId) as Query[]
 }
 
 // 添加 Reference 相关操作
-const createReference = (db: BetterSqlite3.Database) => (queryId: number, responseId: number): void => {
+const createReference = (db: Database) => (queryId: string, responseId: string): void => {
   const stmt = db.prepare(`
-    INSERT OR IGNORE INTO references (query_id, response_id)
-    VALUES (?, ?)
+    INSERT OR IGNORE INTO references (id, query_id, response_id)
+    VALUES (?, ?, ?)
   `)
-  stmt.run(queryId, responseId)
+  stmt.run(uuidv4(), queryId, responseId)
 }
 
-const deleteReference = (db: BetterSqlite3.Database) => (queryId: number, responseId: number): void => {
+const deleteReference = (db: Database) => (queryId: string, responseId: string): void => {
   const stmt = db.prepare('DELETE FROM references WHERE query_id = ? AND response_id = ?')
   stmt.run(queryId, responseId)
 }
 
-const getResponseReferences = (db: BetterSqlite3.Database) => (responseId: number): Query[] => {
+const getResponseReferences = (db: Database) => (responseId: string): Query[] => {
   const stmt = db.prepare(`
     SELECT q.* FROM queries q
     INNER JOIN references r ON r.query_id = q.id
@@ -158,7 +161,7 @@ const getResponseReferences = (db: BetterSqlite3.Database) => (responseId: numbe
   return stmt.all(responseId) as Query[]
 }
 
-const getQueryReferences = (db: BetterSqlite3.Database) => (queryId: number): Response[] => {
+const getQueryReferences = (db: Database) => (queryId: string): Response[] => {
   const stmt = db.prepare(`
     SELECT r.* FROM responses r
     INNER JOIN references ref ON ref.response_id = r.id
