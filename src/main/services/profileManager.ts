@@ -7,10 +7,10 @@ import { type Profile, ProfileSchema, ProfilesSchema } from '@/shared/types/prof
 const PROFILES_FILE = 'profiles.json'
 
 // 获取配置文件路径
-const getProfilesPath = () => path.join(app.getPath('userData'), PROFILES_FILE)
+export const getProfilesPath = () => path.join(app.getPath('userData'), PROFILES_FILE)
 
 // 获取指定 profile 的目录路径
-const getProfileDir = (profileId: string) => 
+export const getProfileDir = (profileId: string) => 
   path.join(app.getPath('userData'), 'profiles', profileId)
 
 // 读取 profiles 配置
@@ -93,3 +93,4 @@ export const getProfile = async (profileId: string): Promise<Profile | null> => 
   const profiles = await readProfiles()
   return profiles.profiles.find(p => p.id === profileId) || null
 }
+
