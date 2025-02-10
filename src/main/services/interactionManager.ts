@@ -1,5 +1,6 @@
 import { getDatabaseService } from '../store/interactions'
 import { QueryInput, ResponseInput, Query, Response, Interaction } from '@/shared/types/interactions'
+import { onProfileDeleted } from './profileManager'
 
 const managers = new Map<string, InteractionManager>()
 
@@ -88,3 +89,4 @@ export const getInteractionManager = (profileId: string): InteractionManager => 
   return manager
 }
 
+onProfileDeleted((profileId) => { managers.delete(profileId) })

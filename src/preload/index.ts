@@ -4,6 +4,7 @@ import { profileAPI } from './profile'
 import { settingsAPI } from './settings'
 import { chatAPI } from './chat'
 import { messageAPI } from './message'
+import { interactionAPI } from './interactions'
 
 // 暴露 API 到渲染进程
 contextBridge.exposeInMainWorld('electron', {
@@ -11,5 +12,6 @@ contextBridge.exposeInMainWorld('electron', {
   asset: assetAPI,
   settings: settingsAPI,
   chat: chatAPI,
-  message: messageAPI
+  message: messageAPI,
+  interactions: interactionAPI
 })

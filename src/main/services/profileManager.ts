@@ -3,8 +3,15 @@ import path from 'node:path'
 import fs from 'node:fs/promises'
 import { v4 as uuidv4 } from 'uuid'
 import { type Profile, ProfileSchema, ProfilesSchema } from '@/shared/types/profile'
+import { eventSource } from '@/main/utils/event'
 
 const PROFILES_FILE = 'profiles.json'
+
+const [notifyProfileCreated, onProfileCreated] = eventSource<Profile>()
+const [notifyProfileDeleted, onProfileDeleted] = eventSource<string>()
+const [notifyProfileUpdated, onProfileUpdated] = eventSource<Profile>()
+
+export { onProfileCreated, onProfileDeleted, onProfileUpdated }
 
 // 获取配置文件路径
 export const getProfilesPath = () => path.join(app.getPath('userData'), PROFILES_FILE)
@@ -54,7 +61,9 @@ export const createProfile = async (username: string, avatar: string): Promise<P
   
   await createProfileDir(newProfile.id)
   await saveProfiles({ profiles: [...profiles.profiles, newProfile] });
-  
+
+  notifyProfileCreated(newProfile)
+
   return newProfile
 }
 
@@ -65,6 +74,8 @@ export const deleteProfile = async (profileId: string): Promise<void> => {
   
   await removeProfileDir(profileId)
   await saveProfiles({ profiles: newProfiles })
+
+  notifyProfileDeleted(profileId)
 }
 
 // 更新 profile
@@ -78,8 +89,14 @@ export const updateProfile = async (
   )
   
   await saveProfiles({ profiles: updatedProfiles })
-  
-  return updatedProfiles.find(p => p.id === profileId) || null
+
+  const updatedProfile = updatedProfiles.find(p => p.id === profileId) || null;
+
+  if (updatedProfile) {
+    notifyProfileUpdated(updatedProfile)
+  }
+
+  return updatedProfile
 }
 
 // 获取所有 profiles
@@ -93,4 +110,3 @@ export const getProfile = async (profileId: string): Promise<Profile | null> => 
   const profiles = await readProfiles()
   return profiles.profiles.find(p => p.id === profileId) || null
 }
-

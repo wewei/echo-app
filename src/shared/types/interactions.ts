@@ -61,3 +61,16 @@ export const responseFromInteraction = (interaction: Interaction): Response => {
     agents: interaction.responseAgents,
   }
 }
+
+export const IPC_CHANNELS = {
+  CREATE_QUERY: 'interaction:createQuery',
+  CREATE_RESPONSE: 'interaction:createResponse',
+  APPEND_RESPONSE: 'interaction:appendResponse',
+  SOFT_DELETE_QUERY: 'interaction:softDeleteQuery',
+  HARD_DELETE_QUERY: 'interaction:hardDeleteQuery',
+  SEARCH_INTERACTIONS: 'interaction:searchInteractions',
+  SEARCH_INTERACTION_IDS: 'interaction:searchInteractionIds',
+  GET_RESPONSES: 'interaction:getResponses',
+  GET_QUERIES: 'interaction:getQueries',
+  GET_INTERACTIONS: 'interaction:getInteractions',
+} as const
