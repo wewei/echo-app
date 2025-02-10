@@ -1,5 +1,7 @@
 import { Query, Response, Interaction, queryFromInteraction, responseFromInteraction, interactionFromQueryAndResponse } from '@/shared/types/interactions'
 import type { SearchOptions } from '@/main/services/interactionManager'
+import { useState, useEffect } from 'react'
+import { eventSource } from '@/shared/utils/event'
 
 export interface InteractionStore {
 	// Query 相关方法
@@ -23,6 +25,7 @@ export interface InteractionStore {
 }
 
 const interactionStores = new Map<string, InteractionStore>()
+const [notifyInteractionChanged, onInteractionChanged] = eventSource<[string, string, Interaction]>()
 
 export const getInteractionStore = (
 	profileId: string
@@ -92,6 +95,13 @@ export const getInteractionStore = (
 			const query = await api.softDeleteQuery(profileId, id)
 			if (query) {
 				updateCachedQuery(query)
+				const responseIds = queryResponses.get(query.id)
+				responseIds?.forEach(responseId => {
+					const response = responseCache.get(responseId)
+					if (response) {
+						notifyInteractionChanged(profileId, responseId, interactionFromQueryAndResponse(query, response))
+					}
+				})
 			}
 			return query
 		},
@@ -114,6 +124,8 @@ export const getInteractionStore = (
 			const response = await api.appendResponse(profileId, id, content)
 			if (response) {
 				updateCachedResponse(response)
+				const query = await getQuery(response.query)
+				notifyInteractionChanged(profileId, response.id, interactionFromQueryAndResponse(query, response))
 			}
 			return response
 		},
@@ -147,4 +159,32 @@ export const getInteractionStore = (
 
 	interactionStores.set(profileId, interactionStore)
 	return interactionStore
+}
+
+export const useInteraction = (profileId: string, interactionId: string) => {
+	const [interaction, setInteraction] = useState<Interaction | null>(null)
+
+	useEffect(() => {
+		const interactionStore = getInteractionStore(profileId)
+		interactionStore.getInteraction(interactionId).then(setInteraction)
+	}, [profileId, interactionId])
+
+	onInteractionChanged((pid, iid, interaction) => {
+		if (pid === profileId && iid === interactionId) {
+			setInteraction(interaction)
+		}
+	})
+
+	return interaction
+}
+
+export const useInteractionIds = (profileId: string, options: SearchOptions) => {
+	const [interactionIds, setInteractionIds] = useState<string[]>([])
+
+	useEffect(() => {
+		const interactionStore = getInteractionStore(profileId)
+		interactionStore.searchInteractionIds(options).then(setInteractionIds)
+	}, [profileId, options])
+
+	return interactionIds
 }

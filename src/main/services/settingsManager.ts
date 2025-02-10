@@ -2,6 +2,7 @@ import { app } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs/promises'
 import { type Settings, SettingsSchema } from '@/shared/types/settings'
+import { eventSource, type EventSource } from '@/shared/utils/event'
 
 const SETTINGS_DIR = 'settings'
 
@@ -53,9 +54,8 @@ export const updateSettings = async (
   const current = await readSettings(profileId, scope)
   const updated = { ...current, ...updates }
   await writeSettings(profileId, scope, updated)
-  for (const callback of (settingsListeners.get(scope) || [])) {
-    callback(profileId, updated)
-  }
+  const [notifySettingsUpdated] = getSettingsEventSource(scope)
+  notifySettingsUpdated(profileId, updated)
   return updated
 }
 
@@ -100,11 +100,18 @@ export const getScopes = async (profileId: string): Promise<string[]> => {
   }
 } 
 
-const settingsListeners = new Map<string, ((profileId: string, settings: Settings) => void)[]>()
-
-export const onSettingsUpdate = (scope: string, callback: (profileId: string, settings: Settings) => void): () => void => {
-  settingsListeners.set(scope, [...(settingsListeners.get(scope) || []), callback])
-  return () => {
-    settingsListeners.set(scope, [...(settingsListeners.get(scope) || []), callback])
+const eventSources = new Map<string, EventSource<[string, Settings]>>()
+const getSettingsEventSource = (scope: string): EventSource<[string, Settings]> => {
+  if (eventSources.has(scope)) {
+    return eventSources.get(scope) as EventSource<[string, Settings]>
   }
+
+  const [notifySettingsUpdated, onSettingsUpdated] = eventSource<[string, Settings]>()
+  eventSources.set(scope, [notifySettingsUpdated, onSettingsUpdated])
+  return [notifySettingsUpdated, onSettingsUpdated]
+}
+
+export const onSettingsUpdated = (scope: string, callback: (profileId: string, settings: Settings) => void): () => void => {
+  const [, onSettingsUpdated] = getSettingsEventSource(scope)
+  return onSettingsUpdated(callback)
 }

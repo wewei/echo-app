@@ -1,8 +1,7 @@
 import { OpenAI, AzureOpenAI } from 'openai'
 import { type ChatSettings, CHAT_SETTINGS } from '@/shared/types/chatSettings'
-import { readSettings, onSettingsUpdate } from './settingsManager'
+import { readSettings, onSettingsUpdated } from './settingsManager'
 import { onProfileDeleted } from './profileManager'
-
 // 缓存 OpenAI clients
 const clients = new Map<string, OpenAI>()
 
@@ -19,6 +18,5 @@ export const getClient = async (profileId: string): Promise<OpenAI> => {
   return client
 }
 
-onSettingsUpdate(CHAT_SETTINGS, (profileId) => { clients.delete(profileId) })
-
+onSettingsUpdated(CHAT_SETTINGS, (profileId) => { clients.delete(profileId) })
 onProfileDeleted((profileId) => { clients.delete(profileId) })
