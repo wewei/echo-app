@@ -1,147 +1,150 @@
-import { InteractionApi } from '@/preload/interactions'
-import { Query, Response, Interaction } from '@/shared/types/interactions'
+import { Query, Response, Interaction, queryFromInteraction, responseFromInteraction, interactionFromQueryAndResponse } from '@/shared/types/interactions'
 import type { SearchOptions } from '@/main/services/interactionManager'
 
-class InteractionStore {
-  private api: InteractionApi
-  private profileId: string
-  private queryCache = new Map<string, Query>()
-  private responseCache = new Map<string, Response>()
+export interface InteractionStore {
+	// Query 相关方法
+	createQuery: (input: Omit<Query, "id">) => Promise<Query>
+	softDeleteQuery: (id: string) => Promise<Query | null>
+	hardDeleteQuery: (id: string) => Promise<void>
+	getQuery: (id: string) => Promise<Query | null>
 
-  constructor(api: InteractionApi, profileId: string) {
-    this.api = api
-    this.profileId = profileId
-  }
+	// Response 相关方法
+	createResponse: (input: Omit<Response, "id">) => Promise<Response>
+	appendResponse: (id: string, content: string) => Promise<Response | null>
+	getResponse: (id: string) => Promise<Response | null>
 
-  // Query 相关方法
-  async createQuery(input: Omit<Query, "id">): Promise<Query> {
-    const query = await this.api.createQuery(this.profileId, input)
-    this.queryCache.set(query.id, query)
-    return query
-  }
+	// Interaction 相关方法
+	searchInteractions: (options: SearchOptions) => Promise<Interaction[]>
+	searchInteractionIds: (options: SearchOptions) => Promise<string[]>
+	getInteraction: (id: string) => Promise<Interaction | null>
 
-  async softDeleteQuery(id: string): Promise<void> {
-    await this.api.softDeleteQuery(this.profileId, id)
-    const query = this.queryCache.get(id)
-    if (query) {
-      this.queryCache.set(id, {
-        ...query,
-        deletedTimestamp: Date.now()
-      })
-    }
-  }
-
-  async hardDeleteQuery(id: string): Promise<void> {
-    await this.api.hardDeleteQuery(this.profileId, id)
-    this.queryCache.delete(id)
-  }
-
-  async getQueries(ids: string[]): Promise<Query[]> {
-    const uncachedIds = ids.filter(id => !this.queryCache.has(id))
-    if (uncachedIds.length > 0) {
-      const queries = await this.api.getQueries(this.profileId, uncachedIds)
-      queries.forEach(query => this.queryCache.set(query.id, query))
-    }
-    return ids.map(id => this.queryCache.get(id)!).filter(Boolean)
-  }
-
-  // Response 相关方法
-  async createResponse(input: Omit<Response, "id">): Promise<Response> {
-    const response = await this.api.createResponse(this.profileId, input)
-    this.responseCache.set(response.id, response)
-    return response
-  }
-
-  async appendResponse(id: string, content: string): Promise<void> {
-    await this.api.appendResponse(this.profileId, id, content)
-    const response = this.responseCache.get(id)
-    if (response) {
-      this.responseCache.set(id, {
-        ...response,
-        content: response.content + content,
-        timestamp: Date.now()
-      })
-    }
-  }
-
-  async getResponses(ids: string[]): Promise<Response[]> {
-    const uncachedIds = ids.filter(id => !this.responseCache.has(id))
-    if (uncachedIds.length > 0) {
-      const responses = await this.api.getResponses(this.profileId, uncachedIds)
-      responses.forEach(response => this.responseCache.set(response.id, response))
-    }
-    return ids.map(id => this.responseCache.get(id)!).filter(Boolean)
-  }
-
-  // Interaction 相关方法
-  async searchInteractions(options: SearchOptions): Promise<Interaction[]> {
-    const interactions = await this.api.searchInteractions(this.profileId, options)
-    
-    // 更新缓存
-    interactions.forEach(interaction => {
-      this.queryCache.set(interaction.queryId, {
-        id: interaction.queryId,
-        content: interaction.queryContent,
-        timestamp: interaction.queryTimestamp,
-        type: interaction.queryType,
-        deletedTimestamp: interaction.queryDeletedTimestamp
-      })
-      
-      this.responseCache.set(interaction.responseId, {
-        id: interaction.responseId,
-        content: interaction.responseContent,
-        timestamp: interaction.responseTimestamp,
-        agents: interaction.responseAgents,
-        query: interaction.queryId
-      })
-    })
-
-    return interactions
-  }
-
-  async searchInteractionIds(options: SearchOptions): Promise<string[]> {
-    return await this.api.searchInteractionIds(this.profileId, options)
-  }
-
-  async getInteractions(ids: string[]): Promise<Interaction[]> {
-    const interactions = await this.api.getInteractions(this.profileId, ids)
-    
-    // 更新缓存
-    interactions.forEach(interaction => {
-      this.queryCache.set(interaction.queryId, {
-        id: interaction.queryId,
-        content: interaction.queryContent,
-        timestamp: interaction.queryTimestamp,
-        type: interaction.queryType,
-        deletedTimestamp: interaction.queryDeletedTimestamp
-      })
-      
-      this.responseCache.set(interaction.responseId, {
-        id: interaction.responseId,
-        content: interaction.responseContent,
-        timestamp: interaction.responseTimestamp,
-        agents: interaction.responseAgents,
-        query: interaction.queryId
-      })
-    })
-
-    return interactions
-  }
-
-  // 缓存管理
-  clearCache(): void {
-    this.queryCache.clear()
-    this.responseCache.clear()
-  }
+	// 缓存管理
+	clearCache: () => void
 }
 
-// 工厂函数
-export const createInteractionStore = (
-  api: InteractionApi,
-  profileId: string
+const interactionStores = new Map<string, InteractionStore>()
+
+export const getInteractionStore = (
+	profileId: string
 ): InteractionStore => {
-  return new InteractionStore(api, profileId)
+	const api = window.electron.interactions;
+
+	if (interactionStores.has(profileId)) {
+		return interactionStores.get(profileId)!
+	}
+	const queryCache = new Map<string, Query>()
+	const responseCache = new Map<string, Response>()
+	const queryResponses = new Map<string, Set<string>>()
+
+	// 缓存更新辅助函数
+	const updateCachedResponse = (response: Response) => {
+		responseCache.set(response.id, response)
+		if (!queryResponses.has(response.query)) {
+			queryResponses.set(response.query, new Set())
+		}
+		queryResponses.get(response.query)?.add(response.id)
+	}
+
+	const updateCachedQuery = (query: Query) => {
+		queryCache.set(query.id, query)
+	}
+
+	const removeCachedQuery = (id: string) => {
+		queryCache.delete(id)
+		queryResponses.get(id)?.forEach(responseId => responseCache.delete(responseId))
+		queryResponses.delete(id)
+	}
+
+	const updateCachesFromInteraction = (interaction: Interaction) => {
+		updateCachedQuery(queryFromInteraction(interaction))
+		updateCachedResponse(responseFromInteraction(interaction))
+	}
+
+	const getQuery = async (id: string) => {
+		if (!queryCache.has(id)) {
+			const queries = await api.getQueries(profileId, [id])
+			if (queries.length > 0) {
+				queryCache.set(id, queries[0])
+			}
+		}
+		return queryCache.get(id)
+	}
+
+	const getResponse = async (id: string) => {
+		if (!responseCache.has(id)) {
+			const responses = await api.getResponses(profileId, [id])
+			if (responses.length > 0) {
+				responseCache.set(id, responses[0])
+			}
+		}
+		return responseCache.get(id)
+	}
+
+	const interactionStore: InteractionStore = {
+		// Query 相关方法
+		async createQuery(input: Omit<Query, "id">) {
+			const query = await api.createQuery(profileId, input)
+			updateCachedQuery(query)
+			return query
+		},
+
+		async softDeleteQuery(id: string) {
+			const query = await api.softDeleteQuery(profileId, id)
+			if (query) {
+				updateCachedQuery(query)
+			}
+			return query
+		},
+
+		async hardDeleteQuery(id: string) {
+			await api.hardDeleteQuery(profileId, id)
+			removeCachedQuery(id)
+		},
+
+		getQuery,
+
+		// Response 相关方法
+		async createResponse(input: Omit<Response, "id">) {
+			const response = await api.createResponse(profileId, input)
+			updateCachedResponse(response)
+			return response
+		},
+
+		async appendResponse(id: string, content: string) {
+			const response = await api.appendResponse(profileId, id, content)
+			if (response) {
+				updateCachedResponse(response)
+			}
+			return response
+		},
+
+		getResponse,
+
+		// Interaction 相关方法
+		async searchInteractions(options: SearchOptions) {
+			const interactions = await api.searchInteractions(profileId, options)
+			interactions.forEach(updateCachesFromInteraction)
+			return interactions
+		},
+
+		async searchInteractionIds(options: SearchOptions) {
+			return await api.searchInteractionIds(profileId, options)
+		},
+
+		async getInteraction(id: string) {
+			const response = await getResponse(id)
+			const query = await getQuery(response?.query)
+			return interactionFromQueryAndResponse(query, response)
+		},
+
+		// 缓存管理
+		clearCache() {
+			queryCache.clear()
+			responseCache.clear()
+			queryResponses.clear()
+		}
+	}
+
+	interactionStores.set(profileId, interactionStore)
+	return interactionStore
 }
-
-export type { InteractionStore }
-

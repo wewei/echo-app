@@ -120,14 +120,15 @@ const updateQuery = (db: Database) => (id: string, input: Partial<QueryInput>): 
   stmt.run({ ...input, id })
 }
 
-const getQuery = (db: Database) => (id: string): Query | undefined => {
+const getQuery = (db: Database) => (id: string): Query | null => {
   const stmt = db.prepare('SELECT * FROM queries WHERE id = ?')
-  return stmt.get(id) as Query | undefined
+  return stmt.get(id) || null
 }
 
-const softDeleteQuery = (db: Database) => (id: string): void => {
+const softDeleteQuery = (db: Database) => (id: string): Query | null => {
   const stmt = db.prepare('UPDATE queries SET deletedTimestamp = ? WHERE id = ?')
   stmt.run(Date.now(), id)
+  return getQuery(db)(id)
 }
 
 const hardDeleteQuery = (db: Database) => (id: string): void => {
@@ -154,9 +155,9 @@ const updateResponse = (db: Database) => (id: string, input: Partial<ResponseInp
   stmt.run({ ...input, id })
 }
 
-const getResponse = (db: Database) => (id: string): Response | undefined => {
+const getResponse = (db: Database) => (id: string): Response | null => {
   const stmt = db.prepare('SELECT * FROM responses WHERE id = ?')
-  return stmt.get(id) as Response | undefined
+  return stmt.get(id) || null
 }
 
 // 添加辅助函数来处理搜索条件

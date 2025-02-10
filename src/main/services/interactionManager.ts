@@ -20,7 +20,7 @@ export interface SearchOptions {
 export interface InteractionManager {
   createQuery: (input: QueryInput) => Query
   createResponse: (input: ResponseInput) => Response
-  appendResponse: (id: string, content: string) => void
+  appendResponse: (id: string, content: string) => Response
   softDeleteQuery: (id: string) => void
   hardDeleteQuery: (id: string) => void
   searchInteractions: (options: SearchOptions) => Interaction[]
@@ -47,17 +47,18 @@ export const getInteractionManager = (profileId: string): InteractionManager => 
     },
 
     appendResponse: (id: string, content: string) => {
-      const response = db.response.get(id)
+      const response = db.response.get(id) || null
       if (response) {
         db.response.update(id, {
           content: response.content + content,
           timestamp: Date.now()
         })
       }
+      return response
     },
 
     softDeleteQuery: (id: string) => {
-      db.query.softDelete(id)
+      return db.query.softDelete(id)
     },
 
     hardDeleteQuery: (id: string) => {

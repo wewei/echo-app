@@ -62,6 +62,19 @@ export const responseFromInteraction = (interaction: Interaction): Response => {
   }
 }
 
+export const interactionFromQueryAndResponse = (query: Query, response: Response): Interaction => {
+  return {
+    queryId: query.id,
+    queryContent: query.content,
+    queryTimestamp: query.timestamp,
+    queryType: query.type,
+    responseId: response.id,
+    responseContent: response.content,
+    responseTimestamp: response.timestamp,
+    responseAgents: response.agents,
+  }
+}
+
 export const IPC_CHANNELS = {
   CREATE_QUERY: 'interaction:createQuery',
   CREATE_RESPONSE: 'interaction:createResponse',
