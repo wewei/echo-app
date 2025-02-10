@@ -1,7 +1,6 @@
 import { ipcRenderer } from 'electron'
-import type { QueryInput, ResponseInput, Query, Response, Interaction } from '@/shared/types/interactions'
+import type { QueryInput, ResponseInput, Query, Response, Interaction, SearchOptions } from '@/shared/types/interactions'
 import { IPC_CHANNELS } from '@/shared/types/interactions'
-import type { SearchOptions } from '@/main/services/interactionManager'
 
 export const interactionAPI = {
   createQuery: (profileId: string, input: QueryInput): Promise<Query> => 

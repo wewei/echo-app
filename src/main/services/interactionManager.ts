@@ -1,21 +1,8 @@
 import { getDatabaseService } from '../store/interactions'
-import { QueryInput, ResponseInput, Query, Response, Interaction } from '@/shared/types/interactions'
+import { QueryInput, ResponseInput, Query, Response, Interaction, SearchOptions } from '@/shared/types/interactions'
 import { onProfileDeleted } from './profileManager'
 
 const managers = new Map<string, InteractionManager>()
-
-export interface SearchOptions {
-  timestamp?: number
-  before?: number
-  after?: number
-  contextId?: string
-  queryType?: string
-  responseAgents?: string[]
-  queryId?: string
-  deletedTimestamp?: number
-  deletedBefore?: number
-  deletedAfter?: number
-}
 
 export interface InteractionManager {
   createQuery: (input: QueryInput) => Query
@@ -32,7 +19,7 @@ export interface InteractionManager {
 
 export const getInteractionManager = (profileId: string): InteractionManager => {
   if (managers.has(profileId)) {
-    return managers.get(profileId)!
+    return managers.get(profileId) as InteractionManager
   }
 
   const db = getDatabaseService(profileId)

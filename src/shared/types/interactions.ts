@@ -43,6 +43,21 @@ export const interactionSchema = zod.object({
 
 export type Interaction = zod.infer<typeof interactionSchema>
 
+export const searchOptionsSchema = zod.object({
+  timestamp: zod.number().optional(),
+  before: zod.number().optional(),
+  after: zod.number().optional(),
+  contextId: zod.string().optional(),
+  queryType: zod.string().optional(),
+  responseAgents: zod.array(zod.string()).optional(),
+  queryId: zod.string().optional(),
+  deletedTimestamp: zod.number().optional(),
+  deletedBefore: zod.number().optional(),
+  deletedAfter: zod.number().optional(),
+})
+
+export type SearchOptions = zod.infer<typeof searchOptionsSchema>
+
 export const queryFromInteraction = (interaction: Interaction): Query => {
   return {
     id: interaction.queryId,
