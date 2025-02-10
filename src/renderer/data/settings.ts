@@ -12,6 +12,7 @@ export const useSettings = <T extends Settings>(profileId: string, scope: string
     readSettings()
   }, [scope, profileId])
   return [settings, (settings: T) => {
+    setSettings(settings)
     window.electron.settings.write(profileId, scope, settings)
   }]
 }

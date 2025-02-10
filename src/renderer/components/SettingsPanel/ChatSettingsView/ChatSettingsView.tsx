@@ -37,24 +37,10 @@ const ChatSettings = ({ profile }: Props) => {
     CHAT_SETTINGS,
     ChatSettingsSchema
   );
-
-  const handleAISettingsChange = async (
-    field: "provider" | "apiKey" | "endpoint" | "model",
-    value: string
-  ) => {
-    const newSettings = { ...settings };
-
-    if (field === "provider") {
-      newSettings.provider = value as ChatProvider;
-    } else {
-      newSettings[settings.provider] = {
-        ...newSettings[settings.provider],
-        [field]: value,
-      };
-    }
-
-    setSettings(newSettings);
-  };
+  const handleProviderChange = (provider: ChatProvider) => {
+    setSettings({ ...settings, provider })
+    window.electron.settings.write(profile.id, CHAT_SETTINGS, settings)
+  }
 
   const renderAISettings = () => {
     switch (settings.provider) {
@@ -62,14 +48,9 @@ const ChatSettings = ({ profile }: Props) => {
         return (
           <OpenAISettings
             settings={settings.openai}
-            onChange={(settings) => {
-              const newSettings = { ...settings, openai: settings };
+            onChange={(openai) => {
+              const newSettings = { ...settings, openai };
               setSettings(newSettings);
-              window.electron.settings.write(
-                profile?.id,
-                CHAT_SETTINGS,
-                newSettings
-              );
             }}
           />
         );
@@ -77,14 +58,9 @@ const ChatSettings = ({ profile }: Props) => {
         return (
           <DeepSeekSettingsPanel
             settings={settings.deepseek}
-            onChange={(settings) => {
-              const newSettings = { ...settings, deepseek: settings };
+            onChange={(deepseek) => {
+              const newSettings = { ...settings, deepseek };
               setSettings(newSettings);
-              window.electron.settings.write(
-                profile?.id,
-                CHAT_SETTINGS,
-                newSettings
-              );
             }}
           />
         );
@@ -92,14 +68,9 @@ const ChatSettings = ({ profile }: Props) => {
         return (
           <AzureSettingsPanel
             settings={settings.azure}
-            onChange={(settings) => {
-              const newSettings = { ...settings, azure: settings };
+            onChange={(azure) => {
+              const newSettings = { ...settings, azure };
               setSettings(newSettings);
-              window.electron.settings.write(
-                profile?.id,
-                CHAT_SETTINGS,
-                newSettings
-              );
             }}
           />
         );
@@ -131,9 +102,9 @@ const ChatSettings = ({ profile }: Props) => {
               <Select
                 value={settings.provider}
                 label={t("settings.ai.provider")}
-                onChange={(e) =>
-                  handleAISettingsChange("provider", e.target.value)
-                }
+                onChange={(e) => {
+                  handleProviderChange(e.target.value as ChatProvider)
+                }}
               >
                 <MenuItem value="openai">
                   {t("settings.ai.providers.openai")}
