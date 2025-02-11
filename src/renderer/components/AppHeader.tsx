@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import {
   Avatar, IconButton, Drawer, List, ListItem, 
   ListItemIcon, ListItemText, ListItemAvatar, 
@@ -9,24 +9,36 @@ import AddIcon from '@mui/icons-material/Add'
 import MenuIcon from '@mui/icons-material/Menu'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useLocation, useParams } from 'react-router-dom'
+import { useNavigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 
 import { useProfile, useProfiles } from '@/renderer/data/profile'
 
-import SettingsPanel from './SettingsPanel'
+interface AppHeaderProps {
+  showMenu?: boolean
+  showSettings?: boolean
+}
 
-export default function AppHeader() {
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
+export default function AppHeader({ showMenu, showSettings }: AppHeaderProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { profileId } = useParams<{ profileId: string }>()
   const [profile] = useProfile(profileId)
   const [profiles, createProfile] = useProfiles()
 
+  const handleCloseMenu = () => {
+    searchParams.delete('menu')
+    setSearchParams(searchParams)
+  }
+
+  const handleOpenSettings = () => {
+    searchParams.set('menu', '/settings')
+    setSearchParams(searchParams)
+  }
+
   const handleBack = () => {
-    setShowSettings(false)
+    handleCloseMenu()
   }
 
   if (location.pathname.endsWith('/settings') && profileId) {
@@ -66,7 +78,10 @@ export default function AppHeader() {
       }}
     >
       <IconButton 
-        onClick={() => setDrawerOpen(true)}
+        onClick={() => {
+          searchParams.set('menu', '/')
+          setSearchParams(searchParams)
+        }}
         sx={{ 
           p: 0.5,
           bgcolor: 'background.paper',
@@ -88,11 +103,8 @@ export default function AppHeader() {
 
       <Drawer
         anchor="right"
-        open={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false)
-          setShowSettings(false)
-        }}
+        open={showMenu}
+        onClose={handleCloseMenu}
       >
         <Box 
           sx={{ 
@@ -143,7 +155,7 @@ export default function AppHeader() {
 
                   <ListItem 
                     component="button"
-                    onClick={() => setShowSettings(true)}
+                    onClick={handleOpenSettings}
                     sx={{
                       width: '100%',
                       border: 'none',
@@ -188,7 +200,7 @@ export default function AppHeader() {
                       }}
                       onClick={() => {
                         navigate(`/profile/${p.id}/chat`)
-                        setDrawerOpen(false)
+                        handleCloseMenu()
                       }}
                     >
                       <ListItemAvatar>
@@ -216,7 +228,7 @@ export default function AppHeader() {
                   onClick={async () => {
                     const newProfile = await createProfile()
                     navigate(`/profile/${newProfile.id}/settings`)
-                    setDrawerOpen(false)
+                    handleCloseMenu()
                   }}
                 >
                   <ListItemIcon>
@@ -225,37 +237,6 @@ export default function AppHeader() {
                   <ListItemText primary={t('profile.addNew')} />
                 </ListItem>
               </List>
-            </Box>
-          </Box>
-
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              transform: showSettings ? 'translateX(0)' : 'translateX(100%)',
-              transition: 'transform 0.3s ease',
-              bgcolor: 'background.paper',
-            }}
-          >
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              p: 2,
-              borderBottom: '1px solid',
-              borderColor: 'divider'
-            }}>
-              <IconButton onClick={handleBack} sx={{ mr: 1 }}>
-                <ArrowBackIcon />
-              </IconButton>
-              <Typography variant="h6">
-                {t('settings.title')}
-              </Typography>
-            </Box>
-            <Box sx={{ p: 2 }}>
-              <SettingsPanel />
             </Box>
           </Box>
         </Box>
