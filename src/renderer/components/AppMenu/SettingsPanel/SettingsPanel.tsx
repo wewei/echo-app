@@ -1,10 +1,10 @@
 import React, { useRef, useState } from "react";
 import {
   Box,
-  Paper,
   List,
   ListItem,
   ListItemText,
+  ListItemIcon,
   Avatar,
   IconButton,
   TextField,
@@ -14,6 +14,7 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  Divider,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import EditIcon from "@mui/icons-material/Edit";
@@ -21,7 +22,8 @@ import PhotoIcon from "@mui/icons-material/Photo";
 import DoneIcon from "@mui/icons-material/Done";
 import CloseIcon from "@mui/icons-material/Close";
 import LogoutIcon from "@mui/icons-material/Logout";
-import { useParams, useNavigate } from "react-router-dom";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 
 import { useProfile } from "@/renderer/data/profile";
 import Loading from "@/renderer/components/Loading";
@@ -31,6 +33,7 @@ import ChatSettingsView from './ChatSettingsView'
 
 export default function SettingsPanel() {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isEditing, setIsEditing] = useState(false);
   const [avatarAssetId, setAvatarAssetId] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -60,6 +63,10 @@ export default function SettingsPanel() {
     }
   };
 
+  const handleBack = () => {
+    setSearchParams({ menu: "/" });
+  }
+
   const handleUpdateProfile = async () => {
     let avatarUrl = profile?.avatar;
     if (avatarAssetId) {
@@ -88,21 +95,51 @@ export default function SettingsPanel() {
   };
 
   return profile ? (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      {/* Back Button */}
+      <ListItem
+        component="button"
+        onClick={handleBack}
+        sx={{
+          width: 'fit-content',
+          px: 1,
+          py: 0.5,
+          mb: -1,
+          border: 'none',
+          borderRadius: 1,
+          bgcolor: 'transparent',
+          color: 'text.primary',
+          '&:hover': {
+            bgcolor: 'action.hover',
+          },
+        }}
+      >
+        <ListItemIcon sx={{ minWidth: 36 }}>
+          <ArrowBackIcon />
+        </ListItemIcon>
+        <ListItemText 
+          primary={t("common.back")}
+          primaryTypographyProps={{
+            variant: 'body2',
+            fontWeight: 500,
+          }}
+        />
+      </ListItem>
+
+      {/* Account Section */}
       <List>
-        <ListItem>
+        <ListItem sx={{ px: 0 }}>
           <Typography variant="subtitle2" color="text.secondary">
             {t("settings.account").toUpperCase()}
           </Typography>
         </ListItem>
-        <ListItem>
+        <ListItem sx={{ px: 0 }}>
           <Box
             sx={{
               display: "flex",
               alignItems: isEditing ? "flex-start" : "center",
               gap: 2,
-              flexGrow: 1,
-              py: 1,
+              width: '100%',
             }}
           >
             <Box sx={{ position: "relative" }}>
@@ -149,7 +186,7 @@ export default function SettingsPanel() {
                 />
               ) : (
                 <>
-                  <Typography variant="subtitle1">
+                  <Typography variant="subtitle1" fontWeight={500}>
                     {profile?.username}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -182,34 +219,48 @@ export default function SettingsPanel() {
                 <EditIcon />
               </IconButton>
             )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              hidden
-              accept="image/*"
-              onChange={handleFileSelect}
-            />
           </Box>
         </ListItem>
       </List>
 
+      <Divider />
+
+      {/* Chat Settings */}
       <ChatSettingsView profile={profile} />
+
+      <Divider />
+
+      {/* Search Settings */}
       <SearchSettingsView profile={profile} />
 
+      <Divider />
+
+      {/* About Section */}
       <List>
-        <ListItem>
+        <ListItem sx={{ px: 0 }}>
           <Typography variant="subtitle2" color="text.secondary">
             {t("settings.about").toUpperCase()}
           </Typography>
         </ListItem>
-        <ListItem>
+        <ListItem sx={{ px: 0 }}>
           <ListItemText
             primary={t("settings.version")}
             secondary={t("app.version")}
+            primaryTypographyProps={{
+              variant: 'body2',
+              color: 'text.primary'
+            }}
+            secondaryTypographyProps={{
+              variant: 'body2',
+              color: 'text.secondary'
+            }}
           />
         </ListItem>
       </List>
 
+      <Divider />
+
+      {/* Logout Section */}
       <List>
         <ListItem
           component="button"
@@ -217,9 +268,10 @@ export default function SettingsPanel() {
           sx={{
             color: "error.main",
             justifyContent: "space-between",
-            py: 2,
             width: "100%",
+            px: 0,
             border: "none",
+            borderRadius: 1,
             bgcolor: "transparent",
             "&:hover": {
               bgcolor: "action.hover",
@@ -228,24 +280,23 @@ export default function SettingsPanel() {
         >
           <ListItemText
             primary={t("settings.logout")}
-            slotProps={{
-              primary: {
-                variant: "body1",
-                fontWeight: 500,
-              },
+            primaryTypographyProps={{
+              variant: 'body1',
+              fontWeight: 500,
             }}
           />
           <LogoutIcon sx={{ color: "inherit" }} />
         </ListItem>
       </List>
 
+      {/* Logout Dialog */}
       <Dialog
         open={logoutDialogOpen}
         onClose={() => setLogoutDialogOpen(false)}
       >
-        <DialogTitle>{t("settings.logout.confirm.title")}</DialogTitle>
+        <DialogTitle>{t("settings.logoutConfirmTitle")}</DialogTitle>
         <DialogContent>
-          <Typography>{t("settings.logout.confirm.message")}</Typography>
+          <Typography>{t("settings.logoutConfirmMessage")}</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setLogoutDialogOpen(false)}>
@@ -256,7 +307,15 @@ export default function SettingsPanel() {
           </Button>
         </DialogActions>
       </Dialog>
-    </>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        hidden
+        accept="image/*"
+        onChange={handleFileSelect}
+      />
+    </Box>
   ) : (
     <Loading />
   );

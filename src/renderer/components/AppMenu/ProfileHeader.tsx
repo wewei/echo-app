@@ -14,7 +14,7 @@ const ProfileHeader = ({ profile, onOpenSettings }: ProfileHeaderProps) => {
   const { t } = useTranslation()
 
   return profile ? (
-    <Box sx={{ px: 2, mb: 2 }}>
+    <Box>
       <Box sx={{
         display: 'flex',
         alignItems: 'center',
@@ -23,7 +23,7 @@ const ProfileHeader = ({ profile, onOpenSettings }: ProfileHeaderProps) => {
       }}>
         <Avatar
           src={profile.avatar}
-          sx={{ width: 64, height: 64 }}
+          sx={{ width: 56, height: 56 }}
         />
         <Box>
           <Typography variant="h6">
@@ -44,6 +44,7 @@ const ProfileHeader = ({ profile, onOpenSettings }: ProfileHeaderProps) => {
         sx={{
           width: '100%',
           border: 'none',
+          borderRadius: 1,
           bgcolor: 'transparent',
           color: 'text.primary',
           '&:hover': {

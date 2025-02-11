@@ -15,7 +15,7 @@ const ProfileList = () =>  {
   }
 
   return (
-    <List sx={{ pt: 0 }}>
+    <List>
       {profiles
         .filter(p => p.id !== currentProfileId)
         .map(p => (
@@ -25,6 +25,7 @@ const ProfileList = () =>  {
             sx={{
               width: '100%',
               border: 'none',
+              borderRadius: 1,
               bgcolor: 'transparent',
               color: 'text.primary',
               '&:hover': {
@@ -49,6 +50,7 @@ const ProfileList = () =>  {
         sx={{
           width: '100%',
           border: 'none',
+          borderRadius: 1,
           bgcolor: 'transparent',
           color: 'text.primary',
           '&:hover': {
