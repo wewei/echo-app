@@ -1,9 +1,7 @@
 import { ipcMain } from 'electron'
 
-import { QueryInput, ResponseInput } from '@/shared/types/interactions'
-import { IPC_CHANNELS } from '@/shared/types/interactions'
-
-import { getInteractionManager, type SearchOptions } from '@/main/services/interactionManager'
+import { QueryInput, ResponseInput, SearchOptions, IPC_CHANNELS } from '@/shared/types/interactions'
+import { getInteractionManager } from '@/main/services/interactionManager'
 
 export const registerInteractionHandlers = () => {
   ipcMain.handle(IPC_CHANNELS.CREATE_QUERY, 
