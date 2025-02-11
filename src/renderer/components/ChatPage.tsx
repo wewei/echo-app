@@ -1,7 +1,7 @@
-import React  from "react";
+import React, { useRef }  from "react";
 import { useSearchParams } from "react-router-dom";
 import SplitView from "./SplitView";
-import WebPanel from "./WebPanel";
+import WebPanel, { WebPanelRef } from "./WebPanel";
 import ChatPanel from "./ChatPanel";
 import MessageDetailPanel from "./MessageDetailPanel/MessageDetailPanel";
 
@@ -21,12 +21,17 @@ const matchMessageDetailUrl = (contextUrl: string): { profileId: string, message
 export default function ChatPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const contextUrl = searchParams.get("context");
+  const webPanelRef = useRef<WebPanelRef>(null);
 
   const handleLinkClick = (url: string) => {
     setSearchParams({ context: url })
+    if (url) {
+      webPanelRef.current?.addTab(url);
+    }
   }
 
   const messageDetail = matchMessageDetailUrl(contextUrl);
+
 
   return (
     <SplitView
@@ -36,9 +41,9 @@ export default function ChatPage() {
             profileId={messageDetail.profileId}
             messageId={messageDetail.messageId}
           />
-        ) : contextUrl ? (
-          <WebPanel contextUrl={contextUrl} />
-        ) : null
+        ) : (
+          <WebPanel ref={webPanelRef} />
+        )
       }
       rightContent={<ChatPanel handleLinkClick={handleLinkClick} />}
     />
