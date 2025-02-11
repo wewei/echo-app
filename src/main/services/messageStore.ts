@@ -3,6 +3,7 @@ import path from 'node:path'
 import fs from 'node:fs/promises'
 import { app } from 'electron'
 import type { Message, MessageQuery } from '@/shared/types/message'
+import { onProfileWillBeDeleted } from './profileManager'
 
 
 // 缓存数据库连接
@@ -225,3 +226,10 @@ app.on('will-quit', () => {
   }
   dbCache.clear()
 }) 
+
+onProfileWillBeDeleted((profileId) => {
+  if (dbCache.has(profileId)) {
+    dbCache.get(profileId)?.close()
+    dbCache.delete(profileId)
+  }
+})

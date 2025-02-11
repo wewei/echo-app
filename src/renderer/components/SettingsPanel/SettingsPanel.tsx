@@ -89,168 +89,163 @@ export default function SettingsPanel() {
 
   return profile ? (
     <>
-      <Paper>
-        <List>
-          <ListItem>
-            <Typography variant="subtitle2" color="text.secondary">
-              {t("settings.account").toUpperCase()}
-            </Typography>
-          </ListItem>
-          <ListItem>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: isEditing ? "flex-start" : "center",
-                gap: 2,
-                flexGrow: 1,
-                py: 1,
-              }}
-            >
-              <Box sx={{ position: "relative" }}>
-                <Avatar
-                  src={
-                    avatarAssetId
-                      ? `echo-asset:///${profile?.id}/${avatarAssetId}`
-                      : profile?.avatar
-                  }
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    bgcolor: "primary.main",
-                  }}
-                />
-                {isEditing && (
-                  <IconButton
-                    size="small"
-                    sx={{
-                      position: "absolute",
-                      right: -8,
-                      bottom: -8,
-                      backgroundColor: "background.paper",
-                      boxShadow: 1,
-                      "&:hover": {
-                        backgroundColor: "action.hover",
-                      },
-                    }}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <PhotoIcon fontSize="small" />
-                  </IconButton>
-                )}
-              </Box>
-              <Box sx={{ flexGrow: 1 }}>
-                {isEditing ? (
-                  <TextField
-                    autoFocus
-                    size="small"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    fullWidth
-                    label={t("profile.create.username")}
-                  />
-                ) : (
-                  <>
-                    <Typography variant="subtitle1">
-                      {profile?.username}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {t("profile.current")}
-                    </Typography>
-                  </>
-                )}
-              </Box>
-              {isEditing ? (
-                <Box sx={{ display: "flex", gap: 1, pt: 0.5 }}>
-                  <IconButton
-                    onClick={handleUpdateProfile}
-                    color="primary"
-                    size="small"
-                  >
-                    <DoneIcon />
-                  </IconButton>
-                  <IconButton onClick={handleCancel} size="small">
-                    <CloseIcon />
-                  </IconButton>
-                </Box>
-              ) : (
+      <List>
+        <ListItem>
+          <Typography variant="subtitle2" color="text.secondary">
+            {t("settings.account").toUpperCase()}
+          </Typography>
+        </ListItem>
+        <ListItem>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: isEditing ? "flex-start" : "center",
+              gap: 2,
+              flexGrow: 1,
+              py: 1,
+            }}
+          >
+            <Box sx={{ position: "relative" }}>
+              <Avatar
+                src={
+                  avatarAssetId
+                    ? `echo-asset:///${profile?.id}/${avatarAssetId}`
+                    : profile?.avatar
+                }
+                sx={{
+                  width: 56,
+                  height: 56,
+                  bgcolor: "primary.main",
+                }}
+              />
+              {isEditing && (
                 <IconButton
-                  onClick={() => {
-                    setUsername(profile?.username || "");
-                    setIsEditing(true);
-                  }}
                   size="small"
+                  sx={{
+                    position: "absolute",
+                    right: -8,
+                    bottom: -8,
+                    backgroundColor: "background.paper",
+                    boxShadow: 1,
+                    "&:hover": {
+                      backgroundColor: "action.hover",
+                    },
+                  }}
+                  onClick={() => fileInputRef.current?.click()}
                 >
-                  <EditIcon />
+                  <PhotoIcon fontSize="small" />
                 </IconButton>
               )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={handleFileSelect}
-              />
             </Box>
-          </ListItem>
-        </List>
-      </Paper>
+            <Box sx={{ flexGrow: 1 }}>
+              {isEditing ? (
+                <TextField
+                  autoFocus
+                  size="small"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  fullWidth
+                  label={t("profile.create.username")}
+                />
+              ) : (
+                <>
+                  <Typography variant="subtitle1">
+                    {profile?.username}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("profile.current")}
+                  </Typography>
+                </>
+              )}
+            </Box>
+            {isEditing ? (
+              <Box sx={{ display: "flex", gap: 1, pt: 0.5 }}>
+                <IconButton
+                  onClick={handleUpdateProfile}
+                  color="primary"
+                  size="small"
+                >
+                  <DoneIcon />
+                </IconButton>
+                <IconButton onClick={handleCancel} size="small">
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            ) : (
+              <IconButton
+                onClick={() => {
+                  setUsername(profile?.username || "");
+                  setIsEditing(true);
+                }}
+                size="small"
+              >
+                <EditIcon />
+              </IconButton>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              hidden
+              accept="image/*"
+              onChange={handleFileSelect}
+            />
+          </Box>
+        </ListItem>
+      </List>
 
       <ChatSettingsView profile={profile} />
       <SearchSettingsView profile={profile} />
 
-      <Paper>
-        <List>
-          <ListItem>
-            <Typography variant="subtitle2" color="text.secondary">
-              {t("settings.about").toUpperCase()}
-            </Typography>
-          </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={t("settings.version")}
-              secondary={t("app.version")}
-            />
-          </ListItem>
-        </List>
-      </Paper>
+      <List>
+        <ListItem>
+          <Typography variant="subtitle2" color="text.secondary">
+            {t("settings.about").toUpperCase()}
+          </Typography>
+        </ListItem>
+        <ListItem>
+          <ListItemText
+            primary={t("settings.version")}
+            secondary={t("app.version")}
+          />
+        </ListItem>
+      </List>
 
-      <Paper>
-        <List>
-          <ListItem
-            component="button"
-            onClick={() => setLogoutDialogOpen(true)}
-            sx={{
-              color: "error.main",
-              justifyContent: "space-between",
-              py: 2,
-              width: "100%",
-              border: "none",
-              bgcolor: "transparent",
-              "&:hover": {
-                bgcolor: "action.hover",
+      <List>
+        <ListItem
+          component="button"
+          onClick={() => setLogoutDialogOpen(true)}
+          sx={{
+            color: "error.main",
+            justifyContent: "space-between",
+            py: 2,
+            width: "100%",
+            border: "none",
+            bgcolor: "transparent",
+            "&:hover": {
+              bgcolor: "action.hover",
+            },
+          }}
+        >
+          <ListItemText
+            primary={t("settings.logout")}
+            slotProps={{
+              primary: {
+                variant: "body1",
+                fontWeight: 500,
               },
             }}
-          >
-            <ListItemText
-              primary={t("settings.logout")}
-              slotProps={{
-                primary: {
-                  variant: "body1",
-                  fontWeight: 500,
-                },
-              }}
-            />
-            <LogoutIcon sx={{ color: "inherit" }} />
-          </ListItem>
-        </List>
-      </Paper>
+          />
+          <LogoutIcon sx={{ color: "inherit" }} />
+        </ListItem>
+      </List>
 
-      <Dialog open={logoutDialogOpen} onClose={() => setLogoutDialogOpen(false)}>
+      <Dialog
+        open={logoutDialogOpen}
+        onClose={() => setLogoutDialogOpen(false)}
+      >
         <DialogTitle>{t("settings.logout.confirm.title")}</DialogTitle>
         <DialogContent>
-          <Typography>
-            {t("settings.logout.confirm.message")}
-          </Typography>
+          <Typography>{t("settings.logout.confirm.message")}</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setLogoutDialogOpen(false)}>

@@ -32,7 +32,7 @@ export default function SearchSettingsView({ profile }: Props) {
   }
 
   return settings ? (
-    <Paper>
+    <>
       <List>
         <ListItem>
           <Typography variant="subtitle2" color="text.secondary">
@@ -75,7 +75,7 @@ export default function SearchSettingsView({ profile }: Props) {
           </Box>
         </ListItem>
       </List>
-    </Paper>
+    </>
   ) : (
     <Loading />
   );

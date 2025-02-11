@@ -80,49 +80,47 @@ const ChatSettings = ({ profile }: Props) => {
   };
 
   return settings ? (
-    <Paper>
-      <List>
-        <ListItem>
-          <Typography variant="subtitle2" color="text.secondary">
-            {t("settings.ai.title").toUpperCase()}
-          </Typography>
-        </ListItem>
-        <ListItem>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-              width: "100%",
-              py: 1,
-            }}
-          >
-            <FormControl fullWidth size="small">
-              <InputLabel>{t("settings.ai.provider")}</InputLabel>
-              <Select
-                value={settings.provider}
-                label={t("settings.ai.provider")}
-                onChange={(e) => {
-                  handleProviderChange(e.target.value as ChatProvider)
-                }}
-              >
-                <MenuItem value="openai">
-                  {t("settings.ai.providers.openai")}
-                </MenuItem>
-                <MenuItem value="deepseek">
-                  {t("settings.ai.providers.deepseek")}
-                </MenuItem>
-                <MenuItem value="azure">
-                  {t("settings.ai.providers.azure")}
-                </MenuItem>
-              </Select>
-            </FormControl>
+    <List>
+      <ListItem>
+        <Typography variant="subtitle2" color="text.secondary">
+          {t("settings.ai.title").toUpperCase()}
+        </Typography>
+      </ListItem>
+      <ListItem>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            width: "100%",
+            py: 1,
+          }}
+        >
+          <FormControl fullWidth size="small">
+            <InputLabel>{t("settings.ai.provider")}</InputLabel>
+            <Select
+              value={settings.provider}
+              label={t("settings.ai.provider")}
+              onChange={(e) => {
+                handleProviderChange(e.target.value as ChatProvider);
+              }}
+            >
+              <MenuItem value="openai">
+                {t("settings.ai.providers.openai")}
+              </MenuItem>
+              <MenuItem value="deepseek">
+                {t("settings.ai.providers.deepseek")}
+              </MenuItem>
+              <MenuItem value="azure">
+                {t("settings.ai.providers.azure")}
+              </MenuItem>
+            </Select>
+          </FormControl>
 
-            {renderAISettings()}
-          </Box>
-        </ListItem>
-      </List>
-    </Paper>
+          {renderAISettings()}
+        </Box>
+      </ListItem>
+    </List>
   ) : (
     <Loading />
   );

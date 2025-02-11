@@ -1,34 +1,54 @@
 import React from 'react'
-import { Box, List, ListItem, ListItemAvatar, ListItemText, Typography, Avatar, Divider } from '@mui/material'
-import { Profile } from '@/shared/types/profile'
-import { useTranslation } from 'react-i18next'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { Box, Divider } from '@mui/material'
 import ProfileHeader from './ProfileHeader'
+import ProfileList from './ProfileList'
+import SettingsPanel from '../SettingsPanel'
+import { useProfile } from '@/renderer/data/profile'
+import { useParams, useSearchParams } from 'react-router-dom'
 
-export type AppMenuProps = {
-  path: string
-  currentProfileId: string
-  profiles: Profile[]
-  onPathChange: (path: string) => void
-  onSwitchProfile: (profileId: string) => void
-  onOpenSettings: () => void
-  onCreateProfile: () => void
-}
+export default function AppMenu() {
+  const profileId = useParams().profileId;
+  const [profile] = useProfile(profileId);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const path = searchParams.get("menu");
 
-export default function AppMenu({ path, onPathChange, currentProfileId, profiles, onSwitchProfile, onOpenSettings, onCreateProfile }: AppMenuProps) {
-  const { t } = useTranslation()
-  const currentProfile = profiles.find(p => p.id === currentProfileId)
 
-  if (path === '/') {
-    return (
-      <>
-        <ProfileHeader
-          profile={currentProfile}
-          onOpenSettings={onOpenSettings}
-        />
-        <Divider />
-      </>
-    )
-  }
-
+  return (
+    <Box
+      sx={{
+        width: 420,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+        overflow: "hidden",
+        bgcolor: "background.paper",
+      }}
+    >
+      <ProfileHeader
+        profile={profile}
+        onOpenSettings={() => {
+          setSearchParams({ menu: "/settings" });
+        }}
+      />
+      <Divider />
+      <ProfileList />
+      <Box
+        sx={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 1200,
+          bgcolor: "background.paper",
+          transform:
+            path === "/settings" ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 0.3s ease-in-out",
+        }}
+      >
+        <SettingsPanel />
+      </Box>
+    </Box>
+  );
 }

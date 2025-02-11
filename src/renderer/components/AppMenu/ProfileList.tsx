@@ -2,20 +2,22 @@ import React from 'react'
 import { List, ListItem, ListItemAvatar, ListItemText, Avatar, ListItemIcon } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { useTranslation } from 'react-i18next'
-import { Profile } from '@/shared/types/profile'
+import { useProfiles } from '@/renderer/data/profile'
+import { useNavigate, useParams } from 'react-router-dom'
 
-interface ProfileListProps {
-  profiles: Profile[]
-  onSwitchProfile: (profileId: string) => void
-  onCreateProfile: () => void
-}
-
-const ProfileList = ({ profiles, onSwitchProfile, onCreateProfile }: ProfileListProps) =>  {
+const ProfileList = () =>  {
   const { t } = useTranslation()
+  const [profiles, createProfile] = useProfiles();
+  const currentProfileId = useParams().profileId;
+  const navigate = useNavigate();
+  const onProfileClick = (profileId: string) => {
+    navigate(`/profile/${profileId}`);
+  }
 
   return (
     <List sx={{ pt: 0 }}>
       {profiles
+        .filter(p => p.id !== currentProfileId)
         .map(p => (
           <ListItem
             component="button"
@@ -29,7 +31,7 @@ const ProfileList = ({ profiles, onSwitchProfile, onCreateProfile }: ProfileList
                 bgcolor: 'action.hover'
               }
             }}
-            onClick={() => onSwitchProfile(p.id)}
+            onClick={() => onProfileClick(p.id)}
           >
             <ListItemAvatar>
               <Avatar src={p.avatar} />
@@ -53,7 +55,10 @@ const ProfileList = ({ profiles, onSwitchProfile, onCreateProfile }: ProfileList
             bgcolor: 'action.hover'
           }
         }}
-        onClick={onCreateProfile}
+        onClick={async () => {
+          const { id } = await createProfile();
+          navigate(`/profile/${id}?menu=/settings`);
+        }}
       >
         <ListItemIcon>
           <AddIcon />

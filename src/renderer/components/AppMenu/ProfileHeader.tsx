@@ -3,6 +3,7 @@ import { Box, Avatar, Typography, ListItem, ListItemIcon, ListItemText } from '@
 import SettingsIcon from '@mui/icons-material/Settings'
 import { Profile } from '@/shared/types/profile'
 import { useTranslation } from 'react-i18next'
+import Loading from '@/renderer/components/Loading'
 
 type ProfileHeaderProps = {
   profile: Profile
@@ -12,7 +13,7 @@ type ProfileHeaderProps = {
 const ProfileHeader = ({ profile, onOpenSettings }: ProfileHeaderProps) => {
   const { t } = useTranslation()
 
-  return (
+  return profile ? (
     <Box sx={{ px: 2, mb: 2 }}>
       <Box sx={{
         display: 'flex',
@@ -56,7 +57,7 @@ const ProfileHeader = ({ profile, onOpenSettings }: ProfileHeaderProps) => {
         <ListItemText primary={t('common.settings')} />
       </ListItem>
     </Box>
-  )
+  ) : <Loading />
 }
 
 export default ProfileHeader

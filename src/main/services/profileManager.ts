@@ -8,10 +8,11 @@ import { eventSource } from '@/shared/utils/event'
 const PROFILES_FILE = 'profiles.json'
 
 const [notifyProfileCreated, onProfileCreated] = eventSource<[Profile]>()
+const [notifyProfileWillBeDeleted, onProfileWillBeDeleted] = eventSource<[string]>()
 const [notifyProfileDeleted, onProfileDeleted] = eventSource<[string]>()
 const [notifyProfileUpdated, onProfileUpdated] = eventSource<[Profile]>()
 
-export { onProfileCreated, onProfileDeleted, onProfileUpdated }
+export { onProfileCreated, onProfileWillBeDeleted, onProfileDeleted, onProfileUpdated }
 
 // 获取配置文件路径
 export const getProfilesPath = () => path.join(app.getPath('userData'), PROFILES_FILE)
@@ -72,6 +73,8 @@ export const deleteProfile = async (profileId: string): Promise<void> => {
   const profiles = await readProfiles()
   const newProfiles = profiles.profiles.filter(p => p.id !== profileId)
   
+  notifyProfileWillBeDeleted(profileId)
+
   await removeProfileDir(profileId)
   await saveProfiles({ profiles: newProfiles })
 

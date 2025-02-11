@@ -26,7 +26,7 @@ export default function DefaultView() {
       ''  // 空头像
     )
 
-    navigate(`/profile/${profile.id}/settings`)
+    navigate(`/profile/${profile.id}?menu=/settings`)
   }
 
   return loading ? <Loading /> : (
