@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import type { Profile } from "@/shared/types/profile";
@@ -6,19 +6,35 @@ import type { Profile } from "@/shared/types/profile";
 const profiles = new Map<string, Profile>();
 
 export const useProfile = (
-  profileId: string
+  profileId: string | null
 ): [Profile | null, (updater: (prev: Profile) => Profile) => void] => {
-  const [profile, setProfile] = useState<Profile | null>(profiles.get(profileId));
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const profileIdRef = useRef<string | null>(null)
+
   useEffect(() => {
     const loadProfile = async () => {
-      const profile = await window.electron.profile.get(profileId);
-      profiles.set(profileId, profile);
-      setProfile(profile);
-    };
-    if (!profile) {
-      loadProfile();
+      const pro = await window.electron.profile.get(profileId)
+      profiles.set(profileId, pro)
+      if (profileIdRef.current === profileId) {
+        setProfile(pro)
+      }
     }
-  }, [profileId]);
+
+    profileIdRef.current = profileId
+
+    if (profileId && !profile) {
+      const pro = profiles.get(profileId)
+      if (pro) {
+        setProfile(pro)
+      } else {
+        loadProfile()
+      }
+    }
+    return () => {
+      profileIdRef.current = null
+      setProfile(null)
+    }
+  }, [profileId])
 
   return [
     profile,
@@ -66,8 +82,10 @@ export const useProfiles = (): [
   ];
 };
 
+export const useCurrentProfileId = (): string | null => useParams().profileId ?? null;
+
 export const useCurrentProfile = (): Profile | null => {
-  const profileId = useParams().profileId;
+  const profileId = useCurrentProfileId();
   const [profile] = useProfile(profileId);
   return profile;
 };
