@@ -1,55 +1,27 @@
-import React, { useRef }  from "react";
-import { useSearchParams } from "react-router-dom";
+import React from "react";
+import { useSearchParams, useNavigate, useParams } from "react-router-dom";
 import SplitView from "./SplitView";
-import WebPanel, { WebPanelRef } from "./WebPanel";
+import ContentPanel from "./ContentPanel";
 import ChatPanel from "./ChatPanel";
-import MessageDetailPanel from "./MessageDetailPanel/MessageDetailPanel";
 import { Drawer, IconButton, Box } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import AppMenu from "./AppMenu";
 
-const matchMessageDetailUrl = (contextUrl: string): { profileId: string, messageId: string } | null => {
-  if (!contextUrl) {
-    return null;
-  }
-  const url = new URL(contextUrl);
-  if (url.protocol === "echo-message:") {
-    const profileId = url.pathname.split("/")[1];
-    const messageId = url.pathname.split("/")[2];
-    return profileId && messageId ? { profileId, messageId } : null;
-  }
-  return null;
-}
-
 export default function MainPage() {
+  const { profileId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const contextUrl = searchParams.get("context");
+  const navigate = useNavigate();
   const menuPath = searchParams.get("menu");
-  const webPanelRef = useRef<WebPanelRef>(null);
 
   const handleLinkClick = (url: string) => {
-    setSearchParams({ context: url })
-    console.log(url)
-    if (url) {
-      webPanelRef.current?.addTab(url);
-    }
+    // setSearchParams({ context: url });
+    navigate(`/profile/${profileId}?context=${url}`);
   }
-
-  const messageDetail = matchMessageDetailUrl(contextUrl);
 
   return (
     <Box sx={{ height: "100%", position: "fixed", top: 0, left: 0, right: 0, bottom: 0   }}>
       <SplitView
-        leftContent={
-          messageDetail ? (
-            <MessageDetailPanel
-              profileId={messageDetail.profileId}
-              messageId={messageDetail.messageId}
-            />
-          ) : contextUrl ? (
-            <WebPanel ref={webPanelRef} />
-          ) : null 
-        }
+        leftContent={<ContentPanel />}
         rightContent={<ChatPanel handleLinkClick={handleLinkClick} />}
       />
       <IconButton
@@ -71,4 +43,3 @@ export default function MainPage() {
     </Box>
   );
 }
-

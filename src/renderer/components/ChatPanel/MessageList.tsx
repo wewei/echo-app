@@ -95,8 +95,15 @@ function MessageItem({
                 <Link
                   component="a"
                   onClick={(e) => {
-                    e.preventDefault()
-                    onLinkClick?.(props.href || '')
+                    e.preventDefault();
+                    //TODO: replace queryId instead of messageId once the queryId is implemented
+                    setSearchParams(prev => {
+                      const newParams = new URLSearchParams(prev);
+                      newParams.set('context', props.href || '');
+                      newParams.set('messageId', null);
+                      newParams.set('queryId', message.uuid);
+                      return newParams;
+                    });
                   }}
                   {...props}
                 />
@@ -123,7 +130,7 @@ function MessageItem({
             },
           }}
           onClick={() => {
-            setSearchParams({ context: `echo-message:///${profileId}/${message.uuid}` })
+            setSearchParams({ queryId: message.uuid, messageId: message.uuid })
           }}
         >
           <OpenInFullIcon fontSize="small" />

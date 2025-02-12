@@ -1,4 +1,3 @@
-import WebPanel, { WebPanelRef } from './WebPanel'
+import WebPanel from './WebPanel'
 
-export { WebPanelRef }
 export default WebPanel
