@@ -14,7 +14,7 @@ export default function DefaultView() {
       const profiles = await window.electron.profile.getAll()
       setLoading(false)
       if (profiles.length > 0) {
-        navigate(`/profile/${profiles[0].id}/chat`)
+        navigate(`/profile/${profiles[0].id}`)
       }
     }
     loadProfile()
