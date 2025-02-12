@@ -29,20 +29,6 @@ export type QueryInput = Omit<Query, "id">
 
 export type ResponseInput = Omit<Response, "id">
 
-export const interactionSchema = zod.object({
-  responseId: zod.string().uuid(),
-  responseContent: zod.string(),
-  responseTimestamp: zod.number(),
-  responseAgents: zod.string(),
-  queryId: zod.string().uuid(),
-  queryContent: zod.string(),
-  queryTimestamp: zod.number(),
-  queryType: queryTypeSchema,
-  queryDeletedTimestamp: zod.number().optional(),
-})
-
-export type Interaction = zod.infer<typeof interactionSchema>
-
 export const searchOptionsSchema = zod.object({
   timestamp: zod.number().optional(),
   before: zod.number().optional(),
@@ -58,47 +44,12 @@ export const searchOptionsSchema = zod.object({
 
 export type SearchOptions = zod.infer<typeof searchOptionsSchema>
 
-export const queryFromInteraction = (interaction: Interaction): Query => {
-  return {
-    id: interaction.queryId,
-    content: interaction.queryContent,
-    timestamp: interaction.queryTimestamp,
-    type: interaction.queryType,
-    deletedTimestamp: interaction.queryDeletedTimestamp,
-  }
-}
-
-export const responseFromInteraction = (interaction: Interaction): Response => {
-  return {
-    id: interaction.responseId,
-    content: interaction.responseContent,
-    timestamp: interaction.responseTimestamp,
-    agents: interaction.responseAgents,
-  }
-}
-
-export const interactionFromQueryAndResponse = (query: Query, response: Response): Interaction => {
-  return {
-    queryId: query.id,
-    queryContent: query.content,
-    queryTimestamp: query.timestamp,
-    queryType: query.type,
-    responseId: response.id,
-    responseContent: response.content,
-    responseTimestamp: response.timestamp,
-    responseAgents: response.agents,
-  }
-}
-
 export const IPC_CHANNELS = {
   CREATE_QUERY: 'interaction:createQuery',
   CREATE_RESPONSE: 'interaction:createResponse',
   APPEND_RESPONSE: 'interaction:appendResponse',
   SOFT_DELETE_QUERY: 'interaction:softDeleteQuery',
   HARD_DELETE_QUERY: 'interaction:hardDeleteQuery',
-  SEARCH_INTERACTIONS: 'interaction:searchInteractions',
-  SEARCH_INTERACTION_IDS: 'interaction:searchInteractionIds',
   GET_RESPONSES: 'interaction:getResponses',
   GET_QUERIES: 'interaction:getQueries',
-  GET_INTERACTIONS: 'interaction:getInteractions',
 } as const

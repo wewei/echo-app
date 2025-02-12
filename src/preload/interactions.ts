@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron'
-import type { QueryInput, ResponseInput, Query, Response, Interaction, SearchOptions } from '@/shared/types/interactions'
+import type { QueryInput, ResponseInput, Query, Response } from '@/shared/types/interactions'
 import { IPC_CHANNELS } from '@/shared/types/interactions'
 
 export const interactionAPI = {
@@ -18,20 +18,11 @@ export const interactionAPI = {
   hardDeleteQuery: (profileId: string, id: string): Promise<void> =>
     ipcRenderer.invoke(IPC_CHANNELS.HARD_DELETE_QUERY, profileId, id),
 
-  searchInteractions: (profileId: string, options: SearchOptions): Promise<Interaction[]> =>
-    ipcRenderer.invoke(IPC_CHANNELS.SEARCH_INTERACTIONS, profileId, options),
-
-  searchInteractionIds: (profileId: string, options: SearchOptions): Promise<string[]> =>
-    ipcRenderer.invoke(IPC_CHANNELS.SEARCH_INTERACTION_IDS, profileId, options),
-
   getResponses: (profileId: string, ids: string[]): Promise<Response[]> =>
     ipcRenderer.invoke(IPC_CHANNELS.GET_RESPONSES, profileId, ids),
 
   getQueries: (profileId: string, ids: string[]): Promise<Query[]> =>
     ipcRenderer.invoke(IPC_CHANNELS.GET_QUERIES, profileId, ids),
-
-  getInteractions: (profileId: string, ids: string[]): Promise<Interaction[]> =>
-    ipcRenderer.invoke(IPC_CHANNELS.GET_INTERACTIONS, profileId, ids)
 }
 
 export type InteractionApi = typeof interactionAPI

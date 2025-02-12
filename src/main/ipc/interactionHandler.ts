@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 
-import { QueryInput, ResponseInput, SearchOptions, IPC_CHANNELS } from '@/shared/types/interactions'
+import { QueryInput, ResponseInput, IPC_CHANNELS } from '@/shared/types/interactions'
 import { getInteractionManager } from '@/main/services/interactionManager'
 
 export const registerInteractionHandlers = () => {
@@ -34,18 +34,6 @@ export const registerInteractionHandlers = () => {
     }
   )
 
-  ipcMain.handle(IPC_CHANNELS.SEARCH_INTERACTIONS,
-    (_, profileId: string, options: SearchOptions) => {
-      return getInteractionManager(profileId).searchInteractions(options)
-    }
-  )
-
-  ipcMain.handle(IPC_CHANNELS.SEARCH_INTERACTION_IDS,
-    (_, profileId: string, options: SearchOptions) => {
-      return getInteractionManager(profileId).searchInteractionIds(options)
-    }
-  )
-
   ipcMain.handle(IPC_CHANNELS.GET_RESPONSES,
     (_, profileId: string, ids: string[]) => {
       return getInteractionManager(profileId).getResponses(ids)
@@ -55,12 +43,6 @@ export const registerInteractionHandlers = () => {
   ipcMain.handle(IPC_CHANNELS.GET_QUERIES,
     (_, profileId: string, ids: string[]) => {
       return getInteractionManager(profileId).getQueries(ids)
-    }
-  )
-
-  ipcMain.handle(IPC_CHANNELS.GET_INTERACTIONS,
-    (_, profileId: string, ids: string[]) => {
-      return getInteractionManager(profileId).getInteractions(ids)
     }
   )
 } 

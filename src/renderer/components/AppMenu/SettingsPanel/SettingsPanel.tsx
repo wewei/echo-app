@@ -33,7 +33,7 @@ import ChatSettingsView from './ChatSettingsView'
 
 export default function SettingsPanelRp() {
   const { t } = useTranslation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [, setSearchParams] = useSearchParams();
   const [isEditing, setIsEditing] = useState(false);
   const [avatarAssetId, setAvatarAssetId] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);

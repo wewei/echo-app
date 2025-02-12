@@ -5,7 +5,7 @@ import { app } from 'electron'
 import Sqlite, { Database } from 'better-sqlite3'
 import { v4 as uuidv4 } from 'uuid'
 
-import { QueryInput, ResponseInput, Query, Response, Interaction } from '@/shared/types/interactions'
+import { QueryInput, ResponseInput, Query, Response } from '@/shared/types/interactions'
 import { getProfileDir } from '@/main/services/profileManager'
 
 // 数据库初始化函数
@@ -37,20 +37,6 @@ const initializeDb = (db: Database): void => {
       FOREIGN KEY (query) REFERENCES queries(id) ON DELETE CASCADE
     );
 
-    CREATE VIEW IF NOT EXISTS interaction_view AS
-    SELECT DISTINCT
-      r.id AS responseId,
-      r.content AS responseContent,
-      r.timestamp AS responseTimestamp,
-      r.agents AS responseAgents,
-      q.id AS queryId,
-      q.content AS queryContent,
-      q.timestamp AS queryTimestamp,
-      q.type AS queryType,
-      q.deletedTimestamp AS queryDeletedTimestamp
-    FROM responses r
-    LEFT JOIN queries q ON r.query = q.id
-    ORDER BY r.timestamp ASC
   `);
 }
 
@@ -160,183 +146,6 @@ const getResponse = (db: Database) => (id: string): Response | null => {
   return stmt.get(id) || null
 }
 
-// 添加辅助函数来处理搜索条件
-const buildSearchConditions = (options: {
-  timestamp?: number
-  before?: number
-  after?: number
-  contextId?: string
-  queryType?: string
-  responseAgents?: string[]
-  queryId?: string
-  deletedTimestamp?: number
-  deletedBefore?: number
-  deletedAfter?: number
-}): { conditions: string[], params: any[] } => {
-  const {
-    timestamp,
-    before = 0,
-    after = 0,
-    contextId,
-    queryType,
-    responseAgents,
-    queryId,
-    deletedTimestamp,
-    deletedBefore = 0,
-    deletedAfter = 0
-  } = options
-
-  const conditions: string[] = []
-  const params: any[] = []
-
-  if (timestamp) {
-    if (before > 0) {
-      conditions.push(`
-        r.timestamp <= ? AND
-        r.id IN (
-          SELECT id FROM responses 
-          WHERE timestamp <= ?
-          ORDER BY timestamp DESC 
-          LIMIT ?
-        )
-      `)
-      params.push(timestamp, timestamp, before)
-    }
-    if (after > 0) {
-      conditions.push(`
-        r.timestamp >= ? AND
-        r.id IN (
-          SELECT id FROM responses 
-          WHERE timestamp >= ?
-          ORDER BY timestamp ASC 
-          LIMIT ?
-        )
-      `)
-      params.push(timestamp, timestamp, after)
-    }
-  }
-
-  if (contextId) {
-    conditions.push(`
-      q.id IN (
-        SELECT query_id FROM query_contexts 
-        WHERE context_id = ?
-      )
-    `)
-    params.push(contextId)
-  }
-
-  if (queryType) {
-    conditions.push('q.type = ?')
-    params.push(queryType)
-  }
-
-  if (responseAgents?.length) {
-    conditions.push('r.agents IN (?)')
-    params.push(responseAgents.join(','))
-  }
-
-  if (queryId) {
-    conditions.push('q.id = ?')
-    params.push(queryId)
-  }
-
-  if (deletedTimestamp) {
-    if (deletedBefore > 0) {
-      conditions.push(`
-        (q.deletedTimestamp IS NOT NULL AND q.deletedTimestamp <= ? AND
-        q.id IN (
-          SELECT id FROM queries 
-          WHERE deletedTimestamp <= ?
-          ORDER BY deletedTimestamp DESC 
-          LIMIT ?
-        ))
-      `)
-      params.push(deletedTimestamp, deletedTimestamp, deletedBefore)
-    }
-    if (deletedAfter > 0) {
-      conditions.push(`
-        (q.deletedTimestamp IS NOT NULL AND q.deletedTimestamp >= ? AND
-        q.id IN (
-          SELECT id FROM queries 
-          WHERE deletedTimestamp >= ?
-          ORDER BY deletedTimestamp ASC 
-          LIMIT ?
-        ))
-      `)
-      params.push(deletedTimestamp, deletedTimestamp, deletedAfter)
-    }
-    if (deletedBefore === 0 && deletedAfter === 0) {
-      conditions.push('q.deletedTimestamp = ?')
-      params.push(deletedTimestamp)
-    }
-  } else if (deletedBefore === 0 && deletedAfter === 0) {
-    conditions.push('q.deletedTimestamp IS NULL')
-  }
-
-  return { conditions, params }
-}
-
-// 修改搜索函数使用辅助函数
-const searchInteractions = (db: Database) => (options: {
-  timestamp?: number
-  before?: number
-  after?: number
-  contextId?: string
-  queryType?: string
-  responseAgents?: string[]
-  queryId?: string
-  deletedTimestamp?: number
-  deletedBefore?: number
-  deletedAfter?: number
-}): Interaction[] => {
-  let sql = `
-    SELECT 
-      r.id as response_id,
-      r.content as response_content,
-      r.timestamp as response_timestamp,
-      r.agents as response_agents,
-      q.id as query_id,
-      q.content as query_content,
-      q.timestamp as query_timestamp,
-      q.type as query_type,
-      q.deletedTimestamp as query_deletedTimestamp
-    FROM responses r
-    LEFT JOIN queries q ON r.query = q.id
-  `
-
-  const { conditions, params } = buildSearchConditions(options)
-
-  if (conditions.length) {
-    sql += ' WHERE ' + conditions.join(' AND ')
-  }
-
-  sql += ' ORDER BY r.timestamp ASC'
-
-  const stmt = db.prepare(sql)
-  return stmt.all(...params) as Interaction[]
-}
-
-const getInteractionsByIds = (db: Database) => (ids: string[]): Interaction[] => {
-  if (ids.length === 0) return []
-  
-  const stmt = db.prepare(`
-    SELECT 
-      r.id as response_id,
-      r.content as response_content,
-      r.timestamp as response_timestamp,
-      r.agents as response_agents,
-      q.id as query_id,
-      q.content as query_content,
-      q.timestamp as query_timestamp,
-      q.type as query_type
-    FROM responses r
-    LEFT JOIN queries q ON r.query = q.id
-    WHERE r.id IN (${ids.map(() => '?').join(',')})
-  `)
-  return stmt.all(...ids) as Interaction[]
-}
-
 const getQueriesByIds = (db: Database) => (ids: string[]): Query[] => {
   if (ids.length === 0) return []
   
@@ -355,36 +164,6 @@ const getResponsesByIds = (db: Database) => (ids: string[]): Response[] => {
     WHERE id IN (${ids.map(() => '?').join(',')})
   `)
   return stmt.all(...ids) as Response[]
-}
-
-// 修改 ID 搜索函数使用相同的辅助函数
-const searchInteractionIds = (db: Database) => (options: {
-  timestamp?: number
-  before?: number
-  after?: number
-  contextId?: string
-  queryType?: string
-  responseAgents?: string[]
-  queryId?: string
-  deletedTimestamp?: number
-  deletedBefore?: number
-  deletedAfter?: number
-}): string[] => {
-  let sql = `
-    SELECT DISTINCT r.id
-    FROM responses r
-    LEFT JOIN queries q ON r.query = q.id
-  `
-
-  const { conditions, params } = buildSearchConditions(options)
-
-  if (conditions.length) {
-    sql += ' WHERE ' + conditions.join(' AND ')
-  }
-
-  sql += ' ORDER BY r.timestamp ASC'
-  const stmt = db.prepare(sql)
-  return stmt.all(...params).map((row: { id: string }) => row.id)
 }
 
 // 修改工厂函数，添加新方法
@@ -406,11 +185,6 @@ export const getDatabaseService = (profileId: string) => {
       get: getResponse(db),
       getByIds: getResponsesByIds(db)
     },
-    interaction: {
-      search: searchInteractions(db),
-      searchIds: searchInteractionIds(db),
-      getByIds: getInteractionsByIds(db)
-    }
   }
 }
 
