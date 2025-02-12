@@ -99,13 +99,13 @@ export const ContentPanelCt: React.FC = () => {
     });
   };
 
-  const handleCloseTab = (id: string) => {
+  const handleTabClose = (id: string) => {
     // 从可见标签中移除
     setTabs(prevTabs => {
       const newTabs = prevTabs.filter(tab => tab.id !== id);
       
       // 如果有隐藏标签，将最近访问的隐藏标签移到可见标签
-      if (newTabs.length < MAX_VISIBLE_TABS && hiddenTabs.length > 0) {
+      if (newTabs.length <= MAX_VISIBLE_TABS && hiddenTabs.length > 0) {
         const [mostRecentHidden, ...remainingHidden] = [...hiddenTabs].sort((a, b) => b.lastAccessed - a.lastAccessed);
         setHiddenTabs(remainingHidden);
         return [...newTabs, mostRecentHidden];
@@ -189,7 +189,7 @@ export const ContentPanelCt: React.FC = () => {
       messageId={messageId}
       context={context}
       onTabClick={handleTabClick}
-      onCloseTab={handleCloseTab}
+      onCloseTab={handleTabClose}
       onHiddenTabClick={handleHiddenTabClick}
       onMenuClick={handleMenuClick}
       onMenuClose={handleMenuClose}
