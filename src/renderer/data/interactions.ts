@@ -1,14 +1,7 @@
 import {
   type Query,
   type Response,
-  type Interaction,
-  type SearchOptions,
-  queryFromInteraction,
-  responseFromInteraction,
-  interactionFromQueryAndResponse,
 } from "@/shared/types/interactions";
-import { useState, useEffect } from "react";
-import { eventSource } from "@/shared/utils/event";
 
 export interface InteractionStore {
   // Query 相关方法
@@ -22,18 +15,11 @@ export interface InteractionStore {
   appendResponse: (id: string, content: string) => Promise<Response | null>;
   getResponse: (id: string) => Promise<Response | null>;
 
-  // Interaction 相关方法
-  searchInteractions: (options: SearchOptions) => Promise<Interaction[]>;
-  searchInteractionIds: (options: SearchOptions) => Promise<string[]>;
-  getInteraction: (id: string) => Promise<Interaction | null>;
-
   // 缓存管理
   clearCache: () => void;
 }
 
 const interactionStores = new Map<string, InteractionStore>();
-const [notifyInteractionChanged, onInteractionChanged] =
-  eventSource<[string, string, Interaction]>();
 
 export const getInteractionStore = (profileId: string): InteractionStore => {
   const api = window.electron.interactions;
@@ -64,11 +50,6 @@ export const getInteractionStore = (profileId: string): InteractionStore => {
       .get(id)
       ?.forEach((responseId) => responseCache.delete(responseId));
     queryResponses.delete(id);
-  };
-
-  const updateCachesFromInteraction = (interaction: Interaction) => {
-    updateCachedQuery(queryFromInteraction(interaction));
-    updateCachedResponse(responseFromInteraction(interaction));
   };
 
   const getQuery = async (id: string) => {
@@ -103,17 +84,6 @@ export const getInteractionStore = (profileId: string): InteractionStore => {
       const query = await api.softDeleteQuery(profileId, id);
       if (query) {
         updateCachedQuery(query);
-        const responseIds = queryResponses.get(query.id);
-        responseIds?.forEach((responseId) => {
-          const response = responseCache.get(responseId);
-          if (response) {
-            notifyInteractionChanged(
-              profileId,
-              responseId,
-              interactionFromQueryAndResponse(query, response)
-            );
-          }
-        });
       }
       return query;
     },
@@ -136,34 +106,11 @@ export const getInteractionStore = (profileId: string): InteractionStore => {
       const response = await api.appendResponse(profileId, id, content);
       if (response) {
         updateCachedResponse(response);
-        const query = await getQuery(response.query);
-        notifyInteractionChanged(
-          profileId,
-          response.id,
-          interactionFromQueryAndResponse(query, response)
-        );
       }
       return response;
     },
 
     getResponse,
-
-    // Interaction 相关方法
-    async searchInteractions(options: SearchOptions) {
-      const interactions = await api.searchInteractions(profileId, options);
-      interactions.forEach(updateCachesFromInteraction);
-      return interactions;
-    },
-
-    async searchInteractionIds(options: SearchOptions) {
-      return await api.searchInteractionIds(profileId, options);
-    },
-
-    async getInteraction(id: string) {
-      const response = await getResponse(id);
-      const query = await getQuery(response?.query);
-      return interactionFromQueryAndResponse(query, response);
-    },
 
     // 缓存管理
     clearCache() {
@@ -176,20 +123,3 @@ export const getInteractionStore = (profileId: string): InteractionStore => {
   interactionStores.set(profileId, interactionStore);
   return interactionStore;
 };
-
-export const useInteraction = (profileId: string, interactionId: string) => {
-  const [interaction, setInteraction] = useState<Interaction | null>(null);
-
-  useEffect(() => {
-    const interactionStore = getInteractionStore(profileId);
-    interactionStore.getInteraction(interactionId).then(setInteraction);
-  }, [profileId, interactionId]);
-
-  onInteractionChanged((pid, iid, interaction) => {
-    if (pid === profileId && iid === interactionId) {
-      setInteraction(interaction);
-    }
-  });
-
-  return interaction;
-}

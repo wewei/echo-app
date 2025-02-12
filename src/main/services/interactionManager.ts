@@ -1,5 +1,5 @@
 import { getDatabaseService } from '../store/interactions'
-import { QueryInput, ResponseInput, Query, Response, Interaction, SearchOptions } from '@/shared/types/interactions'
+import { QueryInput, ResponseInput, Query, Response } from '@/shared/types/interactions'
 import { onProfileDeleted } from './profileManager'
 
 const managers = new Map<string, InteractionManager>()
@@ -10,11 +10,8 @@ export interface InteractionManager {
   appendResponse: (id: string, content: string) => Response
   softDeleteQuery: (id: string) => void
   hardDeleteQuery: (id: string) => void
-  searchInteractions: (options: SearchOptions) => Interaction[]
-  searchInteractionIds: (options: SearchOptions) => string[]
   getResponses: (ids: string[]) => Response[]
   getQueries: (ids: string[]) => Query[]
-  getInteractions: (ids: string[]) => Interaction[]
 }
 
 export const getInteractionManager = (profileId: string): InteractionManager => {
@@ -52,14 +49,6 @@ export const getInteractionManager = (profileId: string): InteractionManager => 
       db.query.hardDelete(id)
     },
 
-    searchInteractions: (options: SearchOptions) => {
-      return db.interaction.search(options)
-    },
-
-    searchInteractionIds: (options: SearchOptions) => {
-      return db.interaction.searchIds(options)
-    },
-
     getResponses: (ids: string[]) => {
       return db.response.getByIds(ids)
     },
@@ -67,10 +56,6 @@ export const getInteractionManager = (profileId: string): InteractionManager => 
     getQueries: (ids: string[]) => {
       return db.query.getByIds(ids)
     },
-
-    getInteractions: (ids: string[]) => {
-      return db.interaction.getByIds(ids)
-    }
   }
 
   managers.set(profileId, manager)
