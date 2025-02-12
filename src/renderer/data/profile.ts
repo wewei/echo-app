@@ -1,54 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import type { Profile } from "@/shared/types/profile";
+import { cachedEntity } from "./cachedEntity";
 
-const profiles = new Map<string, Profile>();
+const useProfile = cachedEntity(window.electron.profile.get, (updater: (cur: Profile) => Profile, cur: Profile) => {
+  const newProfile = updater(cur)
+  window.electron.profile.update(newProfile.id, newProfile)
+  return newProfile
+})
 
-export const useProfile = (
-  profileId: string | null
-): [Profile | null, (updater: (prev: Profile) => Profile) => void] => {
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const profileIdRef = useRef<string | null>(null)
-
-  useEffect(() => {
-    const loadProfile = async () => {
-      const pro = await window.electron.profile.get(profileId)
-      profiles.set(profileId, pro)
-      if (profileIdRef.current === profileId) {
-        setProfile(pro)
-      }
-    }
-
-    profileIdRef.current = profileId
-
-    if (profileId && !profile) {
-      const pro = profiles.get(profileId)
-      if (pro) {
-        setProfile(pro)
-      } else {
-        loadProfile()
-      }
-    }
-    return () => {
-      profileIdRef.current = null
-      setProfile(null)
-    }
-  }, [profileId])
-
-  return [
-    profile,
-    (updater: (prev: Profile) => Profile) => {
-      setProfile((prev) => {
-        if (!prev) return prev;
-        const newProfile = updater(prev);
-        profiles.set(profileId, newProfile);
-        window.electron.profile.update(profileId, newProfile);
-        return newProfile;
-      });
-    },
-  ];
-};
+export { useProfile }
 
 export const useProfiles = (): [
   Profile[],
