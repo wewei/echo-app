@@ -1,3 +1,1 @@
-import AppMenu from './AppMenu'
-
-export default AppMenu
+export { default } from './AppMenuCt'

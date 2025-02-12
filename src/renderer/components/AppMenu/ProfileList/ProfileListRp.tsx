@@ -2,17 +2,22 @@ import React from 'react'
 import { List, ListItem, ListItemAvatar, ListItemText, Avatar, ListItemIcon } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import { useTranslation } from 'react-i18next'
-import { useProfiles } from '@/renderer/data/profile'
-import { useNavigate, useParams } from 'react-router-dom'
+import type { Profile } from '@/shared/types/profile'
 
-const ProfileList = () =>  {
+interface ProfileListPrProps {
+  profiles: Profile[]
+  currentProfileId?: string
+  onProfileClick: (profileId: string) => void
+  onCreateProfile: () => void
+}
+
+export default function ProfileListPr({
+  profiles,
+  currentProfileId,
+  onProfileClick,
+  onCreateProfile
+}: ProfileListPrProps) {
   const { t } = useTranslation()
-  const [profiles, createProfile] = useProfiles();
-  const currentProfileId = useParams().profileId;
-  const navigate = useNavigate();
-  const onProfileClick = (profileId: string) => {
-    navigate(`/profile/${profileId}`);
-  }
 
   return (
     <List>
@@ -57,10 +62,7 @@ const ProfileList = () =>  {
             bgcolor: 'action.hover'
           }
         }}
-        onClick={async () => {
-          const { id } = await createProfile();
-          navigate(`/profile/${id}?menu=/settings`);
-        }}
+        onClick={onCreateProfile}
       >
         <ListItemIcon>
           <AddIcon />
@@ -69,6 +71,4 @@ const ProfileList = () =>  {
       </ListItem>
     </List>
   )
-}
-
-export default ProfileList
+} 

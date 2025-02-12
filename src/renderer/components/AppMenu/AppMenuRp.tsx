@@ -3,15 +3,19 @@ import { Box, Divider, Paper } from '@mui/material'
 import ProfileHeader from './ProfileHeader'
 import ProfileList from './ProfileList'
 import SettingsPanel from './SettingsPanel'
-import { useProfile } from '@/renderer/data/profile'
-import { useParams, useSearchParams } from 'react-router-dom'
+import type { Profile } from '@/shared/types/profile'
 
-export default function AppMenu() {
-  const profileId = useParams().profileId;
-  const [profile] = useProfile(profileId);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const path = searchParams.get("menu");
+interface AppMenuPrProps {
+  profile: Profile | null
+  showSettings: boolean
+  onOpenSettings: () => void
+}
 
+export default function AppMenuRp({ 
+  profile, 
+  showSettings,
+  onOpenSettings 
+}: AppMenuPrProps) {
   return (
     <Paper
       elevation={0}
@@ -30,7 +34,7 @@ export default function AppMenu() {
       <Box sx={{ p: 2, pb: 2 }}>
         <ProfileHeader
           profile={profile}
-          onOpenSettings={() => setSearchParams({ menu: "/settings" })}
+          onOpenSettings={onOpenSettings}
         />
       </Box>
       
@@ -63,7 +67,7 @@ export default function AppMenu() {
           bottom: 0,
           zIndex: 1200,
           bgcolor: "background.paper",
-          transform: path === "/settings" ? "translateX(0)" : "translateX(100%)",
+          transform: showSettings ? "translateX(0)" : "translateX(100%)",
           transition: "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
           overflow: 'auto',
           p: 3,
@@ -80,5 +84,5 @@ export default function AppMenu() {
         <SettingsPanel />
       </Paper>
     </Paper>
-  );
-}
+  )
+} 

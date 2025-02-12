@@ -1,3 +1,1 @@
-import ChatSettingsView from './ChatSettingsView'
-
-export default ChatSettingsView;
+export { default } from './ChatSettingsViewCt'
