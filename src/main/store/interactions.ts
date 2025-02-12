@@ -1,11 +1,12 @@
 import path from 'node:path'
 import fs from 'node:fs'
+import crypto from 'node:crypto'
 
 import { app } from 'electron'
 import Sqlite, { Database } from 'better-sqlite3'
 import { v4 as uuidv4 } from 'uuid'
 
-import { QueryInput, ResponseInput, Query, Response } from '@/shared/types/interactions'
+import { QueryInput, ResponseInput, Query, Response, QuerySearchOptions } from '@/shared/types/interactions'
 import { getProfileDir } from '@/main/services/profileManager'
 
 // 数据库初始化函数
@@ -70,9 +71,22 @@ const createConnection = (profileId: string): Database => {
   return db
 }
 
+const getQueryId = (input: QueryInput): string => {
+  // 将输入的查询内容、类型和上下文排序后，转换为JSON字符串
+  const key = JSON.stringify([input.type, input.content, [...input.contexts].sort()])
+  // 使用SHA-256哈希算法对JSON字符串进行哈希，并返回十六进制表示的哈希值
+  return crypto.createHash('sha256').update(key).digest('hex')
+}
+
 // Query 相关操作
 const createQuery = (db: Database) => (input: QueryInput): Query => {
-  const id = uuidv4()
+  const id = getQueryId(input)
+
+  const query = getQuery(db)(id)
+  if (query) {
+    return query
+  }
+
   const { contexts, ...queryData } = input
   
   const insertQuery = db.prepare(`
@@ -111,6 +125,57 @@ const getQuery = (db: Database) => (id: string): Query | null => {
   return stmt.get(id) || null
 }
 
+const getQueriesByIds = (db: Database) => (ids: string[]): Query[] => {
+  if (ids.length === 0) return []
+  
+  const stmt = db.prepare(`
+    SELECT * FROM queries 
+    WHERE id IN (${ids.map(() => '?').join(',')})
+  `)
+  return stmt.all(...ids) as Query[]
+}
+
+const MAX_COUNT = 100
+
+const searchQueries = (db: Database) => (options: QuerySearchOptions): Query[] => {
+  const conditions: string[] = []
+  const params: (string | number)[] = []
+
+  if (options.created) {
+    const operator = options.created.type === 'before' ? '<' : '>'
+    conditions.push(`timestamp ${operator} ?`)
+    params.push(options.created.timestamp)
+  }
+
+  if (options.deleted) {
+    const operator = options.deleted.type === 'before' ? '<' : '>'
+    conditions.push(`deletedTimestamp ${operator} ?`)
+    params.push(options.deleted.timestamp)
+  }
+
+  if (options.type) {
+    conditions.push(`type = ?`)
+    params.push(options.type)
+  }
+
+  let query = 'SELECT * FROM queries'
+  
+  if (options.contextId) {
+    query += ` INNER JOIN query_contexts ON queries.id = query_contexts.query_id`
+    conditions.push(`query_contexts.context_id = ?`)
+    params.push(options.contextId)
+  }
+
+  if (conditions.length > 0) {
+    query += ` WHERE ${conditions.join(' AND ')}`
+  }
+
+  query += ` LIMIT ${Math.min(options.maxCount ?? MAX_COUNT, MAX_COUNT)}`
+
+  const stmt = db.prepare(query)
+  return stmt.all(...params) as Query[]
+}
+
 const softDeleteQuery = (db: Database) => (id: string): Query | null => {
   const stmt = db.prepare('UPDATE queries SET deletedTimestamp = ? WHERE id = ?')
   stmt.run(Date.now(), id)
@@ -123,8 +188,19 @@ const hardDeleteQuery = (db: Database) => (id: string): void => {
 }
 
 // Response 相关操作
+const getResponseId = (input: ResponseInput): string => {
+  const key = JSON.stringify([input.query, input.agents, input.timestamp])
+  return crypto.createHash('sha256').update(key).digest('hex')
+}
+
 const createResponse = (db: Database) => (input: ResponseInput): Response => {
-  const id = uuidv4()
+  const id = getResponseId(input)
+
+  const response = getResponse(db)(id)
+  if (response) {
+    return response
+  }
+
   const stmt = db.prepare(`
     INSERT INTO responses (id, query, content, timestamp, agents)
     VALUES (@id, @query, @content, @timestamp, @agents)
@@ -146,16 +222,6 @@ const getResponse = (db: Database) => (id: string): Response | null => {
   return stmt.get(id) || null
 }
 
-const getQueriesByIds = (db: Database) => (ids: string[]): Query[] => {
-  if (ids.length === 0) return []
-  
-  const stmt = db.prepare(`
-    SELECT * FROM queries 
-    WHERE id IN (${ids.map(() => '?').join(',')})
-  `)
-  return stmt.all(...ids) as Query[]
-}
-
 const getResponsesByIds = (db: Database) => (ids: string[]): Response[] => {
   if (ids.length === 0) return []
   
@@ -165,6 +231,13 @@ const getResponsesByIds = (db: Database) => (ids: string[]): Response[] => {
   `)
   return stmt.all(...ids) as Response[]
 }
+
+const getResponsesByQueryId = (db: Database) => (queryId: string): string[] => {
+  const stmt = db.prepare('SELECT id FROM responses WHERE query = ?')
+  const results = stmt.all(queryId) as { id: string }[]
+  return results.map(r => r.id)
+}
+
 
 // 修改工厂函数，添加新方法
 export const getDatabaseService = (profileId: string) => {
@@ -177,13 +250,15 @@ export const getDatabaseService = (profileId: string) => {
       get: getQuery(db),
       softDelete: softDeleteQuery(db),
       hardDelete: hardDeleteQuery(db),
-      getByIds: getQueriesByIds(db)
+      getByIds: getQueriesByIds(db),
+      search: searchQueries(db),
     },
     response: {
       create: createResponse(db),
       update: updateResponse(db),
       get: getResponse(db),
-      getByIds: getResponsesByIds(db)
+      getByIds: getResponsesByIds(db),
+      getByQueryId: getResponsesByQueryId(db),
     },
   }
 }

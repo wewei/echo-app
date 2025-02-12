@@ -12,7 +12,7 @@ import DefaultView from "./components/DefaultView";
 const Layout = () => {
   return (
     <Routes>
-      <Route path="/profile/:profileId/*" element={<MainPage />} />
+      <Route path="/profile/:profileId" element={<MainPage />} />
       <Route path="*" element={<DefaultView />} />
     </Routes>
   );
