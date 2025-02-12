@@ -6,8 +6,6 @@ export const querySchema = zod.object({
   content: zod.string(),
   timestamp: zod.number(),
   type: zod.string(),
-  defaultResponse: zod.string().uuid().optional(),
-  deletedTimestamp: zod.number().optional(),
 })
 
 export type Query = zod.infer<typeof querySchema>
@@ -32,11 +30,6 @@ export const querySearchOptionsSchema = zod.object({
     type: zod.enum(['before', 'after']),
     timestamp: zod.number(),  
   }).optional(),
-  // 删除的时间早于或晚于指定的时间
-  deleted: zod.object({
-    type: zod.enum(['before', 'after']),
-    timestamp: zod.number(),
-  }).optional(),
   // 最大数量
   maxCount: zod.number().optional(),
   // 上下文ID
@@ -51,8 +44,6 @@ export const IPC_CHANNELS = {
   CREATE_QUERY: 'interaction:createQuery',
   CREATE_RESPONSE: 'interaction:createResponse',
   APPEND_RESPONSE: 'interaction:appendResponse',
-  SOFT_DELETE_QUERY: 'interaction:softDeleteQuery',
-  HARD_DELETE_QUERY: 'interaction:hardDeleteQuery',
   SEARCH_QUERIES: 'interaction:searchQueries',
   GET_RESPONSES: 'interaction:getResponses',
   GET_QUERIES: 'interaction:getQueries',

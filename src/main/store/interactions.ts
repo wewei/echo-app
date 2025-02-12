@@ -16,7 +16,6 @@ const initializeDb = (db: Database): void => {
       id TEXT PRIMARY KEY,
       content TEXT NOT NULL,
       timestamp INTEGER NOT NULL,
-      deletedTimestamp INTEGER,
       type TEXT NOT NULL
     );
 
@@ -90,8 +89,8 @@ const createQuery = (db: Database) => (input: QueryInput): Query => {
   const { contexts, ...queryData } = input
   
   const insertQuery = db.prepare(`
-    INSERT INTO queries (id, content, timestamp, deletedTimestamp, type)
-    VALUES (@id, @content, @timestamp, @deletedTimestamp, @type)
+    INSERT INTO queries (id, content, timestamp, type)
+    VALUES (@id, @content, @timestamp, @type)
   `)
   
   const insertContext = db.prepare(`
@@ -147,12 +146,6 @@ const searchQueries = (db: Database) => (options: QuerySearchOptions): Query[] =
     params.push(options.created.timestamp)
   }
 
-  if (options.deleted) {
-    const operator = options.deleted.type === 'before' ? '<' : '>'
-    conditions.push(`deletedTimestamp ${operator} ?`)
-    params.push(options.deleted.timestamp)
-  }
-
   if (options.type) {
     conditions.push(`type = ?`)
     params.push(options.type)
@@ -174,17 +167,6 @@ const searchQueries = (db: Database) => (options: QuerySearchOptions): Query[] =
 
   const stmt = db.prepare(query)
   return stmt.all(...params) as Query[]
-}
-
-const softDeleteQuery = (db: Database) => (id: string): Query | null => {
-  const stmt = db.prepare('UPDATE queries SET deletedTimestamp = ? WHERE id = ?')
-  stmt.run(Date.now(), id)
-  return getQuery(db)(id)
-}
-
-const hardDeleteQuery = (db: Database) => (id: string): void => {
-  const stmt = db.prepare('DELETE FROM queries WHERE id = ?')
-  stmt.run(id)
 }
 
 // Response 相关操作
@@ -248,8 +230,6 @@ export const getDatabaseService = (profileId: string) => {
       create: createQuery(db),
       update: updateQuery(db),
       get: getQuery(db),
-      softDelete: softDeleteQuery(db),
-      hardDelete: hardDeleteQuery(db),
       getByIds: getQueriesByIds(db),
       search: searchQueries(db),
     },

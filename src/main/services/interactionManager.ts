@@ -7,10 +7,6 @@ const managers = new Map<string, InteractionManager>()
 export interface InteractionManager {
   // 创建 Query
   createQuery: (input: QueryInput) => Query
-  // 软删除 Query
-  softDeleteQuery: (id: string) => void
-  // 硬删除 Query
-  hardDeleteQuery: (id: string) => void
 
   // 获取 Query
   getQueries: (ids: string[]) => Query[]
@@ -41,14 +37,6 @@ export const getInteractionManager = (profileId: string): InteractionManager => 
   const manager: InteractionManager = {
     createQuery: (input: QueryInput) => {
       return db.query.create(input)
-    },
-
-    softDeleteQuery: (id: string) => {
-      return db.query.softDelete(id)
-    },
-
-    hardDeleteQuery: (id: string) => {
-      db.query.hardDelete(id)
     },
 
     getQueries: (ids: string[]) => {

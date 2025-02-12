@@ -10,18 +10,6 @@ export const registerInteractionHandlers = () => {
     }
   )
 
-  ipcMain.handle(IPC_CHANNELS.SOFT_DELETE_QUERY,
-    (_, profileId: string, id: string) => {
-      return getInteractionManager(profileId).softDeleteQuery(id)
-    }
-  )
-
-  ipcMain.handle(IPC_CHANNELS.HARD_DELETE_QUERY,
-    (_, profileId: string, id: string) => {
-      return getInteractionManager(profileId).hardDeleteQuery(id)
-    }
-  )
-
   ipcMain.handle(IPC_CHANNELS.SEARCH_QUERIES,
     (_, profileId: string, options: QuerySearchOptions) => {
       return getInteractionManager(profileId).searchQueries(options)

@@ -6,12 +6,6 @@ export const interactionAPI = {
   createQuery: (profileId: string, input: QueryInput): Promise<Query> => 
     ipcRenderer.invoke(IPC_CHANNELS.CREATE_QUERY, profileId, input),
 
-  softDeleteQuery: (profileId: string, id: string): Promise<Query | null> =>
-    ipcRenderer.invoke(IPC_CHANNELS.SOFT_DELETE_QUERY, profileId, id),
-
-  hardDeleteQuery: (profileId: string, id: string): Promise<void> =>
-    ipcRenderer.invoke(IPC_CHANNELS.HARD_DELETE_QUERY, profileId, id),
-
   getQueries: (profileId: string, ids: string[]): Promise<Query[]> =>
     ipcRenderer.invoke(IPC_CHANNELS.GET_QUERIES, profileId, ids),
 

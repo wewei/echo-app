@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react"
 
+export type CachedEntityHook<V> = (key: string) => V | null
 export type Patcher<P> = (patch: P) => void
-export type CachedEntityHook<V, P> = (key: string) => [V | null, Patcher<P>]
+export type MutableCachedEntityHook<V, P> = (key: string) => [V | null, Patcher<P>]
 
-// V is the value type
-// P is the patch type
-export const cachedEntity = <V extends Record<string, unknown>, P>(read: (key: string) => Promise<V>, update: (patch: P, value: V) => (V | null)): CachedEntityHook<V, P> => {
+type CachedEntityHookPlus<V, C> = (key: string) => [V | null, C]
+
+const cachedEntityInner = <V>(read: (key: string) => Promise<V | null>): CachedEntityHookPlus<V, (key: string, value: V | null) => void> => {
   const cache = new Map<string, V>()
 
   return (key: string) => {
@@ -20,7 +21,7 @@ export const cachedEntity = <V extends Record<string, unknown>, P>(read: (key: s
         }
       }
       keyRef.current = key
-      if (key && !value) {
+      if (!value) {
         const val = cache.get(key)
         if (val) {
           setValue(val)
@@ -33,22 +34,41 @@ export const cachedEntity = <V extends Record<string, unknown>, P>(read: (key: s
         setValue(null)
       }
     }, [key])
+    return [value, (key, val) => {
+      if (val) {
+        cache.set(key, val)
+      } else {
+        cache.delete(key)
+      }
+      if (keyRef.current === key) {
+        setValue(val)
+      }
+    }]
+  }
+}
 
+// V is the value type
+// P is the patch type
+export const mutableCachedEntity = <V extends Record<string, unknown>, P>(read: (key: string) => Promise<V | null>, update: (patch: P, value: V) => (V | null)): MutableCachedEntityHook<V, P> => {
+  const innerHook = cachedEntityInner(read)
+
+  return (key: string) => {
+    const [value, updateValue] = innerHook(key)
     return [value, (patch) => {
       if (value) {
         const val = update(patch, value);
         if (val !== value) {
-          if (val) {
-          cache.set(key, val)
-        } else {
-          cache.delete(key)
-          }
-        }
-        if (keyRef.current === key) {
-          setValue(val)
+          updateValue(key, val)
         }
       }
     }]
   }
+}
 
+export const cachedEntity = <V extends Record<string, unknown>>(read: (key: string) => Promise<V | null>): CachedEntityHook<V> => {
+  const innerHook = cachedEntityInner(read)
+  return (key: string) => {
+    const [value] = innerHook(key)
+    return value
+  }
 }
