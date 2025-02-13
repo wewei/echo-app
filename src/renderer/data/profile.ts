@@ -2,15 +2,11 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import type { Profile } from "@/shared/types/profile";
-import { mutableCachedEntity } from "./cachedEntity";
+import { cachedEntity, EntityState } from "./cachedEntity";
 
-const [useProfile] = mutableCachedEntity(window.electron.profile.get, (updater: (cur: Profile) => Profile, cur: Profile) => {
-  const newProfile = updater(cur)
-  window.electron.profile.update(newProfile.id, newProfile)
-  return newProfile
-})
+const [useProfile, updateProfile] = cachedEntity(window.electron.profile.get)
 
-export { useProfile }
+export { useProfile, updateProfile }
 
 export const useProfiles = (): [
   Profile[],
@@ -46,8 +42,8 @@ export const useProfiles = (): [
 
 export const useCurrentProfileId = (): string | null => useParams().profileId ?? null;
 
-export const useCurrentProfile = (): Profile | null => {
+export const useCurrentProfile = (): EntityState<Profile> => {
   const profileId = useCurrentProfileId();
-  const [profile] = useProfile(profileId);
+  const profile = useProfile(profileId);
   return profile;
 };

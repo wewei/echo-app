@@ -1,3 +1,4 @@
+import { makeEventSource } from '../../event';
 import { cachedWith, ENTITY_NOT_FOUND } from '../cached';
 import { lru, unlimited } from '../strategies';
 
@@ -200,6 +201,36 @@ describe('cachedWith', () => {
 
       await newCachedFn(1);
       expect(fetchCount).toBe(1);
+    });
+
+    it('should not call updater function when cached promise resolves to ENTITY_NOT_FOUND', async () => {
+      const source = makeEventSource<void>();
+      let updateFnCalled = false;
+      
+      const [cachedFn, updater] = cachedWith()(async () => {
+        await new Promise(resolve => {
+          source.watch(() => resolve(undefined));
+        });
+        return ENTITY_NOT_FOUND;
+      });
+
+      // 开始获取，但还未返回结果
+      const fetchPromise = cachedFn(1);
+      
+      // 在 fetch 完成之前尝试更新
+      const updatePromise = updater(1, (value) => {
+        updateFnCalled = true;
+        return value;
+      });
+
+      // 让 fetch 完成
+      source.notify();
+      
+      // 等待所有操作完成
+      await Promise.all([fetchPromise, updatePromise]);
+      
+      // 验证更新函数没有被调用
+      expect(updateFnCalled).toBe(false);
     });
   });
 

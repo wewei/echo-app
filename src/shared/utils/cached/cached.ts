@@ -5,7 +5,7 @@ export type EntityNotFound = typeof ENTITY_NOT_FOUND
 export type FetchResult<V> = V | EntityNotFound
 export type FetchFunction<K, V> = (key: K) => Promise<FetchResult<V>>
 
-export type CacheUpdater<K, V> = (key: K, fn: (value: FetchResult<V>) => FetchResult<V>) => Promise<void>
+export type CacheUpdater<K, V> = (key: K, fn: (value: V) => FetchResult<V>) => Promise<void>
 
 
 export const cachedWith =
@@ -21,19 +21,21 @@ export const cachedWith =
         return cached;
       }
 
-      const result = fn(key).then(val => {
-        if (val === ENTITY_NOT_FOUND && cache.has(key)) {
-          cache.delete(key);
-          handleDelete(key);
-        }
-        return val;
-      }, (err) => {
-        if (cache.has(key)) {
-          cache.delete(key);
-          handleDelete(key);
-        }
-        throw err;
-      });
+      const result = fn(key)
+        .then((val) => {
+          if (val === ENTITY_NOT_FOUND && cache.has(key)) {
+            cache.delete(key);
+            handleDelete(key);
+          }
+          return val;
+        })
+        .catch((err) => {
+          if (cache.has(key)) {
+            cache.delete(key);
+            handleDelete(key);
+          }
+          throw err;
+        });
       cache.set(key, result);
 
       if (keyOut !== null && cache.has(keyOut)) {
@@ -44,25 +46,28 @@ export const cachedWith =
       return result;
     };
 
-    const updater = async (key: K, fn: (value: FetchResult<V>) => FetchResult<V>) => {
-      const value = cache.get(key);
-      if (value) {
-        const updated = value.then(fn).then(
-          (val) => {
+    const updater = async (key: K, fn: (value: V) => FetchResult<V>) => {
+      const cached = cache.get(key);
+      if (cached) {
+        const updated = cached
+          .then((value) => {
+            if (value === ENTITY_NOT_FOUND) {
+              return value;
+            }
+            const val = fn(value);
             if (val === ENTITY_NOT_FOUND && cache.has(key)) {
               cache.delete(key);
               handleDelete(key);
             }
             return val;
-          },
-          (err) => {
+          })
+          .catch((err) => {
             if (cache.has(key)) {
               cache.delete(key);
               handleDelete(key);
             }
             throw err;
-          }
-        );
+          });
         cache.set(key, updated);
         await updated;
       }

@@ -1,15 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   type Query,
-  type Response,
-  type QuerySearchOptions,
-  QueryInput,
+  type QueryInput,
 } from "@/shared/types/interactions";
 
 import { useCurrentProfileId } from "@/renderer/data/profile";
 import { cachedEntity } from "./cachedEntity";
 
-const [useQuery, queryCache] = cachedEntity(async (key: string) => {
+const [useQuery, updateQuery] = cachedEntity(async (key: string) => {
   const profileId = useCurrentProfileId()
   const queries = await window.electron.interactions.getQueries(profileId, [key])
   return queries[0]
@@ -36,7 +34,7 @@ export const useRecentQueryIds = (): { ids: string[], loadMore: (maxCount: numbe
         },
       }).then((result) => {
         for (const query of result) {
-          queryCache.set(query.id, query)
+          updateQuery(profileId, () => query)
         }
         setIds([...result.map(q => q.id), ...ids])
         setHasMore(result.length === maxCount - count)
@@ -52,7 +50,7 @@ export const useRecentQueryIds = (): { ids: string[], loadMore: (maxCount: numbe
 
   const createQuery = useCallback(async (input: QueryInput) => {
     const query = await window.electron.interactions.createQuery(profileId, input)
-    queryCache.set(query.id, query)
+    updateQuery(profileId, () => query)
     setIds([...ids, query.id])
     setMaxCount((c) => c + 1)
     return query

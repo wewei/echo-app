@@ -4,16 +4,20 @@ import SettingsIcon from '@mui/icons-material/Settings'
 import { Profile } from '@/shared/types/profile'
 import { useTranslation } from 'react-i18next'
 import Loading from '@/renderer/components/Loading'
+import { EntityState, isEntityReady } from '@/renderer/data/cachedEntity'
 
 type ProfileHeaderProps = {
-  profile: Profile
+  profile: EntityState<Profile>
   onOpenSettings: () => void
 }
 
 const ProfileHeader = ({ profile, onOpenSettings }: ProfileHeaderProps) => {
   const { t } = useTranslation()
+  if (!isEntityReady(profile)) {
+    return <Loading />
+  }
 
-  return profile ? (
+  return (
     <Box>
       <Box sx={{
         display: 'flex',
@@ -58,7 +62,7 @@ const ProfileHeader = ({ profile, onOpenSettings }: ProfileHeaderProps) => {
         <ListItemText primary={t('common.settings')} />
       </ListItem>
     </Box>
-  ) : <Loading />
+  )
 }
 
 export default ProfileHeader

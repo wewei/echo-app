@@ -1,57 +1,38 @@
 import { useEffect, useRef, useState } from "react"
-import { EventSource, makeEventSource } from "@/shared/utils/event"
+import {
+  cachedWith,
+  ENTITY_NOT_FOUND,
+  type FetchFunction,
+  type FetchResult,
+  type CacheUpdater,
+  type EntityNotFound,
+} from "@/shared/utils/cached/cached";
 
-export const entityNotExists = Symbol('entityNotExists')
-export type EntityNotExists = typeof entityNotExists
+export const ENTITY_LOADING = Symbol('ENTITY_LOADING')
+export type EntityLoading = typeof ENTITY_LOADING
+export type EntityState<V> = FetchResult<V> | EntityLoading
 
-export type EntityState<V> = V | EntityNotExists
+export { ENTITY_NOT_FOUND, EntityNotFound }
 
-export const entityLoading = Symbol('entityLoading')
-export type EntityLoading = typeof entityLoading
+export type CachedEntityHook<K, V> = (key: K) => EntityState<V>
 
-export type EntityCacheState<V> = EntityState<V> | EntityLoading
-
-export type Updater<V> = (key: string, entity: EntityState<V>) => void
-export type CachedEntityHook<V> = (key: string) => EntityCacheState<V>
-
-export const cachedEntity =
-  <V>(read: (key: string) => Promise<V | null>): [CachedEntityHook<V>, Updater<V>] => {
-    const cache = new Map<string, V>()
-    const eventSources = new Map<string, EventSource<EntityState<V>>>()
-
-    const watch = (key: string, listener: (entity: EntityState<V>) => void) => {
-      const unwatch = (eventSources.has(key) ? eventSources.get(key) : (() => {
-        const evtSrc = makeEventSource<EntityState<V>>()
-        eventSources.set(key, evtSrc)
-        return evtSrc
-      })()).watch(listener);
-
-      return () => {
-        if (unwatch()) {
-          eventSources.delete(key)
+export const cachedEntity = <K, V>(fetch: FetchFunction<K, V>): [CachedEntityHook<K, V>, CacheUpdater<K, V>] => {
+  const [cachedFn, updater] = cachedWith<K, V>()(fetch)
+  const hook = (key: K): EntityState<V> => {
+    const [state, setState] = useState<EntityState<V>>(ENTITY_LOADING)
+    const keyRef = useRef(key)
+    useEffect(() => {
+      keyRef.current = key
+      cachedFn(keyRef.current).then(value => {
+        if (keyRef.current === key) {
+          setState(value)
         }
-      }
-    }
-
-    const hook = (key: string) => {
-      const [value, setValue] = useState<EntityCacheState<V>>(cache.get(key) ?? entityLoading)
-      const keyRef = useRef<string | null>(null)
-
-      useEffect(() => {
-        keyRef.current = key
-        const unwatch = watch(key, setValue);
-        
-        return () => {
-          keyRef.current = null
-          unwatch()
-        }
-      }, [key])
-      return value
-    }
-
-    const updater: Updater<V> = (key, val) => {
-      cache.set(key, val)
-    }
-
-    return [hook, updater]
+      })
+    }, [key])
+    return state
   }
+  return [hook, updater]
+}
+
+export const isEntityReady = <V>(entity: EntityState<V>): entity is V => 
+  entity !== ENTITY_LOADING && entity !== ENTITY_NOT_FOUND
