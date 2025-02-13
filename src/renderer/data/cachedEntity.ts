@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { EventSource, eventSource } from "@/shared/utils/event"
+import { EventSource, makeEventSource } from "@/shared/utils/event"
 
 export const entityNotExists = Symbol('entityNotExists')
 export type EntityNotExists = typeof entityNotExists
@@ -21,7 +21,7 @@ export const cachedEntity =
 
     const watch = (key: string, listener: (entity: EntityState<V>) => void) => {
       const unwatch = (eventSources.has(key) ? eventSources.get(key) : (() => {
-        const evtSrc = eventSource<EntityState<V>>()
+        const evtSrc = makeEventSource<EntityState<V>>()
         eventSources.set(key, evtSrc)
         return evtSrc
       })()).watch(listener);
