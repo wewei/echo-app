@@ -1,17 +1,30 @@
 import { getDatabaseService } from '../store/interactions'
-import { QueryInput, ResponseInput, Query, Response } from '@/shared/types/interactions'
+import { QueryInput, ResponseInput, Query, Response, QuerySearchOptions } from '@/shared/types/interactions'
 import { onProfileDeleted } from './profileManager'
 
 const managers = new Map<string, InteractionManager>()
 
 export interface InteractionManager {
+  // 创建 Query
   createQuery: (input: QueryInput) => Query
-  createResponse: (input: ResponseInput) => Response
-  appendResponse: (id: string, content: string) => Response
-  softDeleteQuery: (id: string) => void
-  hardDeleteQuery: (id: string) => void
-  getResponses: (ids: string[]) => Response[]
+
+  // 获取 Query
   getQueries: (ids: string[]) => Query[]
+
+  // 搜索 Query, 返回 Query 的 id
+  searchQueries: (options: QuerySearchOptions) => Query[]
+
+  // 创建 Response
+  createResponse: (input: ResponseInput) => Response
+
+  // 追加 Response
+  appendResponse: (id: string, content: string) => Response
+
+  // 获取 Response
+  getResponses: (ids: string[]) => Response[]
+
+  // 获取 Query 对应的 Response, 返回 Response 的 id
+  getResponsesOfQuery: (queryId: string) => string[]
 }
 
 export const getInteractionManager = (profileId: string): InteractionManager => {
@@ -24,6 +37,18 @@ export const getInteractionManager = (profileId: string): InteractionManager => 
   const manager: InteractionManager = {
     createQuery: (input: QueryInput) => {
       return db.query.create(input)
+    },
+
+    getQueries: (ids: string[]) => {
+      return db.query.getByIds(ids)
+    },
+
+    getResponses: (ids: string[]) => {
+      return db.response.getByIds(ids)
+    },
+
+    searchQueries: (options: QuerySearchOptions) => {
+      return db.query.search(options)
     },
 
     createResponse: (input: ResponseInput) => {
@@ -41,20 +66,8 @@ export const getInteractionManager = (profileId: string): InteractionManager => 
       return response
     },
 
-    softDeleteQuery: (id: string) => {
-      return db.query.softDelete(id)
-    },
-
-    hardDeleteQuery: (id: string) => {
-      db.query.hardDelete(id)
-    },
-
-    getResponses: (ids: string[]) => {
-      return db.response.getByIds(ids)
-    },
-
-    getQueries: (ids: string[]) => {
-      return db.query.getByIds(ids)
+    getResponsesOfQuery: (queryId: string) => {
+      return db.response.getByQueryId(queryId)
     },
   }
 

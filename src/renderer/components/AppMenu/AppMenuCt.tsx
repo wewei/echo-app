@@ -5,7 +5,7 @@ import AppMenuRp from './AppMenuRp'
 
 export default function AppMenuCt() {
   const { profileId } = useParams()
-  const [profile] = useProfile(profileId)
+  const profile = useProfile(profileId)
   const [searchParams, setSearchParams] = useSearchParams()
   const path = searchParams.get("menu")
 

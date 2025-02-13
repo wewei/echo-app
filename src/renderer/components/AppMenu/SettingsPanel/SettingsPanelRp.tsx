@@ -28,9 +28,10 @@ import type { Profile } from "@/shared/types/profile";
 import Loading from "@/renderer/components/Loading";
 import SearchSettingsView from './SearchSettingsView';
 import ChatSettingsView from './ChatSettingsView';
+import { EntityState, isEntityReady } from "@/renderer/data/cachedEntity";
 
 interface SettingsPanelRpProps {
-  profile: Profile | null
+  profile: EntityState<Profile>
   isEditing: boolean
   username: string
   avatarAssetId: string
@@ -68,7 +69,7 @@ export default function SettingsPanelRp({
 }: SettingsPanelRpProps) {
   const { t } = useTranslation();
 
-  if (!profile) {
+  if (!isEntityReady(profile)) {
     return <Loading />;
   }
 

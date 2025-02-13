@@ -2,7 +2,7 @@ import { app } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs/promises'
 import { type Settings, SettingsSchema } from '@/shared/types/settings'
-import { eventSource, type EventSource } from '@/shared/utils/event'
+import { makeEventSource, type EventSource } from '@/shared/utils/event'
 
 const SETTINGS_DIR = 'settings'
 
@@ -54,8 +54,8 @@ export const updateSettings = async (
   const current = await readSettings(profileId, scope)
   const updated = { ...current, ...updates }
   await writeSettings(profileId, scope, updated)
-  const [notifySettingsUpdated] = getSettingsEventSource(scope)
-  notifySettingsUpdated(profileId, updated)
+  const {notify: notifySettingsUpdated} = getSettingsEventSource(scope)
+  notifySettingsUpdated({profileId, settings: updated})
   return updated
 }
 
@@ -100,18 +100,22 @@ export const getScopes = async (profileId: string): Promise<string[]> => {
   }
 } 
 
-const eventSources = new Map<string, EventSource<[string, Settings]>>()
-const getSettingsEventSource = (scope: string): EventSource<[string, Settings]> => {
+type SettingsUpdatedEvent = { profileId: string, settings: Settings }
+const eventSources = new Map<string, EventSource<SettingsUpdatedEvent>>()
+const getSettingsEventSource = (scope: string): EventSource<SettingsUpdatedEvent> => {
   if (eventSources.has(scope)) {
-    return eventSources.get(scope) as EventSource<[string, Settings]>
+    return eventSources.get(scope) as EventSource<SettingsUpdatedEvent>;
   }
 
-  const [notifySettingsUpdated, onSettingsUpdated] = eventSource<[string, Settings]>()
-  eventSources.set(scope, [notifySettingsUpdated, onSettingsUpdated])
-  return [notifySettingsUpdated, onSettingsUpdated]
+  const {notify: notifySettingsUpdated, watch: onSettingsUpdated} =
+    makeEventSource<SettingsUpdatedEvent>();
+  eventSources.set(scope, {notify: notifySettingsUpdated, watch: onSettingsUpdated});
+  return {notify: notifySettingsUpdated, watch: onSettingsUpdated};
 }
 
 export const onSettingsUpdated = (scope: string, callback: (profileId: string, settings: Settings) => void): () => void => {
-  const [, onSettingsUpdated] = getSettingsEventSource(scope)
-  return onSettingsUpdated(callback)
+  const {watch: onSettingsUpdated} = getSettingsEventSource(scope)
+  return onSettingsUpdated(({ profileId, settings }) =>
+    callback(profileId, settings)
+  );
 }

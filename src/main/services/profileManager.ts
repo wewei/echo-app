@@ -3,14 +3,18 @@ import path from 'node:path'
 import fs from 'node:fs/promises'
 import { v4 as uuidv4 } from 'uuid'
 import { type Profile, ProfileSchema, ProfilesSchema } from '@/shared/types/profile'
-import { eventSource } from '@/shared/utils/event'
+import { makeEventSource } from '@/shared/utils/event'
 
 const PROFILES_FILE = 'profiles.json'
 
-const [notifyProfileCreated, onProfileCreated] = eventSource<[Profile]>()
-const [notifyProfileWillBeDeleted, onProfileWillBeDeleted] = eventSource<[string]>()
-const [notifyProfileDeleted, onProfileDeleted] = eventSource<[string]>()
-const [notifyProfileUpdated, onProfileUpdated] = eventSource<[Profile]>()
+const { notify: notifyProfileCreated, watch: onProfileCreated } =
+  makeEventSource<Profile>();
+const { notify: notifyProfileWillBeDeleted, watch: onProfileWillBeDeleted } =
+  makeEventSource<string>();
+const { notify: notifyProfileDeleted, watch: onProfileDeleted } =
+  makeEventSource<string>();
+const { notify: notifyProfileUpdated, watch: onProfileUpdated } =
+  makeEventSource<Profile>();
 
 export { onProfileCreated, onProfileWillBeDeleted, onProfileDeleted, onProfileUpdated }
 

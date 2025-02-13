@@ -1,5 +1,5 @@
 import React from 'react'
-import { useInteraction } from '@/renderer/data/interactions'
+// import { useInteraction } from '@/renderer/data/interactions'
 
 export type InteractionDetailProps = {
   profileId: string
@@ -8,7 +8,7 @@ export type InteractionDetailProps = {
 };
 
 export const InteractionDetail = ({ profileId, interactionId, onLinkClicked }: InteractionDetailProps) => {
-  const interaction = useInteraction(profileId, interactionId)
+  // const interaction = useInteraction(profileId, interactionId)
   // TODO
 
   return <div>InteractionDetail</div>

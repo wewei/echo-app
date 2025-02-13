@@ -1,17 +1,24 @@
-export type EventHandler<Args extends any[]> = (...args: Args) => void;
-export type EventSource<Args extends any[]> = [EventHandler<Args>, (handler: EventHandler<Args>) => () => void]
+import { makeRing } from "./ring";
 
-export const eventSource = <Args extends any[]>(): EventSource<Args> => {
-    const handlers = new Set<EventHandler<Args>>()
-    return [
-        (...args: Args) => {
-            handlers.forEach(handler => handler(...args))
+export type EventHandler<V> = (value: V) => void;
+export type EventSource<V> = {
+    notify: (value: V) => void,
+    watch: (handler: EventHandler<V>) => () => boolean
+}
+
+export const makeEventSource = <V>(): EventSource<V> => {
+    const handlers = makeRing<EventHandler<V>>()
+    return {
+        notify: (value: V) => {
+            handlers.toArray().forEach(handler => handler(value))
         },
-        (handler: EventHandler<Args>) => {
-            handlers.add(handler)
+        // 监听事件，返回一个函数用于取消监听，取消后返回是否是最后一个监听者
+        watch: (handler: EventHandler<V>) => {
+            const node = handlers.push(handler)
             return () => {
-                handlers.delete(handler)
+                handlers.remove(node)
+                return handlers.size() === 0
             }
         }
-    ]
+    }
 }

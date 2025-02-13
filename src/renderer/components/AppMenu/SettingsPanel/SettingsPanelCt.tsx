@@ -1,7 +1,8 @@
 import React, { useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { useProfile } from "@/renderer/data/profile";
+import { useProfile, updateProfile } from "@/renderer/data/profile";
 import SettingsPanelRp from "./SettingsPanelRp";
+import { isEntityReady } from "@/renderer/data/cachedEntity";
 
 export default function SettingsPanelCt() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -10,13 +11,13 @@ export default function SettingsPanelCt() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const { profileId } = useParams<{ profileId: string }>();
-  const [profile, setProfile] = useProfile(profileId);
-  const [username, setUsername] = useState(profile?.username || "");
+  const profile = useProfile(profileId);
+  const [username, setUsername] = useState(isEntityReady(profile) ? profile.username : "");
   const navigate = useNavigate();
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !profile) return;
+    if (!file || !isEntityReady(profile)) return;
 
     try {
       const buffer = await file.arrayBuffer();
@@ -36,7 +37,7 @@ export default function SettingsPanelCt() {
   };
 
   const handleUpdateProfile = async () => {
-    if (!profile) return;
+    if (!isEntityReady(profile)) return;
     
     let avatarUrl = profile.avatar;
     if (avatarAssetId) {
@@ -45,23 +46,26 @@ export default function SettingsPanelCt() {
 
     setIsEditing(false);
     setAvatarAssetId("");
-    setProfile((prev) => ({ ...prev, username, avatar: avatarUrl }));
+    updateProfile(profileId, (prev) => isEntityReady(prev) ? { ...prev, username, avatar: avatarUrl } : prev);
   };
 
   const handleEditStart = () => {
-    setUsername(profile?.username || "");
+    if (!isEntityReady(profile)) return;
+    setUsername(profile.username);
     setIsEditing(true);
   };
 
   const handleEditCancel = () => {
+    if (!isEntityReady(profile)) return;
     setIsEditing(false);
-    setUsername(profile?.username || "");
+    setUsername(profile.username);
     setAvatarAssetId("");
   };
 
   const handleLogout = async () => {
+    if (!isEntityReady(profile)) return;
     try {
-      await window.electron.profile.delete(profile?.id);
+      await window.electron.profile.delete(profile.id);
       setLogoutDialogOpen(false);
       navigate("/noprofile");
     } catch (error) {
