@@ -1,18 +1,22 @@
-export type EventHandler<Args extends any[]> = (...args: Args) => void;
-export type EventSource<Args extends any[]> = [EventHandler<Args>, (handler: EventHandler<Args>) => () => boolean]
+export type EventHandler<V> = (value: V) => void;
+export type EventSource<V> = {
+    notify: (value: V) => void,
+    watch: (handler: EventHandler<V>) => () => boolean
+}
 
-export const eventSource = <Args extends any[]>(): EventSource<Args> => {
-    const handlers = new Set<EventHandler<Args>>()
-    return [
-        (...args: Args) => {
-            handlers.forEach(handler => handler(...args))
+export const eventSource = <V>(): EventSource<V> => {
+    const handlers = new Set<EventHandler<V>>()
+    return {
+        notify: (value: V) => {
+            handlers.forEach(handler => handler(value))
         },
-        (handler: EventHandler<Args>) => {
+        // 监听事件，返回一个函数用于取消监听，取消后返回是否是最后一个监听者
+        watch: (handler: EventHandler<V>) => {
             handlers.add(handler)
             return () => {
                 handlers.delete(handler)
                 return handlers.size === 0
             }
         }
-    ]
+    }
 }

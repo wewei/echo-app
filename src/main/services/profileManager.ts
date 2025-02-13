@@ -7,10 +7,10 @@ import { eventSource } from '@/shared/utils/event'
 
 const PROFILES_FILE = 'profiles.json'
 
-const [notifyProfileCreated, onProfileCreated] = eventSource<[Profile]>()
-const [notifyProfileWillBeDeleted, onProfileWillBeDeleted] = eventSource<[string]>()
-const [notifyProfileDeleted, onProfileDeleted] = eventSource<[string]>()
-const [notifyProfileUpdated, onProfileUpdated] = eventSource<[Profile]>()
+const { notify: notifyProfileCreated, watch: onProfileCreated } = eventSource<Profile>()
+const { notify: notifyProfileWillBeDeleted, watch: onProfileWillBeDeleted } = eventSource<string>()
+const { notify: notifyProfileDeleted, watch: onProfileDeleted } = eventSource<string>()
+const { notify: notifyProfileUpdated, watch: onProfileUpdated } = eventSource<Profile>()
 
 export { onProfileCreated, onProfileWillBeDeleted, onProfileDeleted, onProfileUpdated }
 

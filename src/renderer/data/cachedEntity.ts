@@ -1,74 +1,57 @@
 import { useEffect, useRef, useState } from "react"
+import { EventSource, eventSource } from "@/shared/utils/event"
 
-export type CachedEntityHook<V> = (key: string) => V | null
-export type Patcher<P> = (patch: P) => void
-export type MutableCachedEntityHook<V, P> = (key: string) => [V | null, Patcher<P>]
+export const entityNotExists = Symbol('entityNotExists')
+export type EntityNotExists = typeof entityNotExists
 
-type CachedEntityHookPlus<V, C> = (key: string) => [V | null, C]
+export type EntityState<V> = V | EntityNotExists
 
-const cachedEntityInner = <V>(read: (key: string) => Promise<V | null>): CachedEntityHookPlus<V, (key: string, value: V | null) => void> => {
-  const cache = new Map<string, V>()
+export const entityLoading = Symbol('entityLoading')
+export type EntityLoading = typeof entityLoading
 
-  return (key: string) => {
-    const [value, setValue] = useState<V | null>(null)
-    const keyRef = useRef<string | null>(null)
-    useEffect(() => {
-      const fetchValue = async () => {
-        const val = await read(key)
-        cache.set(key, val)
-        if (keyRef.current === key) {
-          setValue(val)
-        }
-      }
-      keyRef.current = key
-      if (!value) {
-        const val = cache.get(key)
-        if (val) {
-          setValue(val)
-        } else {
-          fetchValue()
-        }
-      }
+export type EntityCacheState<V> = EntityState<V> | EntityLoading
+
+export type Updater<V> = (key: string, entity: EntityState<V>) => void
+export type CachedEntityHook<V> = (key: string) => EntityCacheState<V>
+
+export const cachedEntity =
+  <V>(read: (key: string) => Promise<V | null>): [CachedEntityHook<V>, Updater<V>] => {
+    const cache = new Map<string, V>()
+    const eventSources = new Map<string, EventSource<EntityState<V>>>()
+
+    const watch = (key: string, listener: (entity: EntityState<V>) => void) => {
+      const unwatch = (eventSources.has(key) ? eventSources.get(key) : (() => {
+        const evtSrc = eventSource<EntityState<V>>()
+        eventSources.set(key, evtSrc)
+        return evtSrc
+      })()).watch(listener);
+
       return () => {
-        keyRef.current = null
-        setValue(null)
-      }
-    }, [key])
-    return [value, (key, val) => {
-      if (val) {
-        cache.set(key, val)
-      } else {
-        cache.delete(key)
-      }
-      if (keyRef.current === key) {
-        setValue(val)
-      }
-    }]
-  }
-}
-
-// V is the value type
-// P is the patch type
-export const mutableCachedEntity = <V extends Record<string, unknown>, P>(read: (key: string) => Promise<V | null>, update: (patch: P, value: V) => (V | null)): MutableCachedEntityHook<V, P> => {
-  const innerHook = cachedEntityInner(read)
-
-  return (key: string) => {
-    const [value, updateValue] = innerHook(key)
-    return [value, (patch) => {
-      if (value) {
-        const val = update(patch, value);
-        if (val !== value) {
-          updateValue(key, val)
+        if (unwatch()) {
+          eventSources.delete(key)
         }
       }
-    }]
-  }
-}
+    }
 
-export const cachedEntity = <V extends Record<string, unknown>>(read: (key: string) => Promise<V | null>): CachedEntityHook<V> => {
-  const innerHook = cachedEntityInner(read)
-  return (key: string) => {
-    const [value] = innerHook(key)
-    return value
+    const hook = (key: string) => {
+      const [value, setValue] = useState<EntityCacheState<V>>(cache.get(key) ?? entityLoading)
+      const keyRef = useRef<string | null>(null)
+
+      useEffect(() => {
+        keyRef.current = key
+        const unwatch = watch(key, setValue);
+        
+        return () => {
+          keyRef.current = null
+          unwatch()
+        }
+      }, [key])
+      return value
+    }
+
+    const updater: Updater<V> = (key, val) => {
+      cache.set(key, val)
+    }
+
+    return [hook, updater]
   }
-}

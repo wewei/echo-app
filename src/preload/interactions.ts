@@ -21,7 +21,7 @@ export const interactionAPI = {
   getResponses: (profileId: string, ids: string[]): Promise<Response[]> =>
     ipcRenderer.invoke(IPC_CHANNELS.GET_RESPONSES, profileId, ids),
 
-  getResponsesOfQuery: (profileId: string, queryId: string): Promise<Response[]> =>
+  getResponsesOfQuery: (profileId: string, queryId: string): Promise<string[]> =>
     ipcRenderer.invoke(IPC_CHANNELS.GET_RESPONSES_OF_QUERY, profileId, queryId),
 }
 

@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import type { Profile } from "@/shared/types/profile";
 import { mutableCachedEntity } from "./cachedEntity";
 
-const useProfile = mutableCachedEntity(window.electron.profile.get, (updater: (cur: Profile) => Profile, cur: Profile) => {
+const [useProfile] = mutableCachedEntity(window.electron.profile.get, (updater: (cur: Profile) => Profile, cur: Profile) => {
   const newProfile = updater(cur)
   window.electron.profile.update(newProfile.id, newProfile)
   return newProfile
