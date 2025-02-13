@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Box } from '@mui/material';
+import WebViewPool from './WebViewPool';
 
 interface WebPanelProps {
   url?: string;
@@ -10,13 +11,18 @@ interface WebPanelProps {
 
 const WebPanel: React.FC<WebPanelProps> = (props) => {
   const [searchParams] = useSearchParams();
-  const webviewRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const webviewPool = WebViewPool.getInstance({ maxSize: 3 });
 
   const url = props.url || searchParams.get('url') || '';
 
   useEffect(() => {
-    const webview = webviewRef.current;
-    if (!webview) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const webview = webviewPool.getWebView(props.tabId, url);
+    container.innerHTML = '';
+    container.appendChild(webview);
 
     const handleTitleUpdate = (e: any) => {
       props.onTitleChange?.(props.tabId, e.title);
@@ -28,13 +34,14 @@ const WebPanel: React.FC<WebPanelProps> = (props) => {
     };
   }, [props.tabId, props.onTitleChange]);
 
+
   return (
     <Box sx={{ width: '100%', height: '100%' }}>
       <webview
         src={url}
         style={{ width: '100%', height: '100%' }}
-        ref={webviewRef}
-      />
+        ref={containerRef}
+    />
     </Box>
   );
 }
