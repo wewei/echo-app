@@ -123,11 +123,8 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
             const currentTab = tabs.find(tab => tab.id === activeTab);
             if (!currentTab) return null;
 
-            console.log("currentTab:"+JSON.stringify(currentTab));
-
             // 如果标签有 context，显示网页
             if (currentTab.context) {
-              console.log("display context");
               return (
                 <WebPanel
                   url={currentTab.context}
@@ -139,7 +136,6 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
 
             // 如果标签有 messageId，显示消息详情
             if (currentTab.messageId) {
-              console.log("display message detail");
               return (
                 <MessageDetailPanel
                   profileId={profileId}

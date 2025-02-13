@@ -14,8 +14,7 @@ export default function MainPage() {
   const menuPath = searchParams.get("menu");
 
   const handleLinkClick = (url: string) => {
-    // setSearchParams({ context: url });
-    navigate(`/profile/${profileId}?context=${url}`);
+    setSearchParams({ context: url });
   }
 
   return (
