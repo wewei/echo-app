@@ -32,7 +32,7 @@ const WebPanel: React.FC<WebPanelProps> = (props) => {
     return () => {
       webview.removeEventListener('page-title-updated', handleTitleUpdate);
     };
-  }, [props.tabId, props.onTitleChange]);
+  }, [props.tabId]);
 
 
   return (
