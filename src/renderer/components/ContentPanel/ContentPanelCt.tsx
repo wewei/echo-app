@@ -5,10 +5,7 @@ import useContentSession from '../../data/contentSession';
 
 export const ContentPanelCt: React.FC = () => {
   const { profileId } = useParams();
-  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-
-  console.log("location ="+JSON.stringify(location));
 
   const {
     contentSession,

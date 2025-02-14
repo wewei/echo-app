@@ -105,7 +105,10 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
                 {hiddenTabs.map((tab) => (
                   <MenuItem
                     key={tab.id}
-                    onClick={() => onHiddenTabClick(tab)}
+                    onClick={() => {
+                      onHiddenTabClick(tab);
+                      onMenuClose();
+                    }}
                   >
                     {tab.title}
                   </MenuItem>
