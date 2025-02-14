@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import {
   type Query,
   type QueryInput,
+  type Response,
+  type ResponseInput,
 } from "@/shared/types/interactions";
 
 import { useCurrentProfileId } from "@/renderer/data/profile";
@@ -13,11 +15,15 @@ const [useQuery, updateQuery] = cachedEntity(async (key: string) => {
   return queries[0]
 })
 
-export { useQuery }
+const [useResponse, updateResponse] = cachedEntity(async (key: string) => {
+  const profileId = useCurrentProfileId()
+  const responses = await window.electron.interactions.getResponses(profileId, [key])
+  return responses[0]
+})
 
 const BATCH_SIZE = 20
 
-export const useRecentQueryIds = (): { ids: string[], loadMore: (maxCount: number) => void, hasMore: boolean, createQuery: (input: QueryInput) => Promise<Query> } => {
+const useRecentQueryIds = (): { ids: string[], loadMore: (maxCount: number) => void, hasMore: boolean, createQuery: (input: QueryInput) => Promise<Query> } => {
   const [ids, setIds] = useState<string[]>([])
   const [maxCount, setMaxCount] = useState(BATCH_SIZE)
   const [hasMore, setHasMore] = useState(true)
@@ -58,3 +64,34 @@ export const useRecentQueryIds = (): { ids: string[], loadMore: (maxCount: numbe
 
   return { ids, loadMore, hasMore, createQuery }
 }
+
+const [useQueryResponses, updateQueryResponses] = cachedEntity(async (queryId: string) => {
+  const profileId = useCurrentProfileId()
+  const responses = await window.electron.interactions.getResponsesOfQuery(profileId, queryId)
+  return responses
+})
+
+const createQuery = async (input: QueryInput) => {
+  const profileId = useCurrentProfileId()
+  const query = await window.electron.interactions.createQuery(profileId, input)
+  updateQuery(profileId, () => query)
+  return query
+}
+
+const createResponse = async (input: ResponseInput) => {
+  const profileId = useCurrentProfileId()
+  const response = await window.electron.interactions.createResponse(profileId, input)
+  updateResponse(profileId, () => response)
+  updateQueryResponses(response.query, (cur) => [...cur, response.id])
+  return response
+}
+
+const appendResponseContent = async (responseId: string, content: string) => {
+  const profileId = useCurrentProfileId()
+  const response = await window.electron.interactions.appendResponse(profileId, responseId, content)
+  updateResponse(profileId, () => response)
+  return response
+}
+
+export { useQuery, useResponse, useRecentQueryIds, useQueryResponses, createQuery, createResponse, appendResponseContent }
+
