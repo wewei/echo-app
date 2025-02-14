@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   type Query,
   type QueryInput,
-  type Response,
   type ResponseInput,
 } from "@/shared/types/interactions";
 
