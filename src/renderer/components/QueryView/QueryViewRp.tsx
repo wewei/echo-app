@@ -2,6 +2,7 @@ import React from 'react'
 import { Box, Typography, Chip } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import type { Query } from '@/shared/types/interactions'
+import ResponseList from '@/renderer/components/ResponseList'
 
 interface QueryViewRpProps {
   query: Query
@@ -23,9 +24,10 @@ export default function QueryViewRp({ query }: QueryViewRpProps) {
           variant="outlined"
         />
       </Box>
-      <Typography>
+      <Typography sx={{ mb: 2 }}>
         {query.content}
       </Typography>
+      <ResponseList queryId={query.id} />
     </Box>
   )
 } 
