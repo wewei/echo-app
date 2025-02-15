@@ -75,4 +75,4 @@ export const profileCachedEntity = <K, V>(
 };
 
 export const isEntityReady = <V>(entity: EntityState<V>): entity is V => 
-  entity !== ENTITY_LOADING && entity !== ENTITY_NOT_FOUND
+  entity && entity !== ENTITY_LOADING && entity !== ENTITY_NOT_FOUND

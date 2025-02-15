@@ -104,8 +104,7 @@ const createQuery = async (input: QueryInput) => {
   return query;
 };
 
-const createResponse = async (input: ResponseInput) => {
-  const profileId = useCurrentProfileId();
+const createResponse = async (profileId: string, input: ResponseInput) => {
   const response = await window.electron.interactions.createResponse(
     profileId,
     input
@@ -132,6 +131,7 @@ const appendResponseContent = async (responseId: string, content: string) => {
 // TODO, use the cached entities
 const getQueries = window.electron.interactions.getQueries;
 const getResponses = window.electron.interactions.getResponses;
+const getResponsesOfQuery = window.electron.interactions.getResponsesOfQuery;
 
 export {
   useQuery,
@@ -143,4 +143,5 @@ export {
   appendResponseContent,
   getQueries,
   getResponses,
+  getResponsesOfQuery,
 };

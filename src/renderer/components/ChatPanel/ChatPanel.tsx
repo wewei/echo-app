@@ -11,7 +11,7 @@ import { useMessages } from '@/renderer/data/messages'
 import { useSettings } from '@/renderer/data/settings'
 import { CHAT_SETTINGS, ChatSettingsSchema } from '@/shared/types/chatSettings'
 import { Message } from '@/shared/types/message'
-import { useRecentQueryIds, createResponse, useQuery, useResponse} from '@/renderer/data/interactions'
+import { useRecentQueryIds, createResponse, getQueries, getResponsesOfQuery} from '@/renderer/data/interactions'
 import ResponseListCt from '../ResponseList'
 import QueryListCt from '../QueryList'
 import { isEntityReady } from '@/renderer/data/cachedEntity'
@@ -35,32 +35,37 @@ const ChatPanel = ({ handleLinkClick }: { handleLinkClick: (url: string) => void
   useEffect(() => () => cancelStreamRef.current?.(), [cancelStreamRef]);
 
   useEffect(() => {
-    if (streamingMessage && model && !cancelStreamRef.current) {
-      let content = ""
+    const fetchMessages = async () => {
+      if (streamingMessage && model && !cancelStreamRef.current) {
+        let content = "";
 
-      const queries = ids.map(id => useQuery(id));
-      const responses = ids.map(id => useResponse(id));
-      
-      type MessageType = {
-        role: "user" | "assistant";
-        content: string;
-      };
-      
-      const messages: MessageType[] = ids.flatMap((id, index) => {
-        const query = queries[index];
-        const response = responses[index];
-      
-        if (isEntityReady(query) && isEntityReady(response)) {
-          return [
-            { role: "user", content: query.content },
-            { role: "assistant", content: response.content }
-          ];
+        // Await the resolution of the promises
+        type MessageType = {
+          role: "user" | "assistant";
+          content: string;
+        };
+
+        const messages: MessageType[] = [];
+        const queries = await getQueries(profileId, ids);
+        for (const query of queries) {
+          if (isEntityReady(query)) {
+            messages.push(
+              { role: "user", content: query.content || "" }
+            );
+
+            const responses = await getResponsesOfQuery(profileId, query.id);
+            if (isEntityReady(responses)) {
+              for (const response of responses) {
+                messages.push(
+                  { role: "assistant", content: response || "" }
+                );
+              }
+            }
+          }
         }
-        return [];
-      });
 
-      cancelStreamRef.current = window.electron.chat.stream(
-        profileId,
+        cancelStreamRef.current = window.electron.chat.stream(
+          profileId,
           {
             messages: messages,
             model
@@ -89,7 +94,7 @@ const ChatPanel = ({ handleLinkClick }: { handleLinkClick: (url: string) => void
               // });
               // setStreamingMessage(null);
           
-              createResponse({
+              createResponse(profileId, {
                 query: streamingMessage.uuid, // replace with the actual query ID related to this response
                 content: streamingMessage.content,
                 timestamp: streamingMessage.timestamp,
@@ -104,8 +109,11 @@ const ChatPanel = ({ handleLinkClick }: { handleLinkClick: (url: string) => void
             setError(t("chat.error.unknown"));
             setStreamingMessage(null);
           }
-      );
-    }
+        );
+      }
+    };
+
+    fetchMessages();
   }, [cancelStreamRef.current, streamingMessage]);
 
   const handleSend = (content: string) => {

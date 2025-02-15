@@ -7,6 +7,7 @@ interface QueryListRpProps {
   queryIds: string[]
   onQueryClick?: (queryId: string) => void
   loadMore: (() => void) | null
+  hasMore: boolean
 }
 
 export default function QueryListRp({ 
