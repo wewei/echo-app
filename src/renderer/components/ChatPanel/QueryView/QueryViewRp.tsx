@@ -2,7 +2,7 @@ import React from 'react'
 import { Box, Typography, Chip } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import type { Query } from '@/shared/types/interactions'
-import ResponseList from '@/renderer/components/ResponseList'
+import ResponseList from '@/renderer/components/ChatPanel/ResponseList'
 
 interface QueryViewRpProps {
   query: Query

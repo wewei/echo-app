@@ -2,7 +2,7 @@ import React from 'react'
 import { Box, IconButton, Paper } from '@mui/material'
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore'
 import NavigateNextIcon from '@mui/icons-material/NavigateNext'
-import ResponseView from '@/renderer/components/ResponseView'
+import ResponseView from '@/renderer/components/ChatPanel/ResponseView'
 
 interface ResponseListRpProps {
   responseIds: string[]

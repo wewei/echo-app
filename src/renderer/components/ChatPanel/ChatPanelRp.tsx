@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, styled } from '@mui/material';
-import QueryList from '../QueryList';
+import QueryList from './QueryList';
 import MessageInput from './MessageInput';
 
 interface Props {
