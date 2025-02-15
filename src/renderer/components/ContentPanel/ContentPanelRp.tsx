@@ -55,39 +55,66 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
     }}>
       {tabs.length > 0 && (
         <Box sx={{ borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center', position: 'relative' }}>
-          <Tabs 
-            value={activeTab}
-            onChange={(_, value) => {
-              const tab = tabs.find(t => t.id === value);
-              if (tab) {
-                onTabClick(tab);
+          <Box
+            sx={{
+              display: 'flex',
+              overflowX: 'auto',
+              flex: 1,
+              minHeight: 0,
+              '&::-webkit-scrollbar': {
+                height: '8px'
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: 'rgba(0,0,0,0.2)',
+                borderRadius: '4px'
               }
             }}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{ flex: 1, minHeight: 0 }}
           >
             {tabs.map((tab) => (
-              <Tab
+              <Box
                 key={tab.id}
-                value={tab.id}
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{ marginRight: '8px' }}>{tab.title}</span>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onCloseTab(tab.id);
-                      }}
-                    >
-                      <CloseIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                }
-              />
+                onClick={() => onTabClick(tab)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center', 
+                  padding: '8px 16px',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  borderRight: '1px solid rgba(0,0,0,0.12)',
+                  backgroundColor: tab.id === activeTab ? 'rgba(0,0,0,0.04)' : 'transparent',
+                  boxShadow: tab.id === activeTab ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                  borderRadius: '4px 4px 0 0',
+                  marginTop: '2px',
+                  position: 'relative',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0,0,0,0.08)',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  },
+                  '&:before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '2px',
+                    background: tab.id === activeTab ? 'primary.main' : 'transparent',
+                    borderRadius: '4px 4px 0 0'
+                  }
+                }}
+              >
+                <span style={{ marginRight: '8px' }}>{tab.title}</span>
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCloseTab(tab.id);
+                  }}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </Box>
             ))}
-          </Tabs>
+          </Box>
           {hiddenTabs.length > 0 && (
             <>
               <IconButton

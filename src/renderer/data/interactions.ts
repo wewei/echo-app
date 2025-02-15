@@ -94,16 +94,6 @@ const [useQueryResponses, updateQueryResponses] = profileCachedEntity(
   }
 );
 
-const createQuery = async (input: QueryInput) => {
-  const profileId = useCurrentProfileId();
-  const query = await window.electron.interactions.createQuery(
-    profileId,
-    input
-  );
-  updateQuery(profileId, query.id, () => query);
-  return query;
-};
-
 const createResponse = async (profileId: string, input: ResponseInput) => {
   const response = await window.electron.interactions.createResponse(
     profileId,
@@ -117,8 +107,7 @@ const createResponse = async (profileId: string, input: ResponseInput) => {
   return response;
 };
 
-const appendResponseContent = async (responseId: string, content: string) => {
-  const profileId = useCurrentProfileId();
+const appendResponseContent = async (profileId: string, responseId: string, content: string) => {
   const response = await window.electron.interactions.appendResponse(
     profileId,
     responseId,
@@ -138,7 +127,6 @@ export {
   useResponse,
   useRecentQueryIds,
   useQueryResponses,
-  createQuery,
   createResponse,
   appendResponseContent,
   getQueries,

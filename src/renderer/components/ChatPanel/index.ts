@@ -1,2 +1,1 @@
-import ChatPanel from './ChatPanel'
-export default ChatPanel;
+export { default } from './ChatPanelCt'

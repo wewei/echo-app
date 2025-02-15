@@ -12,7 +12,6 @@ import { useSettings } from '@/renderer/data/settings'
 import { CHAT_SETTINGS, ChatSettingsSchema } from '@/shared/types/chatSettings'
 import { Message } from '@/shared/types/message'
 import { useRecentQueryIds, createResponse, getQueries, getResponsesOfQuery} from '@/renderer/data/interactions'
-import ResponseListCt from '../ResponseList'
 import QueryListCt from '../QueryList'
 import { isEntityReady } from '@/renderer/data/cachedEntity'
 
@@ -98,6 +97,7 @@ const ChatPanel = ({ handleLinkClick }: { handleLinkClick: (url: string) => void
                 query: streamingMessage.uuid, // replace with the actual query ID related to this response
                 content: streamingMessage.content,
                 timestamp: streamingMessage.timestamp,
+                agents: 'chat',
                 // Add any additional fields required by ResponseInput
               });
           
