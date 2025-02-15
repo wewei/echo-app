@@ -3,14 +3,61 @@ import { type CacheStrategy, unlimited } from "./strategies"
 export const ENTITY_NOT_FOUND = Symbol("ENTITY_NOT_FOUND")
 export type EntityNotFound = typeof ENTITY_NOT_FOUND
 export type FetchResult<V> = V | EntityNotFound
-export type FetchFunction<K, V> = (key: K) => Promise<FetchResult<V>>
+export type Fetch<K, V> = (key: K) => V
+export type CacheUpdater<K, V> = (key: K, fn: (value: V) => FetchResult<V>) => void
 
-export type CacheUpdater<K, V> = (key: K, fn: (value: V) => FetchResult<V>) => Promise<void>
-
+export type AsyncFetch<K, V> = (key: K) => Promise<FetchResult<V>>
+export type AsyncCacheUpdater<K, V> = (key: K, fn: (value: V) => FetchResult<V>) => Promise<void>
 
 export const cachedWith =
-  <K, V>({ handleAccess, handleDelete }: CacheStrategy<K> = unlimited()) =>
-  (fn: FetchFunction<K, V>): [FetchFunction<K, V>, CacheUpdater<K, V>] => {
+  <K>({ handleAccess, handleDelete }: CacheStrategy<K> = unlimited()) =>
+  <V>(fn: Fetch<K, V>): [Fetch<K, V>, CacheUpdater<K, V>] => {
+    const cache = new Map<K, V>()
+
+    const cachedFn = (key: K) => {
+      const cached = cache.get(key)
+
+      if (cached) {
+        handleAccess(key)
+        return cached
+      }
+
+      const result = fn(key)
+
+      if (result !== ENTITY_NOT_FOUND) {
+        const keyOut = handleAccess(key)
+        cache.set(key, result)
+        if (keyOut !== null && cache.has(keyOut)) {
+          handleDelete(keyOut)
+          cache.delete(keyOut)
+        }
+      }
+
+      return result
+    }
+
+    const updater = async (key: K, fn: (value: V) => FetchResult<V>) => {
+      const cached = cache.get(key)
+      if (cached) {
+        const updated = fn(cached)
+
+        if (updated === ENTITY_NOT_FOUND) {
+          cache.delete(key)
+          handleDelete(key)
+        } else {
+          cache.set(key, updated)
+        }
+      }
+    }
+
+    return [cachedFn, updater]
+  }
+
+
+
+export const cachedWithAsync =
+  <K>({ handleAccess, handleDelete }: CacheStrategy<K> = unlimited()) =>
+  <V>(fn: AsyncFetch<K, V>): [AsyncFetch<K, V>, AsyncCacheUpdater<K, V>] => {
     const cache = new Map<K, Promise<FetchResult<V>>>();
 
     const cachedFn = (key: K) => {

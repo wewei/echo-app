@@ -1,8 +1,8 @@
 import { makeEventSource } from '../../event';
-import { cachedWith, ENTITY_NOT_FOUND } from '../cached';
+import { cachedWithAsync, ENTITY_NOT_FOUND, cachedWith } from '../cached';
 import { lru, unlimited } from '../strategies';
 
-describe('cachedWith', () => {
+describe('cachedWithAsync', () => {
   it('should cache function results', async () => {
     let computeCount = 0;
     const expensive = async (x: number) => {
@@ -10,7 +10,7 @@ describe('cachedWith', () => {
       return x * 2;
     };
     
-    const [cachedFn] = cachedWith()(expensive);
+    const [cachedFn] = cachedWithAsync()(expensive);
     
     // 第一次调用应该执行计算
     expect(await cachedFn(2)).toBe(4);
@@ -30,7 +30,7 @@ describe('cachedWith', () => {
       return key === 404 ? ENTITY_NOT_FOUND : key;
     };
 
-    const [cachedFn] = cachedWith()(fetchWithNotFound);
+    const [cachedFn] = cachedWithAsync()(fetchWithNotFound);
 
     expect(await cachedFn(1)).toBe(1);
     expect(await cachedFn(404)).toBe(ENTITY_NOT_FOUND);
@@ -42,7 +42,7 @@ describe('cachedWith', () => {
       onSwapOut: (key) => swapOutKeys.push(key)
     });
     
-    const [cachedFn] = cachedWith(strategy)(async (x: number) => x * 2);
+    const [cachedFn] = cachedWithAsync(strategy)(async (x: number) => x * 2);
 
     // 填充缓存
     await cachedFn(1);
@@ -62,7 +62,7 @@ describe('cachedWith', () => {
         swapOutKeys.push(key)
       },
     })
-    const [cachedFn, updater] = cachedWith(strategy)(async (x: number) => x * 2);
+    const [cachedFn, updater] = cachedWithAsync(strategy)(async (x: number) => x * 2);
 
     // 首次获取值
     expect(await cachedFn(1)).toBe(2);
@@ -80,7 +80,7 @@ describe('cachedWith', () => {
   describe('error handling', () => {
     it('should propagate errors', async () => {
       const error = new Error('fetch failed');
-      const [cachedFn] = cachedWith()(async () => {
+      const [cachedFn] = cachedWithAsync()(async () => {
         throw error;
       });
 
@@ -89,7 +89,7 @@ describe('cachedWith', () => {
 
     it('should not cache rejected promises', async () => {
       let callCount = 0;
-      const [cachedFn] = cachedWith()(async () => {
+      const [cachedFn] = cachedWithAsync()(async () => {
         callCount++;
         throw new Error('fetch failed');
       });
@@ -102,14 +102,14 @@ describe('cachedWith', () => {
 
   describe('cache updater', () => {
     it('should ignore updates for non-existent keys', async () => {
-      const [cachedFn, updater] = cachedWith()(async (x: number) => x * 2);
+      const [cachedFn, updater] = cachedWithAsync()(async (x: number) => x * 2);
       
       updater(1, () => 10);
       expect(await cachedFn(1)).toBe(2); // 应该执行原始计算
     });
 
     it('should handle concurrent updates', async () => {
-      const [cachedFn, updater] = cachedWith()(async (x: number) => x * 2);
+      const [cachedFn, updater] = cachedWithAsync()(async (x: number) => x * 2);
       
       // 首次获取以缓存值
       const initial = await cachedFn(1);
@@ -128,7 +128,7 @@ describe('cachedWith', () => {
         onSwapOut: (key) => swapOutKeys.push(key)
       });
       
-      const [cachedFn, updater] = cachedWith(strategy)(async (x: number) => x);
+      const [cachedFn, updater] = cachedWithAsync(strategy)(async (x: number) => x);
 
       // 首先缓存一个值
       await cachedFn(1);
@@ -144,7 +144,7 @@ describe('cachedWith', () => {
 
       // 再次访问应该重新获取
       let fetchCount = 0;
-      const [newCachedFn] = cachedWith(strategy)(async (x: number) => {
+      const [newCachedFn] = cachedWithAsync(strategy)(async (x: number) => {
         fetchCount++;
         return x;
       });
@@ -159,7 +159,7 @@ describe('cachedWith', () => {
         onSwapOut: (key) => swapOutKeys.push(key)
       });
       
-      const [cachedFn, updater] = cachedWith(strategy)(async (x: number) => x);
+      const [cachedFn, updater] = cachedWithAsync(strategy)(async (x: number) => x);
 
       // 首先缓存一个值
       await cachedFn(1);
@@ -177,7 +177,7 @@ describe('cachedWith', () => {
         onSwapOut: (key) => swapOutKeys.push(key)
       });
       
-      const [cachedFn, updater] = cachedWith(strategy)(async (x: number) => x);
+      const [cachedFn, updater] = cachedWithAsync(strategy)(async (x: number) => x);
 
       // 首先缓存一个值
       await cachedFn(1);
@@ -194,7 +194,7 @@ describe('cachedWith', () => {
       // 验证最后的状态
       expect(swapOutKeys).toContain(1);
       let fetchCount = 0;
-      const [newCachedFn] = cachedWith(strategy)(async (x: number) => {
+      const [newCachedFn] = cachedWithAsync(strategy)(async (x: number) => {
         fetchCount++;
         return x;
       });
@@ -207,7 +207,7 @@ describe('cachedWith', () => {
       const source = makeEventSource<void>();
       let updateFnCalled = false;
       
-      const [cachedFn, updater] = cachedWith()(async () => {
+      const [cachedFn, updater] = cachedWithAsync()(async () => {
         await new Promise(resolve => {
           source.watch(() => resolve(undefined));
         });
@@ -242,7 +242,7 @@ describe('cachedWith', () => {
         onSwapOut: (key) => events.push({ type: 'out', key })
       });
       
-      const [cachedFn] = cachedWith(strategy)(async (x: number) => x);
+      const [cachedFn] = cachedWithAsync(strategy)(async (x: number) => x);
 
       // 测试容量为1的情况
       await cachedFn(1);
@@ -257,7 +257,7 @@ describe('cachedWith', () => {
 
     it('should handle repeated access', async () => {
       const strategy = lru<number>(2);
-      const [cachedFn] = cachedWith(strategy)(async (x: number) => x);
+      const [cachedFn] = cachedWithAsync(strategy)(async (x: number) => x);
 
       // 重复访问相同的key
       await cachedFn(1);
@@ -268,7 +268,7 @@ describe('cachedWith', () => {
       
       // 验证2被移除（通过再次访问2会重新计算）
       let computeCount = 0;
-      const [newCachedFn] = cachedWith(strategy)(async (x: number) => {
+      const [newCachedFn] = cachedWithAsync(strategy)(async (x: number) => {
         computeCount++;
         return x;
       });
@@ -286,7 +286,7 @@ describe('cachedWith', () => {
         onSwapOut: (key) => events.push({ type: 'out', key })
       });
       
-      const [cachedFn, updater] = cachedWith(strategy)(async (x: number) => x);
+      const [cachedFn, updater] = cachedWithAsync(strategy)(async (x: number) => x);
 
       await cachedFn(1);
       await cachedFn(2);
@@ -305,7 +305,7 @@ describe('cachedWith', () => {
       const strategy = unlimited<number>();
       let computeCount = 0;
 
-      const [cachedFn] = cachedWith(strategy)(async (x: number) => {
+      const [cachedFn] = cachedWithAsync(strategy)(async (x: number) => {
         computeCount++;
         return x;
       });
@@ -319,6 +319,218 @@ describe('cachedWith', () => {
       // 验证所有值都被缓存
       await Promise.all(keys.map(cachedFn));
       expect(computeCount).toBe(0);
+    });
+  });
+});
+
+describe('cachedWith', () => {
+  it('should cache the result of first call', () => {
+    let computeCount = 0
+    const [cachedFn] = cachedWith<string>()(key => {
+      computeCount++
+      return `data-${key}`
+    })
+
+    // 第一次调用
+    const result1 = cachedFn('123')
+    expect(result1).toBe('data-123')
+    expect(computeCount).toBe(1)
+
+    // 第二次调用应该使用缓存
+    const result2 = cachedFn('123')
+    expect(result2).toBe('data-123')
+    expect(computeCount).toBe(1)
+  })
+
+  it('should create different caches for different functions', () => {
+    let computeCount1 = 0
+    let computeCount2 = 0
+    
+    const [cachedFn1] = cachedWith<string>()(key => {
+      computeCount1++
+      return `data-${key}`
+    })
+    
+    const [cachedFn2] = cachedWith<string>()(key => {
+      computeCount2++
+      return `data-${key}`
+    })
+
+    // 测试第一个函数
+    const result1 = cachedFn1('123')
+    expect(result1).toBe('data-123')
+    expect(computeCount1).toBe(1)
+
+    // 测试第二个函数
+    const result2 = cachedFn2('123')
+    expect(result2).toBe('data-123')
+    expect(computeCount2).toBe(1)
+
+    // 再次调用两个函数
+    cachedFn1('123')
+    cachedFn2('123')
+    
+    expect(computeCount1).toBe(1)
+    expect(computeCount2).toBe(1)
+  })
+
+  it('should work with different return types', () => {
+    const [cachedString] = cachedWith<string>()(key => `data-${key}`)
+    const [cachedNumber] = cachedWith<string>()(key => parseInt(key))
+    
+    const stringResult = cachedString('123')
+    expect(typeof stringResult).toBe('string')
+    expect(stringResult).toBe('data-123')
+
+    const numberResult = cachedNumber('123')
+    expect(typeof numberResult).toBe('number')
+    expect(numberResult).toBe(123)
+  })
+
+  it('should support cache updates', () => {
+    const [cachedFn, updater] = cachedWith<string>()(key => `data-${key}`)
+
+    // 首次获取值
+    expect(cachedFn('123')).toBe('data-123')
+
+    // 更新缓存的值
+    updater('123', () => 'updated-data')
+    expect(cachedFn('123')).toBe('updated-data')
+
+    // 更新为 ENTITY_NOT_FOUND 应该从缓存中移除
+    updater('123', () => ENTITY_NOT_FOUND)
+    expect(cachedFn('123')).toBe('data-123') // 重新计算
+  })
+
+  describe('LRU strategy', () => {
+    it('should evict least recently used items when capacity is reached', () => {
+      const swapOutKeys: string[] = [];
+      const strategy = lru<string>(2, {
+        onSwapOut: (key) => swapOutKeys.push(key)
+      });
+      
+      const [cachedFn] = cachedWith<string>(strategy)(key => `data-${key}`);
+
+      // 填充缓存到容量上限
+      cachedFn('1');
+      cachedFn('2');
+      
+      // 添加第三个项，应该触发淘汰
+      cachedFn('3');
+      
+      // 验证最早使用的项被淘汰
+      expect(swapOutKeys).toEqual(['1']);
+      
+      // 重新访问已淘汰的项应该重新计算
+      let computeCount = 0;
+      const [newCachedFn] = cachedWith<string>(strategy)(key => {
+        computeCount++;
+        return `data-${key}`;
+      });
+      
+      newCachedFn('1');
+      expect(computeCount).toBe(1);
+    });
+
+    it('should update access order on cache hits', () => {
+      const swapOutKeys: string[] = [];
+      const strategy = lru<string>(2, {
+        onSwapOut: (key) => swapOutKeys.push(key)
+      });
+      
+      const [cachedFn] = cachedWith<string>(strategy)(key => `data-${key}`);
+
+      // 初始化缓存
+      cachedFn('1');
+      cachedFn('2');
+      
+      // 重新访问第一个项
+      cachedFn('1');
+      
+      // 添加新项，应该淘汰第二个项（而不是第一个）
+      cachedFn('3');
+      
+      expect(swapOutKeys).toEqual(['2']);
+    });
+
+    it('should handle cache updates with LRU strategy', () => {
+      const swapOutKeys: string[] = [];
+      const strategy = lru<string>(2, {
+        onSwapOut: (key) => swapOutKeys.push(key)
+      });
+      
+      const [cachedFn, updater] = cachedWith<string>(strategy)(
+        key => `data-${key}`
+      );
+
+      // 填充缓存
+      cachedFn('1');
+      cachedFn('2');
+      
+      // 更新已存在的项
+      updater('1', () => 'updated-1');
+      
+      // 验证更新不会影响 LRU 顺序
+      cachedFn('3');
+      expect(swapOutKeys).toEqual(['1']);
+    });
+
+    it('should handle ENTITY_NOT_FOUND with LRU strategy', () => {
+      const swapOutKeys: string[] = [];
+      const strategy = lru<string>(2, {
+        onSwapOut: (key) => swapOutKeys.push(key)
+      });
+      
+      const [cachedFn, updater] = cachedWith<string>(strategy)(
+        key => `data-${key}`
+      );
+
+      // 初始化缓存
+      cachedFn('1');
+      cachedFn('2');
+      
+      // 将某项更新为 NOT_FOUND
+      updater('1', () => ENTITY_NOT_FOUND);
+      
+      // 验证项被移除且触发了 onSwapOut
+      expect(swapOutKeys).toContain('1');
+      
+      // 添加新项不应该触发额外的淘汰
+      cachedFn('3');
+      expect(swapOutKeys.length).toBe(1);
+    });
+
+    it('should maintain correct capacity with mixed operations', () => {
+      const events: Array<{ type: 'in' | 'out', key: string }> = [];
+      const strategy = lru<string>(2, {
+        onSwapIn: (key) => events.push({ type: 'in', key }),
+        onSwapOut: (key) => events.push({ type: 'out', key })
+      });
+      
+      const [cachedFn, updater] = cachedWith<string>(strategy)(
+        key => `data-${key}`
+      );
+
+      // 混合操作序列
+      cachedFn('1');           // 添加
+      cachedFn('2');           // 添加
+      cachedFn('1');           // 访问
+      updater('2', () => 'updated-2'); // 更新
+      cachedFn('3');           // 添加，应该淘汰 2
+      updater('3', () => ENTITY_NOT_FOUND); // 删除
+      cachedFn('2');           // 重新添加
+
+      console.log(events)
+      
+      // 验证事件序列
+      expect(events).toEqual([
+        { type: 'in', key: '1' },
+        { type: 'in', key: '2' },
+        { type: 'in', key: '3' },
+        { type: 'out', key: '2' },
+        { type: 'out', key: '3' },
+        { type: 'in', key: '2' }
+      ]);
     });
   });
 }); 
