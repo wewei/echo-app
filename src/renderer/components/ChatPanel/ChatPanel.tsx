@@ -11,8 +11,13 @@ import { useMessages } from '@/renderer/data/messages'
 import { useSettings } from '@/renderer/data/settings'
 import { CHAT_SETTINGS, ChatSettingsSchema } from '@/shared/types/chatSettings'
 import { Message } from '@/shared/types/message'
+import { useRecentQueryIds, createResponse, useQuery, useResponse} from '@/renderer/data/interactions'
+import ResponseListCt from '../ResponseList'
+import QueryListCt from '../QueryList'
+import { isEntityReady } from '@/renderer/data/cachedEntity'
 
 const ChatPanel = ({ handleLinkClick }: { handleLinkClick: (url: string) => void }) => {
+  const BATCH_SIZE = 20
   const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const { profileId } = useParams<{ profileId: string }>();
@@ -24,42 +29,74 @@ const ChatPanel = ({ handleLinkClick }: { handleLinkClick: (url: string) => void
   const [chatSettings] = useSettings(profileId, CHAT_SETTINGS, ChatSettingsSchema)
   const model = chatSettings?.[chatSettings?.provider]?.model
 
+
+  const { ids, loadMore, hasMore, createQuery } = useRecentQueryIds();
+
   useEffect(() => () => cancelStreamRef.current?.(), [cancelStreamRef]);
 
   useEffect(() => {
-    if (streamingMessage && model && !cancelStreamRef.current && messages[messages.length - 1].sender === "user") {
+    if (streamingMessage && model && !cancelStreamRef.current) {
       let content = ""
+
+      const queries = ids.map(id => useQuery(id));
+      const responses = ids.map(id => useResponse(id));
+      
+      type MessageType = {
+        role: "user" | "assistant";
+        content: string;
+      };
+      
+      const messages: MessageType[] = ids.flatMap((id, index) => {
+        const query = queries[index];
+        const response = responses[index];
+      
+        if (isEntityReady(query) && isEntityReady(response)) {
+          return [
+            { role: "user", content: query.content },
+            { role: "assistant", content: response.content }
+          ];
+        }
+        return [];
+      });
+
       cancelStreamRef.current = window.electron.chat.stream(
         profileId,
           {
-            messages: [...messages, streamingMessage].map((message) => ({
-              role: message.sender === "user" ? "user" : "assistant",
-              content: message.content,
-            })),
+            messages: messages,
             model
           },
           (chunk: OpenAI.ChatCompletionChunk) => {
             const delta = chunk.choices[0]?.delta?.content || ""
             if (delta) {
               content += delta
-              setStreamingMessage(
-                (prev) =>
-                  prev && {
-                  ...prev,
-                  content:
-                    prev.content + (chunk.choices[0]?.delta?.content || ""),
-                }
-              )
+              // setStreamingMessage(
+              //   (prev) =>
+              //     prev && {
+              //     ...prev,
+              //     content:
+              //       prev.content + (chunk.choices[0]?.delta?.content || ""),
+              //   }
+              // )
+              console.log("content", content);
             }
           },
           () => {
             if (streamingMessage) {
-              addMessage({
-                ...streamingMessage,
-                content,
-                timestamp: new Date().getTime(),
+              // addMessage({
+              //   ...streamingMessage,
+              //   content,
+              //   timestamp: new Date().getTime(),
+              // });
+              // setStreamingMessage(null);
+          
+              createResponse({
+                query: streamingMessage.uuid, // replace with the actual query ID related to this response
+                content: streamingMessage.content,
+                timestamp: streamingMessage.timestamp,
+                // Add any additional fields required by ResponseInput
               });
-              setStreamingMessage(null);
+          
+              setStreamingMessage(null); // Clear the streaming message after creating the response
             }
             cancelStreamRef.current = null;
           },
@@ -69,14 +106,14 @@ const ChatPanel = ({ handleLinkClick }: { handleLinkClick: (url: string) => void
           }
       );
     }
-  }, [cancelStreamRef.current, messages]);
+  }, [cancelStreamRef.current, streamingMessage]);
 
   const handleSend = (content: string) => {
-    addMessage({
-      uuid: uuidv4(),
-      sender: "user",
+    createQuery({
       content,
       timestamp: new Date().getTime(),
+      type: "user",
+      contexts: []
     });
     setStreamingMessage({
       uuid: uuidv4(),
@@ -104,10 +141,16 @@ const ChatPanel = ({ handleLinkClick }: { handleLinkClick: (url: string) => void
           {error || t("chat.error.unknown")}
         </Alert>
       </Collapse>
-      <MessageList
+      {/* <MessageList
         messages={messages}
         streamingMessage={streamingMessage}
         onLinkClick={handleLinkClick}
+      /> */}
+      <QueryListCt
+        queryIds={ids}
+        onQueryClick={handleLinkClick}
+        loadMore={() => loadMore(BATCH_SIZE)}
+        hasMore={hasMore}
       />
       <MessageInput onSend={handleSend} disabled={streamingMessage !== null} />
     </Box>

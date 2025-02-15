@@ -63,12 +63,16 @@ const useContentSession = () => {
         updatedTabs.push(mostRecentlyAccessedHiddenTab);
       }
 
-      const mostRecentlyAccessedTab = updatedTabs.reduce((newest, tab) => tab.lastAccessed > newest.lastAccessed ? tab : newest);
+      let mostRecentlyAccessedTab = null;
+      if (updatedTabs.length > 0) {
+        mostRecentlyAccessedTab = updatedTabs.reduce((newest, tab) => tab.lastAccessed > newest.lastAccessed ? tab : newest);
+      }
+
       return {
         ...prevState,
         tabs: updatedTabs,
         hiddenTabs: updatedHiddenTabs,
-        activeTab: mostRecentlyAccessedTab.id,
+        activeTab: mostRecentlyAccessedTab ? mostRecentlyAccessedTab.id : null,
       };
     });
 

@@ -40,7 +40,9 @@ export const getInteractionManager = (profileId: string): InteractionManager => 
     },
 
     getQueries: (ids: string[]) => {
-      return db.query.getByIds(ids)
+      const result = db.query.getByIds(ids);
+      console.log("getQueries", result);
+      return result;
     },
 
     getResponses: (ids: string[]) => {

@@ -9,7 +9,9 @@ interface Props {
 }
 
 export default function QueryViewCt({ queryId }: Props) {
-  const query = useQuery(queryId)
+  const query = useQuery(queryId);
+
+  console.log("query", query);
 
   return isEntityReady(query) ? <QueryViewRp query={query} /> : <Loading />
 } 

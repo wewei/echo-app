@@ -12,7 +12,8 @@ interface QueryListRpProps {
 export default function QueryListRp({ 
   queryIds,
   onQueryClick,
-  loadMore
+  loadMore,
+  hasMore
 }: QueryListRpProps) {
   const listRef = useRef<HTMLDivElement>(null)
   const { ref: loadMoreRef, inView } = useInView({
