@@ -1,21 +1,39 @@
 import zod from 'zod';
 
 export const querySchema = zod.object({
-  id: zod.string().uuid(),
-  contexts: zod.array(zod.string().uuid()).optional(),
-  content: zod.string(),
+  // Query ID
+  id: zod.string().nonempty(),
+
+  // An array of response IDs as the contexts of the query
+  contexts: zod.array(zod.string().nonempty()).optional(),
+
+  // The content of the query
+  content: zod.string().nonempty(),
+
+  // The timestamp of the query
   timestamp: zod.number(),
-  type: zod.string(),
+
+  // The type of the query
+  type: zod.string().nonempty(),
 })
 
 export type Query = zod.infer<typeof querySchema>
 
 export const responseSchema = zod.object({
-  id: zod.string().uuid(),
-  query: zod.string().uuid(),
-  content: zod.string(),
+  // Response ID
+  id: zod.string().nonempty(),
+
+  // The query ID the response responses to
+  query: zod.string().nonempty(),
+
+  // The content of the response
+  content: zod.string().nonempty(),
+
+  // The timestamp of the response
   timestamp: zod.number(),
-  agents: zod.string(),
+
+  // The agents of the response
+  agents: zod.string().nonempty(),
 })
 
 export type Response = zod.infer<typeof responseSchema>

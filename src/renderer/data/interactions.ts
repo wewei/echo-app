@@ -129,6 +129,10 @@ const appendResponseContent = async (responseId: string, content: string) => {
   return response;
 };
 
+// TODO, use the cached entities
+const getQueries = window.electron.interactions.getQueries;
+const getResponses = window.electron.interactions.getResponses;
+
 export {
   useQuery,
   useResponse,
@@ -137,4 +141,6 @@ export {
   createQuery,
   createResponse,
   appendResponseContent,
+  getQueries,
+  getResponses,
 };
