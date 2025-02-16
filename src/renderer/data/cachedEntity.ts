@@ -7,8 +7,8 @@ import {
   type FetchResult,
   type AsyncCacheUpdater,
   type EntityNotFound,
-} from "@/shared/utils/cached/cached";
-import { type CacheStrategy, unlimited } from "@/shared/utils/cached/strategies";
+} from "@/shared/utils/cache/cached";
+import { type CacheStrategy, unlimited } from "@/shared/utils/cache/strategies";
 import { useCurrentProfileId } from "./profile";
 export const ENTITY_LOADING = Symbol('ENTITY_LOADING')
 export type EntityLoading = typeof ENTITY_LOADING

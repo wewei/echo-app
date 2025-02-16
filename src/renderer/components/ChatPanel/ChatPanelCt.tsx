@@ -7,6 +7,7 @@ import { useSettings } from '@/renderer/data/settings'
 
 interface Props {
   onQueryClick?: (queryId: string) => void
+  handleLinkClick?: (url: string) => void
   disabled?: boolean
 }
 
