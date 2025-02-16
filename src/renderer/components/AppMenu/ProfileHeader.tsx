@@ -4,10 +4,10 @@ import SettingsIcon from '@mui/icons-material/Settings'
 import { Profile } from '@/shared/types/profile'
 import { useTranslation } from 'react-i18next'
 import Loading from '@/renderer/components/Loading'
-import { EntityState, isEntityReady } from '@/renderer/data/cachedEntity'
+import { EntityStoreState, isEntityReady } from '@/renderer/data/cachedEntity'
 
 type ProfileHeaderProps = {
-  profile: EntityState<Profile>
+  profile: EntityStoreState<Profile>
   onOpenSettings: () => void
 }
 

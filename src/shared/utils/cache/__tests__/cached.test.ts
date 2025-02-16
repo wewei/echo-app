@@ -1,7 +1,7 @@
 import { makeEventSource } from '../../event';
 import { cachedWithAsync, cachedWith } from '../cached';
 import { lru, unlimited } from '../strategies';
-import { ENTITY_NOT_FOUND } from '../cache';
+import { ENTITY_NOT_EXIST } from '../cache';
 
 describe('cachedWithAsync', () => {
   it('should cache function results', async () => {
@@ -28,13 +28,13 @@ describe('cachedWithAsync', () => {
 
   it('should handle not found results', async () => {
     const fetchWithNotFound = async (key: number) => {
-      return key === 404 ? ENTITY_NOT_FOUND : key;
+      return key === 404 ? ENTITY_NOT_EXIST : key;
     };
 
     const [cachedFn] = cachedWithAsync()(fetchWithNotFound);
 
     expect(await cachedFn(1)).toBe(1);
-    expect(await cachedFn(404)).toBe(ENTITY_NOT_FOUND);
+    expect(await cachedFn(404)).toBe(ENTITY_NOT_EXIST);
   });
 
   it('should work with LRU strategy', async () => {
@@ -73,8 +73,8 @@ describe('cachedWithAsync', () => {
     expect(await cachedFn(1)).toBe(10);
 
     // Entity 已经删除，更新为 not found 应该从缓存中移除
-    updater(1, () => ENTITY_NOT_FOUND);
-    expect(await cachedFn(1)).toBe(ENTITY_NOT_FOUND);
+    updater(1, () => ENTITY_NOT_EXIST);
+    expect(await cachedFn(1)).toBe(ENTITY_NOT_EXIST);
     expect(swapOutKeys).toContain(1);
   });
 
@@ -154,7 +154,7 @@ describe('cachedWithAsync', () => {
       expect(fetchCount).toBe(1);
     });
 
-    it('should handle updater returning ENTITY_NOT_FOUND', async () => {
+    it('should handle updater returning ENTITY_NOT_EXIST', async () => {
       const swapOutKeys: number[] = [];
       const strategy = unlimited<number>({
         onSwapOut: (key) => swapOutKeys.push(key)
@@ -165,8 +165,8 @@ describe('cachedWithAsync', () => {
       // 首先缓存一个值
       await cachedFn(1);
 
-      // 更新为 ENTITY_NOT_FOUND
-      await updater(1, () => ENTITY_NOT_FOUND);
+      // 更新为 ENTITY_NOT_EXIST
+      await updater(1, () => ENTITY_NOT_EXIST);
 
       // 验证缓存项被移除
       expect(swapOutKeys).toContain(1);
@@ -204,7 +204,7 @@ describe('cachedWithAsync', () => {
       expect(fetchCount).toBe(1);
     });
 
-    it('should not call updater function when cached promise resolves to ENTITY_NOT_FOUND', async () => {
+    it('should not call updater function when cached promise resolves to ENTITY_NOT_EXIST', async () => {
       const source = makeEventSource<void>();
       let updateFnCalled = false;
       
@@ -212,7 +212,7 @@ describe('cachedWithAsync', () => {
         await new Promise(resolve => {
           source.watch(() => resolve(undefined));
         });
-        return ENTITY_NOT_FOUND;
+        return ENTITY_NOT_EXIST;
       });
 
       // 开始获取，但还未返回结果
@@ -293,8 +293,8 @@ describe('cachedWithAsync', () => {
       await cachedFn(2);
       
       console.log(events)
-      // 通过返回 ENTITY_NOT_FOUND 触发移除
-      await updater(1, () => ENTITY_NOT_FOUND);
+      // 通过返回 ENTITY_NOT_EXIST 触发移除
+      await updater(1, () => ENTITY_NOT_EXIST);
 
       expect(events).toEqual([
         { type: 'in', key: 1 },
@@ -399,8 +399,8 @@ describe('cachedWith', () => {
     updater('123', () => 'updated-data')
     expect(cachedFn('123')).toBe('updated-data')
 
-    // 更新为 ENTITY_NOT_FOUND 应该从缓存中移除
-    updater('123', () => ENTITY_NOT_FOUND)
+    // 更新为 ENTITY_NOT_EXIST 应该从缓存中移除
+    updater('123', () => ENTITY_NOT_EXIST)
     expect(cachedFn('123')).toBe('data-123') // 重新计算
   })
 
@@ -477,7 +477,7 @@ describe('cachedWith', () => {
       expect(swapOutKeys).toEqual(['1']);
     });
 
-    it('should handle ENTITY_NOT_FOUND with LRU strategy', () => {
+    it('should handle ENTITY_NOT_EXIST with LRU strategy', () => {
       const swapOutKeys: string[] = [];
       const strategy = lru<string>(2, {
         onSwapOut: (key) => swapOutKeys.push(key)
@@ -492,7 +492,7 @@ describe('cachedWith', () => {
       cachedFn('2');
       
       // 将某项更新为 NOT_FOUND
-      updater('1', () => ENTITY_NOT_FOUND);
+      updater('1', () => ENTITY_NOT_EXIST);
       
       // 验证项被移除且触发了 onSwapOut
       expect(swapOutKeys).toContain('1');
@@ -519,7 +519,7 @@ describe('cachedWith', () => {
       cachedFn('1');           // 访问
       updater('2', () => 'updated-2'); // 更新
       cachedFn('3');           // 添加，应该淘汰 2
-      updater('3', () => ENTITY_NOT_FOUND); // 删除
+      updater('3', () => ENTITY_NOT_EXIST); // 删除
       cachedFn('2');           // 重新添加
 
       console.log(events)

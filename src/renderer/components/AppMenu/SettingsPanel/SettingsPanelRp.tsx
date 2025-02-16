@@ -28,10 +28,10 @@ import type { Profile } from "@/shared/types/profile";
 import Loading from "@/renderer/components/Loading";
 import SearchSettingsView from './SearchSettingsView';
 import ChatSettingsView from './ChatSettingsView';
-import { EntityState, isEntityReady } from "@/renderer/data/cachedEntity";
+import { EntityStoreState, isEntityReady } from "@/renderer/data/cachedEntity";
 
 interface SettingsPanelRpProps {
-  profile: EntityState<Profile>
+  profile: EntityStoreState<Profile>
   isEditing: boolean
   username: string
   avatarAssetId: string

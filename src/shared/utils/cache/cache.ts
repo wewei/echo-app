@@ -1,14 +1,15 @@
 import { CacheStrategy, unlimited } from "./strategies"
 
-export const ENTITY_NOT_FOUND = Symbol("ENTITY_NOT_FOUND")
-export type EntityNotFound = typeof ENTITY_NOT_FOUND
+export const ENTITY_NOT_EXIST = Symbol("ENTITY_NOT_EXIST")
+export type EntityNotExist = typeof ENTITY_NOT_EXIST
+export type EntityState<Entity> = Entity | EntityNotExist
 
 export type Cache<Key, Entity> = {
-  get: (key: Key) => Entity | EntityNotFound
+  get: (key: Key) => EntityState<Entity>
   set: (key: Key, entity: Entity) => void
   del: (key: Key) => void
   has: (key: Key) => boolean
-  update: (key: Key, updater: (entity: Entity | EntityNotFound) => Entity | EntityNotFound) => Entity | EntityNotFound
+  update: (key: Key, updater: (entity: EntityState<Entity>) => EntityState<Entity>) => EntityState<Entity>
 }
 
 export const makeCache = <Key, Entity>({
@@ -19,9 +20,9 @@ export const makeCache = <Key, Entity>({
   suggestSwapOut,
 }: CacheStrategy<Key> = unlimited<Key>()): Cache<Key, Entity> => {
   const entities = new Map<Key, Entity>()
-  const get = (key: Key): Entity | EntityNotFound => {
-    const entity = entities.get(key) ?? ENTITY_NOT_FOUND
-    if (entity !== ENTITY_NOT_FOUND) {
+  const get = (key: Key): EntityState<Entity> => {
+    const entity = entities.get(key) ?? ENTITY_NOT_EXIST
+    if (entity !== ENTITY_NOT_EXIST) {
       onGet?.(key)
     }
     return entity
@@ -44,10 +45,11 @@ export const makeCache = <Key, Entity>({
     onDel?.(key)
   }
   const has = (key: Key) => entities.has(key)
-  const update = (key: Key, updater: (entity: Entity | EntityNotFound) => Entity | EntityNotFound) => {
+
+  const update = (key: Key, updater: (entity: EntityState<Entity>) => EntityState<Entity>) => {
     const entity = entities.get(key)
-    const updated = updater(entity ?? ENTITY_NOT_FOUND)
-    if (updated !== ENTITY_NOT_FOUND) {
+    const updated = updater(entity ?? ENTITY_NOT_EXIST)
+    if (updated !== ENTITY_NOT_EXIST) {
       set(key, updated)
     } else {
       del(key)

@@ -4,10 +4,10 @@ import ProfileHeader from './ProfileHeader'
 import ProfileList from './ProfileList'
 import SettingsPanel from './SettingsPanel'
 import type { Profile } from '@/shared/types/profile'
-import { EntityState } from '@/renderer/data/cachedEntity'
+import { EntityStoreState } from '@/renderer/data/cachedEntity'
 
 interface AppMenuPrProps {
-  profile: EntityState<Profile>
+  profile: EntityStoreState<Profile>
   showSettings: boolean
   onOpenSettings: () => void
 }
