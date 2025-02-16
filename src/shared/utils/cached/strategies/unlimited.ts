@@ -1,11 +1,13 @@
 import { type CacheHandler, type CacheStrategy } from "./strategy"
 
-export const unlimited = <K>({ onSwapIn, onSwapOut }: CacheHandler<K> = {}): CacheStrategy<K> => ({
-  handleAccess: (key: K): K | null => {
-    onSwapIn?.(key)
-    return null
+export const unlimited = <K>({
+  onSwapIn,
+  onSwapOut,
+}: CacheHandler<K> = {}): CacheStrategy<K> => ({
+  onAdd: (key: K) => {
+    onSwapIn?.(key);
   },
-  handleDelete: (key: K) => {
-    onSwapOut?.(key)
+  onDel: (key: K) => {
+    onSwapOut?.(key);
   },
 });

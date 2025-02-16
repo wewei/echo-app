@@ -14,6 +14,8 @@ export type Ring<T> = {
   toArray: () => T[]
   forEach: (callback: (value: T) => void) => void
   clear: () => void
+  first: () => T | undefined
+  last: () => T | undefined
 }
 
 const makeNode = <T>(value: T): RingNode<T> => {
@@ -92,5 +94,7 @@ export const makeRing = <T>(): Ring<T> => {
       head.prev = head.next = head
       size = 0
     },
+    first: () => head.next.value,
+    last: () => head.prev.value,
   }
 }

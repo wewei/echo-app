@@ -1,6 +1,7 @@
 import { makeEventSource } from '../../event';
-import { cachedWithAsync, ENTITY_NOT_FOUND, cachedWith } from '../cached';
+import { cachedWithAsync, cachedWith } from '../cached';
 import { lru, unlimited } from '../strategies';
+import { ENTITY_NOT_FOUND } from '../cache';
 
 describe('cachedWithAsync', () => {
   it('should cache function results', async () => {
@@ -283,7 +284,7 @@ describe('cachedWithAsync', () => {
       const events: Array<{ type: string, key: number }> = [];
       const strategy = unlimited<number>({
         onSwapIn: (key) => events.push({ type: 'in', key }),
-        onSwapOut: (key) => events.push({ type: 'out', key })
+        onSwapOut: (key) => events.push({ type: 'out', key }),
       });
       
       const [cachedFn, updater] = cachedWithAsync(strategy)(async (x: number) => x);
@@ -291,6 +292,7 @@ describe('cachedWithAsync', () => {
       await cachedFn(1);
       await cachedFn(2);
       
+      console.log(events)
       // 通过返回 ENTITY_NOT_FOUND 触发移除
       await updater(1, () => ENTITY_NOT_FOUND);
 
