@@ -104,3 +104,5 @@ export const cachedWithAsync =
 
     return [cachedFn, updater];
   };
+
+export { ENTITY_NOT_FOUND, EntityNotFound };

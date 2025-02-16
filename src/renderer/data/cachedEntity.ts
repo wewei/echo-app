@@ -18,7 +18,7 @@ export { ENTITY_NOT_FOUND, EntityNotFound }
 
 export type CachedEntityHook<K, V> = (key: K) => EntityState<V>
 
-export type UpdateEntity<K, V> = (profileId: string, key: K, fn: (value: V) => FetchResult<V>) => Promise<void>
+export type UpdateEntity<K, V> = (profileId: string, key: K, fn: (value: V) => FetchResult<V>) => Promise<FetchResult<V>>
 
 export const cachedEntity = <K, V>(
   fetchFn: AsyncFetch<K, V>,
