@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react';
 import { TabItem } from '../components/ContentPanel/ContentPanelRp';
+import { useQuery } from './interactions';
+import { Query } from '@/shared/types/interactions';
+import { isEntityReady } from './cachedEntity';
+
+export type TypeString = "Response" | "Link";
 
 export interface ContentSession {
   tabs: TabItem[];
   hiddenTabs: TabItem[];
   activeTab: string | null;
+  type: TypeString;
   queryId: string | null;
-  messageId: string | null;
+  responseId: string | null;
   context: string | null;
 }
 
@@ -18,8 +24,9 @@ const useContentSession = () => {
     tabs: [],
     hiddenTabs: [],
     activeTab: null,
+    type: null,
     queryId: null,
-    messageId: null,
+    responseId: null,
     context: null
   });
 
@@ -36,11 +43,19 @@ const useContentSession = () => {
       return;
     }
 
-    if (contentSession.queryId && (contentSession.context || contentSession.messageId)) {
-      handleTabActiveOrCreate(contentSession.queryId, contentSession.context, contentSession.messageId);
+    if (contentSession.type === "Response") {
+      if (contentSession.queryId && contentSession.responseId) {
+        handleTabActiveOrCreate("Response", contentSession.queryId, null, contentSession.responseId);
+      }
     }
 
-  }, [hasInitialized, contentSession.queryId, contentSession.context, contentSession.messageId]);
+    if (contentSession.type === "Link") {
+      if (contentSession.queryId && contentSession.context) {
+        handleTabActiveOrCreate("Link", contentSession.queryId, contentSession.context, null);
+      }
+    }
+
+  }, [hasInitialized, contentSession.type, contentSession.queryId, contentSession.context, contentSession.responseId]);
 
   const handleTabClick = (tab: TabItem) => {
     setContentSession(prevState => ({
@@ -111,7 +126,7 @@ const useContentSession = () => {
     saveContentSessionAsync(contentSession);
   };
 
-  const handleTabActiveOrCreate = (queryId: string, context: string | null, messageId: string | null) => {
+  const handleTabActiveOrCreate = (type: TypeString, queryId: string | null, context: string | null, responseId: string | null) => {
     const existingVisibleTab = contentSession.tabs.find(tab => tab.id === queryId);
     const existingHiddenTab = contentSession.hiddenTabs.find(tab => tab.id === queryId);
 
@@ -125,7 +140,8 @@ const useContentSession = () => {
         title: context || `Query ${queryId}`,
         lastAccessed: Date.now(),
         context,
-        messageId: messageId || undefined
+        responseId: responseId || undefined,
+        type
       };
 
       let updatedTabs = [...contentSession.tabs, newTab];
@@ -141,7 +157,9 @@ const useContentSession = () => {
         ...prevState,
         tabs: updatedTabs,
         hiddenTabs: updatedHiddenTabs,
-        activeTab: queryId
+        activeTab: queryId,
+        responseId: responseId,
+        type: type
       }));
     }
 

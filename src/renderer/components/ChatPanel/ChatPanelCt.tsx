@@ -5,15 +5,16 @@ import { useCurrentProfileId } from '@/renderer/data/profile'
 import { ChatSettingsSchema, CHAT_SETTINGS } from '@/shared/types/chatSettings'
 import { useSettings } from '@/renderer/data/settings'
 import { chatAgent } from '@/renderer/agents/chatAgent'
+import { Response } from '@/shared/types/interactions';
 
 interface Props {
-  onQueryClick?: (queryId: string) => void
+  onResponseClick?: (response: Response) => void
   handleLinkClick?: (url: string) => void
   disabled?: boolean
 }
 
 export default function ChatPanelCt({
-  onQueryClick,
+  onResponseClick,
   handleLinkClick,
   disabled = false
 }: Props) {
@@ -53,11 +54,11 @@ export default function ChatPanelCt({
     <ChatPanelRp
       queries={queries}
       handleLinkClick={handleLinkClick}
-      onQueryClick={onQueryClick}
+      onResponseClick={onResponseClick}
       onSendMessage={handleSendMessage}
       loadMore={hasMore ? handleLoadMore : null}
       hasMore={hasMore}
       disabled={disabled}
     />
   )
-} 
+}

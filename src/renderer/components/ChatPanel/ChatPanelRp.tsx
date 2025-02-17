@@ -1,17 +1,17 @@
 import React, { useCallback } from 'react';
 import { Box, styled } from '@mui/material';
-import { Query } from '@/shared/types/interactions';
+import { Query, Response } from '@/shared/types/interactions';
 import QueryList from './QueryList';
 import MessageInput from './MessageInput';
 
 interface Props {
   queries: Query[]
-  onQueryClick?: (queryId: string) => void
+  onResponseClick?: (response: Response) => void
   handleLinkClick?: (url: string) => void
   onSendMessage: (message: string) => void
   loadMore: (() => void) | null
   hasMore: boolean
-  disabled?: boolean
+  disabled: boolean
 }
 
 const Container = styled(Box)({
@@ -34,12 +34,12 @@ const InputContainer = styled(Box)({
 
 export default function ChatPanelRp({
   queries,
-  onQueryClick,
+  onResponseClick,
   handleLinkClick,
   onSendMessage,
   loadMore,
   hasMore,
-  disabled = false
+  disabled
 }: Props) {
   const handleClick = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -55,15 +55,15 @@ export default function ChatPanelRp({
       <QueryListContainer>
         <QueryList
           queries={queries}
-          onQueryClick={onQueryClick}
+          onResponseClick={onResponseClick}
           loadMore={loadMore}
           hasMore={hasMore}
         />
       </QueryListContainer>
       <InputContainer>
-        <MessageInput
-          onSend={onSendMessage}
-          disabled={disabled}
+        <MessageInput 
+          onSend={onSendMessage} 
+          disabled={disabled} 
           placeholder="输入消息..."
         />
       </InputContainer>

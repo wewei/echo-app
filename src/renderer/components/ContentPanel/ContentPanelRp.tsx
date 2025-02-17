@@ -2,15 +2,19 @@ import React from 'react';
 import { Box, Tabs, Tab, IconButton, Menu, MenuItem } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import MessageDetailPanel from '../MessageDetailPanel/MessageDetailPanel';
 import WebPanel from '../WebPanel/WebPanel';
+import type { TypeString } from '@/renderer/data/contentSession';
+import { isEntityReady } from '@/renderer/data/cachedEntity';
+import { Query } from '@/shared/types/interactions';
+import ResponseView from '@/renderer/components/ChatPanel/ResponseView'
 
 export interface TabItem {
   id: string;
   title: string;
+  type: TypeString;
   lastAccessed: number;
   context?: string;
-  messageId?: string;
+  responseId?: string;
 }
 
 interface ContentPanelRpProps {
@@ -19,7 +23,9 @@ interface ContentPanelRpProps {
   activeTab: string | null;
   menuAnchor: HTMLElement | null;
   profileId?: string;
-  messageId?: string | null;
+  type?: TypeString;
+  query?: Query;
+  responseId?: string | null;
   context?: string | null;
   onTabClick: (tab: TabItem) => void;
   onCloseTab: (id: string) => void;
@@ -35,7 +41,9 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
   activeTab,
   menuAnchor,
   profileId,
-  messageId,
+  type,
+  responseId,
+  query,
   context,
   onTabClick,
   onCloseTab,
@@ -44,9 +52,9 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
   onMenuClose,
   onTitleChange,
 }) => {
-  console.log("activeTab:"+activeTab);
+  console.log("ContentPanelRp tabs", tabs, "hiddenTabs", hiddenTabs, "activeTab", activeTab, "menuAnchor", menuAnchor, "profileId", profileId, "type", type, "responseId", responseId, "query", query, "context", context);
   return (
-    <Box sx={{ 
+    <Box sx={{
       width: '100%', 
       height: '100%', 
       display: 'flex', 
@@ -146,12 +154,12 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
         </Box>
       )}
       
-      <Box sx={{ flexGrow: 1 }}>
-        {activeTab && (
+      <Box sx={{ flexGrow: 1}}>
+        {activeTab ? (
           (() => {
             
             const currentTab = tabs.find(tab => tab.id === activeTab);
-            if (!currentTab) return null;
+            // if (!currentTab) return null;
 
             // 如果标签有 context，显示网页
             if (currentTab.context) {
@@ -165,16 +173,25 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
             }
 
             // 如果标签有 messageId，显示消息详情
-            if (currentTab.messageId) {
-              return (
-                <MessageDetailPanel
-                  profileId={profileId}
-                  messageId={currentTab.messageId}
-                />
-              );
-            }
-            return null;
+            if (currentTab.type === "Response") {
+              return <ResponseView 
+              responseId={currentTab.responseId}
+              hasPrevious={false}
+              hasNext={false}
+              onPrevious={() => { /* function logic */ }}
+              onNext={() => { /* function logic */ }}
+            />
+            } 
+            return <div style={{ padding: '20px', border: '1px solid black' }}>
+            <h3>Test View 3</h3>
+            <pre>{JSON.stringify(currentTab, null, 2)}</pre>
+          </div>;
           })()
+        ) : (
+          <div style={{ padding: '20px', border: '1px solid black' }}>
+                <h3>Test View 4</h3>
+                <pre>{JSON.stringify("hhahahahahha", null, 2)}</pre>
+              </div>
         )}
       </Box>
     </Box>

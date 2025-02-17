@@ -5,7 +5,8 @@ import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import 'katex/dist/katex.min.css'
-import type { Query } from '@/shared/types/interactions'
+import { useTranslation } from 'react-i18next'
+import type { Query, Response } from '@/shared/types/interactions'
 import ResponseList from '@/renderer/components/ChatPanel/ResponseList'
 
 const convertLatexDelimiters = (content: string): string => {
@@ -17,10 +18,11 @@ const convertLatexDelimiters = (content: string): string => {
 }
 
 interface QueryViewRpProps {
-  query: Query
+  query: Query,
+  onResponseClick?: (response: Response) => void
 }
 
-export default function QueryViewRp({ query }: QueryViewRpProps) {
+export default function QueryViewRp({ query, onResponseClick }: QueryViewRpProps) {
   const processedContent = convertLatexDelimiters(query.content)
 
   return (
@@ -89,8 +91,11 @@ export default function QueryViewRp({ query }: QueryViewRpProps) {
         mb: 2,
         px: 2
       }}>
-        <ResponseList queryId={query.id} />
+        <ResponseList queryId={query.id} onResponseClick={onResponseClick} />
       </Box>
+      <Typography sx={{ mb: 2 }}>
+        {query.content}
+      </Typography>
     </Box>
   )
 } 

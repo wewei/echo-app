@@ -1,10 +1,12 @@
 import React from 'react'
 import { Box } from '@mui/material'
 import ResponseView from '@/renderer/components/ChatPanel/ResponseView'
+import { Response } from '@/shared/types/interactions'
 
 interface ResponseListRpProps {
   responseIds: string[]
   currentIndex: number
+  onResponseClick?: (response: Response) => void
   onPrevious: () => void
   onNext: () => void
 }
@@ -12,6 +14,7 @@ interface ResponseListRpProps {
 export default function ResponseListRp({
   responseIds,
   currentIndex,
+  onResponseClick,
   onPrevious,
   onNext
 }: ResponseListRpProps) {

@@ -19,13 +19,14 @@ const convertLatexDelimiters = (content: string): string => {
 
 type Props = {
   response: Response
+  onResponseClick?: (response: Response) => void
   hasPrevious: boolean
   hasNext: boolean
   onPrevious: () => void
   onNext: () => void
 }
 
-export default function ResponseViewRp({ response, hasPrevious, hasNext, onPrevious, onNext }: Props) {
+export default function ResponseViewRp({ response, onResponseClick,hasPrevious, hasNext, onPrevious, onNext }: Props) {
   const processedContent = convertLatexDelimiters(response.content)
 
   console.log(response)
@@ -34,7 +35,11 @@ export default function ResponseViewRp({ response, hasPrevious, hasNext, onPrevi
       display: 'flex',
       justifyContent: 'flex-start',
       px: 2 
-    }}>
+    }} onClick={(e) => {
+      e.stopPropagation();
+      console.log("response", response, onResponseClick);
+      onResponseClick?.(response)
+      }}>
       <Paper
         elevation={1}
         sx={{

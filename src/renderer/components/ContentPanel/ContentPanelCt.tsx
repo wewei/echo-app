@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useSearchParams } from 'react-router-dom';
 import { ContentPanelRp, TabItem } from './ContentPanelRp';
 import useContentSession from '../../data/contentSession';
+import { TypeString } from '../../data/contentSession';
 
 export const ContentPanelCt: React.FC = () => {
   const { profileId } = useParams();
@@ -20,14 +21,16 @@ export const ContentPanelCt: React.FC = () => {
 
 
   useEffect(() => {
-    const messageId = searchParams.get("messageId");
+    const type = searchParams.get("type");
+    const responseId = searchParams.get("responseId");
     const queryId = searchParams.get("queryId");
     const context = searchParams.get("context");
     setContentSession(prevState => ({
       ...prevState,
       queryId,
+      type: (type || "Response") as TypeString,
       context,
-      messageId
+      responseId
     }))
   }, [searchParams]);
 
@@ -47,6 +50,8 @@ export const ContentPanelCt: React.FC = () => {
       tabs={contentSession.tabs}
       hiddenTabs={contentSession.hiddenTabs}
       activeTab={contentSession.activeTab}
+      responseId={contentSession.responseId}
+      type={contentSession.type}
       onTabClick={handleTabClick}
       onCloseTab={handleTabClose}
       onHiddenTabClick={handleHiddenTabClick}
