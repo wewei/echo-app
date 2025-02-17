@@ -15,6 +15,7 @@ export const registerChatHandlers = () => {
     'chat:stream',
     async (event, streamId: string, profileId: string, params: OpenAI.Chat.Completions.ChatCompletionCreateParams) => {
       const client = await getClient(profileId)
+      console.log(params)
 
       try {
         const stream = await client.chat.completions.create({ ...params, stream: true })

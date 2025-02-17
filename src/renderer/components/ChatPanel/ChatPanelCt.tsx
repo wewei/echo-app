@@ -4,6 +4,7 @@ import ChatPanelRp from './ChatPanelRp'
 import { useCurrentProfileId } from '@/renderer/data/profile'
 import { ChatSettingsSchema, CHAT_SETTINGS } from '@/shared/types/chatSettings'
 import { useSettings } from '@/renderer/data/settings'
+import { chatAgent } from '@/renderer/agents/chatAgent'
 
 interface Props {
   onQueryClick?: (queryId: string) => void
@@ -19,7 +20,6 @@ export default function ChatPanelCt({
   const profileId = useCurrentProfileId()
   const [chatSettings] = useSettings(profileId, CHAT_SETTINGS, ChatSettingsSchema)
   const model = chatSettings?.[chatSettings?.provider]?.model
-  console.log("model", model);
 
   const handleSendMessage = useCallback(async (message: string) => {
     const query = await createQuery(profileId, {
@@ -32,25 +32,15 @@ export default function ChatPanelCt({
       agent: 'chat',
       timestamp: new Date().getTime()
     })
-    window.electron.chat.stream(
+    
+    for await (const chunk of chatAgent({
       profileId,
-      {
-        messages: [{ role: 'user', content: message }],
-        model,
-      },
-      (delta) => {
-        const content = delta.choices[0]?.delta?.content ?? ""
-        console.log(content)
-        appendResponseContent(profileId, response.id, content)
-      },
-      () => {
-        console.log('done')
-      },
-      (error: Error) => {
-        console.error(error)
-      }
-    )
-  }, [createQuery, profileId])
+      model,
+      content: message,
+    })) {
+      appendResponseContent(profileId, response.id, chunk)
+    }
+  }, [profileId, model])
 
   const handleLoadMore = useCallback(() => {
     if (loadMore) {

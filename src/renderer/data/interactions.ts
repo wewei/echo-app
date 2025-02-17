@@ -195,6 +195,7 @@ const useQueryResponseIds = (queryId: string): ListResult<string> => {
   return {
     items: state.items,
     hasMore: state.hasMore,
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     loadMore: () => {},
     refresh,
   };

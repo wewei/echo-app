@@ -1,0 +1,1 @@
+export type Agent<I, O> = (input: I) => O
