@@ -39,8 +39,9 @@ export default function ChatPanelCt({
         model,
       },
       (delta) => {
-        console.log(delta.choices[0]?.delta?.content)
-        appendResponseContent(profileId, response.id, delta.choices[0]?.delta?.content)
+        const content = delta.choices[0]?.delta?.content ?? ""
+        console.log(content)
+        appendResponseContent(profileId, response.id, content)
       },
       () => {
         console.log('done')

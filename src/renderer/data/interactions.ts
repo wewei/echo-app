@@ -218,7 +218,7 @@ const createResponse = async (profileId: string, params: CreateParams<Response>)
 const appendResponseContent = async (profileId: string, responseId: string, content: string): Promise<Response | null> => {
   const response = await window.electron.interactions.appendResponse(profileId, responseId, content)
   if (response) {
-    appendQueryContentEventHub.notify([profileId, response.queryId], content)
+    appendQueryContentEventHub.notify([profileId, responseId], content)
   }
   return response
 }
