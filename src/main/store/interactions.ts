@@ -7,7 +7,7 @@ import Sqlite, { Database } from 'better-sqlite3'
 import { v4 as uuidv4 } from 'uuid'
 
 import { QueryInput, ResponseInput, Query, Response, QuerySearchOptions } from '@/shared/types/interactions'
-import { getProfileDir } from '@/main/services/profileManager'
+import { getProfileDir, onProfileWillBeDeleted } from '@/main/services/profileManager'
 
 // 数据库初始化函数
 const initializeDb = (db: Database): void => {
@@ -50,6 +50,14 @@ app.on('will-quit', () => {
   stores.clear()
 })
 
+onProfileWillBeDeleted((profileId) => {
+  const db = stores.get(profileId)
+  if (db) {
+    db.close()
+  }
+  stores.delete(profileId)
+})
+
 // 创建数据库连接
 const createConnection = (profileId: string): Database => {
   const dbPath = path.join(getProfileDir(profileId), 'sqlite')
@@ -63,7 +71,7 @@ const createConnection = (profileId: string): Database => {
 }
 
 const getQueryId = (input: QueryInput): string => {
-  const key = JSON.stringify([input.content, input.contextId])
+  const key = JSON.stringify([input.content, input.contextId, input.timestamp])
   return crypto.createHash('sha256').update(key).digest('hex')
 }
 
@@ -198,7 +206,8 @@ const getResponsesByIds = (db: Database) => (ids: string[]): Response[] => {
 
 const getQueryResponseIds = (db: Database) => (queryId: string): string[] => {
   const stmt = db.prepare('SELECT id FROM responses WHERE queryId = ? ORDER BY timestamp ASC')
-  return stmt.all(queryId) as string[]
+  const rows = stmt.all(queryId) as { id: string }[]
+  return rows.map(row => row.id)
 }
 
 const appendResponse = (db: Database) => (id: string, content: string): Response | null => {

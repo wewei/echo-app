@@ -24,6 +24,7 @@ export const registerInteractionHandlers = () => {
   )
   ipcMain.handle(IPC_CHANNELS.GET_RESPONSES,
     (_, profileId: string, ids: string[]) => {
+      console.log("handle GET_RESPONSES", ids);
       return getInteractionManager(profileId).getResponses(ids)
     }
   )
