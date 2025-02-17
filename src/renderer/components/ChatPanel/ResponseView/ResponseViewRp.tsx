@@ -5,6 +5,17 @@ import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore'
 import NavigateNextIcon from '@mui/icons-material/NavigateNext'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
+
+const convertLatexDelimiters = (content: string): string => {
+  return content
+    // 转换行内公式
+    .replace(/\\\((.*?)\\\)/g, '$$$1$$')
+    // 转换块级公式
+    .replace(/\\\[(.*?)\\\]/g, '$$$1$$')
+}
 
 type Props = {
   response: Response
@@ -15,6 +26,9 @@ type Props = {
 }
 
 export default function ResponseViewRp({ response, hasPrevious, hasNext, onPrevious, onNext }: Props) {
+  const processedContent = convertLatexDelimiters(response.content)
+
+  console.log(response)
   return (
     <Box sx={{ 
       display: 'flex',
@@ -59,13 +73,21 @@ export default function ResponseViewRp({ response, hasPrevious, hasNext, onPrevi
                 borderColor: 'divider',
                 padding: '6px',
               }
+            },
+            '& .math, & .math-display': {
+              '& .katex': {
+                color: 'text.primary',
+              }
             }
           }
         }}
       >
         <Box className="markdown-body">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {response.content}
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm, remarkMath]}
+            rehypePlugins={[rehypeKatex]}
+          >
+            {processedContent}
           </ReactMarkdown>
         </Box>
         <Box sx={{

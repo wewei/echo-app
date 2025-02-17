@@ -37,7 +37,7 @@ export default function ChatPanelCt({
     for await (const chunk of chatAgent({
       profileId,
       model,
-      content: message,
+      query,
     })) {
       appendResponseContent(profileId, response.id, chunk)
     }

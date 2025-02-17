@@ -2,14 +2,27 @@ import React from 'react'
 import { Box, Typography, Paper } from '@mui/material'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 import type { Query } from '@/shared/types/interactions'
 import ResponseList from '@/renderer/components/ChatPanel/ResponseList'
+
+const convertLatexDelimiters = (content: string): string => {
+  return content
+    // 转换行内公式
+    .replace(/\\\((.*?)\\\)/g, '$$$1$$')
+    // 转换块级公式
+    .replace(/\\\[(.*?)\\\]/g, '$$$1$$')
+}
 
 interface QueryViewRpProps {
   query: Query
 }
 
 export default function QueryViewRp({ query }: QueryViewRpProps) {
+  const processedContent = convertLatexDelimiters(query.content)
+
   return (
     <Box>
       <Box sx={{
@@ -43,13 +56,22 @@ export default function QueryViewRp({ query }: QueryViewRpProps) {
               '& a': {
                 color: 'inherit',
                 textDecoration: 'underline',
+              },
+              '& .math, & .math-display': {
+                color: 'inherit',
+                '& .katex': {
+                  color: 'inherit',
+                }
               }
             }
           }}
         >
           <Box className="markdown-body">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {query.content}
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm, remarkMath]}
+              rehypePlugins={[rehypeKatex]}
+            >
+              {processedContent}
             </ReactMarkdown>
           </Box>
           <Typography
