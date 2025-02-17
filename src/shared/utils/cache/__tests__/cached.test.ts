@@ -491,7 +491,7 @@ describe('cachedWith', () => {
       cachedFn('1');
       cachedFn('2');
       
-      // 将某项更新为 NOT_FOUND
+      // 将某项更新为 ENTITY_NOT_EXIST
       updater('1', () => ENTITY_NOT_EXIST);
       
       // 验证项被移除且触发了 onSwapOut
