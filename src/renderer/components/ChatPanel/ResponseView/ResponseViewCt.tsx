@@ -6,13 +6,23 @@ import Loading from '@/renderer/components/Loading'
 
 interface Props {
   responseId: string
+  hasPrevious: boolean
+  hasNext: boolean
+  onPrevious: () => void
+  onNext: () => void
 }
 
-export default function ResponseViewCt({ responseId }: Props) {
+export default function ResponseViewCt({ responseId, hasPrevious, hasNext, onPrevious, onNext }: Props) {
   const response = useResponse(responseId)
 
   return isEntityReady(response) ? (
-    <ResponseViewRp response={response} />
+    <ResponseViewRp
+      response={response}
+      hasPrevious={hasPrevious}
+      hasNext={hasNext}
+      onPrevious={onPrevious}
+      onNext={onNext}
+    />
   ) : (
     <Loading />
   )

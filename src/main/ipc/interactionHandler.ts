@@ -18,13 +18,11 @@ export const registerInteractionHandlers = () => {
 
   ipcMain.handle(IPC_CHANNELS.GET_QUERIES,
     (_, profileId: string, ids: string[]) => {
-      console.log("handle GET_QUERIES", ids);
       return getInteractionManager(profileId).getQueries(ids)
     }
   )
   ipcMain.handle(IPC_CHANNELS.GET_RESPONSES,
     (_, profileId: string, ids: string[]) => {
-      console.log("handle GET_RESPONSES", ids);
       return getInteractionManager(profileId).getResponses(ids)
     }
   )

@@ -86,9 +86,6 @@ export default function QueryListRp({
                 <QueryView query={query} />
               </Box>
             </ListItem>
-            {index < queries.length - 1 && (
-              <Divider component="li" />
-            )}
           </React.Fragment>
         ))}
       </List>

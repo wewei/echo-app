@@ -181,7 +181,7 @@ const useQueryResponseIds = (queryId: string): ListResult<string> => {
   const profileId = useCurrentProfileId()
   const refresh = useCallback(async () => {
     const responseIds = await window.electron.interactions.getQueryResponseIds(profileId, queryId)
-    dispatch({ type: 'moreResponsesLoaded', responseIds, hasMore: responseIds.length > 0 })
+    dispatch({ type: 'refreshed', responseIds, hasMore: responseIds.length > 0 })
   }, [profileId, queryId])
 
   useEffect(() => {

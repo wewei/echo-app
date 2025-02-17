@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box, Typography, Chip } from '@mui/material'
+import { Box, Typography, Paper } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import type { Query } from '@/shared/types/interactions'
 import ResponseList from '@/renderer/components/ChatPanel/ResponseList'
@@ -12,16 +12,46 @@ export default function QueryViewRp({ query }: QueryViewRpProps) {
   const { t } = useTranslation()
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Box sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Typography variant="body2" color="text.secondary">
-          {new Date(query.timestamp).toLocaleString()}
-        </Typography>
+    <Box>
+
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'flex-end',
+        mb: 2,
+        px: 2
+      }}>
+        <Paper
+          elevation={1}
+          sx={{
+            maxWidth: '80%',
+            bgcolor: 'primary.main',
+            borderRadius: 2,
+            borderTopRightRadius: 0,
+            px: 2,
+            py: 1
+          }}
+        >
+          <Typography color="primary.contrastText">
+            {query.content}
+          </Typography>
+          <Typography
+            variant="caption"
+            color="primary.contrastText"
+            sx={{ opacity: 0.7 }}
+          >
+            {new Date(query.timestamp).toLocaleString()}
+          </Typography>
+        </Paper>
       </Box>
-      <Typography sx={{ mb: 2 }}>
-        {query.content}
-      </Typography>
-      <ResponseList queryId={query.id} />
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'flex-start',
+        mb: 2,
+        px: 2
+      }}>
+        <ResponseList queryId={query.id} />
+      </Box>
+
     </Box>
   )
 } 

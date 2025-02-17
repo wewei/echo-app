@@ -1,7 +1,5 @@
 import React from 'react'
 import { Box, IconButton, Paper } from '@mui/material'
-import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore'
-import NavigateNextIcon from '@mui/icons-material/NavigateNext'
 import ResponseView from '@/renderer/components/ChatPanel/ResponseView'
 
 interface ResponseListRpProps {
@@ -25,46 +23,17 @@ export default function ResponseListRp({
     return null
   }
 
-  return (
-    <Box sx={{ position: 'relative' }}>
-      <Paper 
-        elevation={0}
-        sx={{ 
-          borderRadius: 1,
-          bgcolor: 'background.paper' 
-        }}
-      >
-        <ResponseView responseId={responseIds[currentIndex]} />
-      </Paper>
+  console.log(currentIndex, responseIds)
 
-      {/* Navigation Controls */}
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: 8,
-          right: 8,
-          display: 'flex',
-          gap: 1,
-          bgcolor: 'background.paper',
-          borderRadius: 1,
-          boxShadow: 1
-        }}
-      >
-        <IconButton 
-          size="small"
-          disabled={!hasPrevious}
-          onClick={onPrevious}
-        >
-          <NavigateBeforeIcon />
-        </IconButton>
-        <IconButton 
-          size="small"
-          disabled={!hasNext}
-          onClick={onNext}
-        >
-          <NavigateNextIcon />
-        </IconButton>
-      </Box>
+  return (
+    <Box sx={{ position: 'relative', mb: 2  }}>
+      <ResponseView
+        responseId={responseIds[currentIndex]}
+        hasPrevious={hasPrevious}
+        hasNext={hasNext}
+        onPrevious={onPrevious}
+        onNext={onNext}
+      />
     </Box>
   )
 } 
