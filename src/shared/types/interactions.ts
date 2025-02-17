@@ -17,7 +17,7 @@ export const querySchema = zod.object({
   type: zod.string().nonempty(),
 })
 
-export type Query = zod.infer<typeof querySchema>
+export type Query = zod.infer<typeof querySchema> & { id: string }
 
 export const responseSchema = zod.object({
   // Response ID
@@ -36,7 +36,7 @@ export const responseSchema = zod.object({
   agents: zod.string().nonempty(),
 })
 
-export type Response = zod.infer<typeof responseSchema>
+export type Response = zod.infer<typeof responseSchema> & { id: string }
 
 export type QueryInput = Omit<Query, "id">
 
