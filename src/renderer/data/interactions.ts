@@ -79,7 +79,8 @@ const useRecentQueries = (contextId?: string): ListResult<Query> => {
 
   useEffect(() => {
     refresh();
-    const unwatch = createQueryEventHub.watch(contextId ? [contextId, profileId] : [profileId], (query) => {
+    const unwatch = createQueryEventHub.watch(contextId ? [profileId, contextId] : [profileId], (query) => {
+      console.log("newQueryCreated", query);
       dispatch({ type: 'newQueryCreated', query })
     })
     return () => { unwatch() }
@@ -201,6 +202,7 @@ const useQueryResponseIds = (queryId: string): ListResult<string> => {
 
 const createQuery = async (profileId: string, params: CreateParams<Query>): Promise<Query> => {
   const query = await window.electron.interactions.createQuery(profileId, params)
+  console.log("createQuery", query);
   createQueryEventHub.notify(params.contextId ? [profileId, params.contextId] : [profileId], query)
   return query
 }

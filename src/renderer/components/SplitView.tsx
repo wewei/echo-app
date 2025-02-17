@@ -101,8 +101,6 @@ export default function SplitView({ leftContent, rightContent }: Props) {
     }
   }
 
-  console.log(mode)
-
   return (
     <Box
       ref={containerRef}

@@ -19,6 +19,7 @@ export default function ChatPanelCt({
   const profileId = useCurrentProfileId()
   const [chatSettings] = useSettings(profileId, CHAT_SETTINGS, ChatSettingsSchema)
   const model = chatSettings?.[chatSettings?.provider]?.model
+  console.log("model", model);
 
   const handleSendMessage = useCallback(async (message: string) => {
     const query = await createQuery(profileId, {
@@ -38,8 +39,8 @@ export default function ChatPanelCt({
         model,
       },
       (delta) => {
-        console.log(delta.choices[0].delta.content)
-        appendResponseContent(profileId, response.id, delta.choices[0].delta.content)
+        console.log(delta.choices[0]?.delta?.content)
+        appendResponseContent(profileId, response.id, delta.choices[0]?.delta?.content)
       },
       () => {
         console.log('done')

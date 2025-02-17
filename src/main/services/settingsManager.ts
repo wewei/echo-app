@@ -107,10 +107,9 @@ const getSettingsEventSource = (scope: string): EventSource<SettingsUpdatedEvent
     return eventSources.get(scope) as EventSource<SettingsUpdatedEvent>;
   }
 
-  const {notify: notifySettingsUpdated, watch: onSettingsUpdated} =
-    makeEventSource<SettingsUpdatedEvent>();
-  eventSources.set(scope, {notify: notifySettingsUpdated, watch: onSettingsUpdated});
-  return {notify: notifySettingsUpdated, watch: onSettingsUpdated};
+  const eventSource = makeEventSource<SettingsUpdatedEvent>();
+  eventSources.set(scope, eventSource);
+  return eventSource;
 }
 
 export const onSettingsUpdated = (scope: string, callback: (profileId: string, settings: Settings) => void): () => void => {

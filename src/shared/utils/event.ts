@@ -4,10 +4,12 @@ export type EventHandler<V> = (value: V) => void;
 export type EventSource<V> = {
     notify: (value: V) => void,
     watch: (handler: EventHandler<V>) => () => boolean
+    isWatched: () => boolean
 }
 
 export const makeEventSource = <V>(): EventSource<V> => {
     const handlers = makeRing<EventHandler<V>>()
+    const isWatched = () => handlers.size() > 0
     return {
         notify: (value: V) => {
             handlers.toArray().forEach(handler => handler(value))
@@ -17,20 +19,23 @@ export const makeEventSource = <V>(): EventSource<V> => {
             const node = handlers.push(handler)
             return () => {
                 handlers.remove(node)
-                return handlers.size() === 0
+                return !isWatched()
             }
-        }
+        },
+        isWatched,
     }
 }
 
 export type EventHub<V> = {
     notify: (keyPath: string[], value: V) => void
     watch: (keyPath: string[], handler: EventHandler<V>) => () => boolean
+    isWatched: () => boolean
 }
 
 export const makeEventHub = <V>(): EventHub<V> => {
     const children = new Map<string, EventHub<V>>()
     const eventSource = makeEventSource<V>()
+    const isWatched = () => eventSource.isWatched() || children.size > 0
 
     return {
         notify: (keyPath: string[], value: V) => {
@@ -44,7 +49,6 @@ export const makeEventHub = <V>(): EventHub<V> => {
             }
         },
         watch: (keyPath: string[], handler: EventHandler<V>) => {
-            const unwatch = eventSource.watch(handler)
             if (keyPath.length > 0) {
                 const [head, ...tail] = keyPath
                 const child = children.get(head) ?? (() => {
@@ -57,10 +61,11 @@ export const makeEventHub = <V>(): EventHub<V> => {
                     if (unwatchChild()) {
                         children.delete(head)
                     }
-                    return unwatch()
+                    return !isWatched()
                 }
             }
-            return unwatch
-        }
+            return eventSource.watch(handler)
+        },
+        isWatched
     }
 }
