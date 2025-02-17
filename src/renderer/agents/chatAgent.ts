@@ -23,6 +23,7 @@ export const chatAgent: Agent<ChatAgentInput, AsyncIterable<string>> = ({
 }) => streamToAsyncIterator(
   new ReadableStream({
     async start(controller) {
+      console.log("start", content, context, model);
       const messages = await prepareMessages(content, context);
       window.electron.chat.stream(
         profileId,

@@ -3,6 +3,8 @@ import { Box, Typography, Paper, IconButton } from '@mui/material'
 import type { Response } from '@/shared/types/interactions'
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore'
 import NavigateNextIcon from '@mui/icons-material/NavigateNext'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 type Props = {
   response: Response
@@ -13,7 +15,6 @@ type Props = {
 }
 
 export default function ResponseViewRp({ response, hasPrevious, hasNext, onPrevious, onNext }: Props) {
-  console.log(hasPrevious, hasNext)
   return (
     <Box sx={{ 
       display: 'flex',
@@ -30,12 +31,43 @@ export default function ResponseViewRp({ response, hasPrevious, hasNext, onPrevi
           borderRadius: 2,
           borderTopLeftRadius: 0,
           px: 2,
-          py: 1
+          py: 1,
+          '& .markdown-body': {
+            '& pre': {
+              background: 'action.hover',
+              padding: 1,
+              borderRadius: 1,
+              overflow: 'auto',
+            },
+            '& code': {
+              background: 'action.hover',
+              padding: '2px 4px',
+              borderRadius: 1,
+            },
+            '& a': {
+              color: 'primary.main',
+            },
+            '& img': {
+              maxWidth: '100%',
+              height: 'auto',
+            },
+            '& table': {
+              borderCollapse: 'collapse',
+              width: '100%',
+              '& th, & td': {
+                border: '1px solid',
+                borderColor: 'divider',
+                padding: '6px',
+              }
+            }
+          }
         }}
       >
-        <Typography color="text.primary">
-          {response.content}
-        </Typography>
+        <Box className="markdown-body">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {response.content}
+          </ReactMarkdown>
+        </Box>
         <Box sx={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -83,9 +115,7 @@ export default function ResponseViewRp({ response, hasPrevious, hasNext, onPrevi
               <NavigateNextIcon />
             </IconButton>
           </Box>
-
         </Box>
-
       </Paper>
     </Box>
   )

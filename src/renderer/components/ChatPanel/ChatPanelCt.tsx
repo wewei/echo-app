@@ -14,6 +14,7 @@ interface Props {
 
 export default function ChatPanelCt({
   onQueryClick,
+  handleLinkClick,
   disabled = false
 }: Props) {
   const { items: queries, loadMore, hasMore } = useRecentQueries()
@@ -51,6 +52,7 @@ export default function ChatPanelCt({
   return (
     <ChatPanelRp
       queries={queries}
+      handleLinkClick={handleLinkClick}
       onQueryClick={onQueryClick}
       onSendMessage={handleSendMessage}
       loadMore={hasMore ? handleLoadMore : null}

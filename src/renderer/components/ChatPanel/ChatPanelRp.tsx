@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Box, styled } from '@mui/material';
 import { Query } from '@/shared/types/interactions';
 import QueryList from './QueryList';
@@ -7,6 +7,7 @@ import MessageInput from './MessageInput';
 interface Props {
   queries: Query[]
   onQueryClick?: (queryId: string) => void
+  handleLinkClick?: (url: string) => void
   onSendMessage: (message: string) => void
   loadMore: (() => void) | null
   hasMore: boolean
@@ -34,13 +35,23 @@ const InputContainer = styled(Box)({
 export default function ChatPanelRp({
   queries,
   onQueryClick,
+  handleLinkClick,
   onSendMessage,
   loadMore,
   hasMore,
   disabled = false
 }: Props) {
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const link = target.closest('a');
+    if (link) {
+      e.preventDefault();
+      handleLinkClick?.(link.href);
+    }
+  }, [handleLinkClick]);
+
   return (
-    <Container>
+    <Container onClick={handleClick}>
       <QueryListContainer>
         <QueryList
           queries={queries}

@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react'
-import { Box, List, ListItem, Divider, CircularProgress } from '@mui/material'
+import React, { useEffect, useRef, useState } from 'react'
+import { Box, List, ListItem, CircularProgress } from '@mui/material'
 import { useInView } from 'react-intersection-observer'
 import QueryView from '../QueryView'
 import { Query } from '@/shared/types/interactions'
@@ -18,27 +18,43 @@ export default function QueryListRp({
   hasMore
 }: QueryListRpProps) {
   const listRef = useRef<HTMLDivElement>(null)
-  const { ref: loadMoreRef, inView } = useInView({
-    threshold: 0.1,
-  })
+  const [stayAtBottom, setStayAtBottom] = useState(true)
 
-  // 首次渲染时滚动到底部
   useEffect(() => {
-    if (listRef.current) {
-      listRef.current.scrollTop = listRef.current.scrollHeight
+    if (stayAtBottom && listRef.current) {
+      const elem = listRef.current
+      const callback = () => {
+        elem.scrollTop = elem.scrollHeight
+      }
+      const resizeObserver = new ResizeObserver(callback)
+      const mutationObserver = new MutationObserver(callback)
+      resizeObserver.observe(elem)
+      mutationObserver.observe(elem, { childList: true, subtree: true })
+      return () => {
+        resizeObserver.unobserve(elem)
+        mutationObserver.disconnect()
+      }
     }
-  }, [])
+  }, [stayAtBottom, listRef.current])
 
-  // 当 Loading Placeholder 可见时触发加载
   useEffect(() => {
-    if (inView && loadMore) {
-      loadMore()
-    }
-  }, [inView, loadMore])
+    setStayAtBottom(true)
+  }, [queries])
+
+  // 处理滚动事件
+  const handleScroll = () => {
+    if (!listRef.current) return
+    
+    const { scrollTop, scrollHeight, clientHeight } = listRef.current
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 10
+
+    setStayAtBottom(isAtBottom)
+  }
 
   return (
     <Box 
       ref={listRef}
+      onScroll={handleScroll}
       sx={{ 
         height: '100%',
         overflow: 'auto',
@@ -54,21 +70,6 @@ export default function QueryListRp({
         },
       }}
     >
-      {/* Loading Placeholder */}
-      {loadMore && (
-        <Box 
-          ref={loadMoreRef}
-          sx={{ 
-            p: 2,
-            display: 'flex',
-            justifyContent: 'center'
-          }}
-        >
-          <CircularProgress size={24} />
-        </Box>
-      )}
-
-      {/* Query List */}
       <List disablePadding>
         {queries.map((query, index) => (
           <React.Fragment key={query.id}>

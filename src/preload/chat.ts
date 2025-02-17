@@ -33,6 +33,7 @@ export const chatAPI = {
     const errorHandler = (_: unknown, id: string, error: string) => {
       if (id === streamId) {
         onError(new Error(error))
+        console.log(error)
         cleanup()
       }
     }

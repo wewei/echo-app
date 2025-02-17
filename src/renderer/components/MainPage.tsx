@@ -15,6 +15,7 @@ export default function MainPage() {
 
   const handleLinkClick = (url: string) => {
     setSearchParams({ context: url });
+    console.log(url)
   }
 
   return (

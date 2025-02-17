@@ -6,6 +6,7 @@ import useContentSession from '../../data/contentSession';
 export const ContentPanelCt: React.FC = () => {
   const { profileId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
+  console.log(searchParams.get("context"))
 
   const {
     contentSession,
