@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { appendResponseContent, createResponse, useRecentQueryIds } from '@/renderer/data/interactions'
+import { createResponse, useRecentQueries, appendResponseContent, createQuery } from '@/renderer/data/interactions'
 import ChatPanelRp from './ChatPanelRp'
 import { useCurrentProfileId } from '@/renderer/data/profile'
 import { ChatSettingsSchema, CHAT_SETTINGS } from '@/shared/types/chatSettings'
@@ -15,22 +15,20 @@ export default function ChatPanelCt({
   onQueryClick,
   disabled = false
 }: Props) {
-  const { ids: queryIds, loadMore, hasMore, createQuery } = useRecentQueryIds()
+  const { items: queries, loadMore, hasMore } = useRecentQueries()
   const profileId = useCurrentProfileId()
   const [chatSettings] = useSettings(profileId, CHAT_SETTINGS, ChatSettingsSchema)
   const model = chatSettings?.[chatSettings?.provider]?.model
 
   const handleSendMessage = useCallback(async (message: string) => {
-    const query = await createQuery({
+    const query = await createQuery(profileId, {
       content: message,
-      contexts: [], // TODO, add the contexts of the query
-      type: 'chat',
       timestamp: new Date().getTime()
     })
     const response = await createResponse(profileId, {
-      query: query.id,
+      queryId: query.id,
       content: '',
-      agents: 'chat',
+      agent: 'chat',
       timestamp: new Date().getTime()
     })
     window.electron.chat.stream(
@@ -54,13 +52,13 @@ export default function ChatPanelCt({
 
   const handleLoadMore = useCallback(() => {
     if (loadMore) {
-      loadMore(10)
+      loadMore()
     }
   }, [loadMore])
 
   return (
     <ChatPanelRp
-      queryIds={queryIds}
+      queries={queries}
       onQueryClick={onQueryClick}
       onSendMessage={handleSendMessage}
       loadMore={hasMore ? handleLoadMore : null}

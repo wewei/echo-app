@@ -40,9 +40,9 @@ export const registerInteractionHandlers = () => {
     }
   )
 
-  ipcMain.handle(IPC_CHANNELS.GET_RESPONSES_OF_QUERY,
+  ipcMain.handle(IPC_CHANNELS.GET_QUERY_RESPONSE_IDS,
     (_, profileId: string, queryId: string) => {
-      return getInteractionManager(profileId).getResponsesOfQuery(queryId)
+      return getInteractionManager(profileId).getQueryResponseIds(queryId)
     }
   )
 } 

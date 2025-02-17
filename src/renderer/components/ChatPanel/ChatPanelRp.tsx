@@ -1,10 +1,11 @@
 import React from 'react';
 import { Box, styled } from '@mui/material';
+import { Query } from '@/shared/types/interactions';
 import QueryList from './QueryList';
 import MessageInput from './MessageInput';
 
 interface Props {
-  queryIds: string[]
+  queries: Query[]
   onQueryClick?: (queryId: string) => void
   onSendMessage: (message: string) => void
   loadMore: (() => void) | null
@@ -31,7 +32,7 @@ const InputContainer = styled(Box)({
 });
 
 export default function ChatPanelRp({
-  queryIds,
+  queries,
   onQueryClick,
   onSendMessage,
   loadMore,
@@ -42,7 +43,7 @@ export default function ChatPanelRp({
     <Container>
       <QueryListContainer>
         <QueryList
-          queryIds={queryIds}
+          queries={queries}
           onQueryClick={onQueryClick}
           loadMore={loadMore}
           hasMore={hasMore}

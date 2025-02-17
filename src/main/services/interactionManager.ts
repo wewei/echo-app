@@ -18,13 +18,13 @@ export interface InteractionManager {
   createResponse: (input: ResponseInput) => Response
 
   // 追加 Response
-  appendResponse: (id: string, content: string) => Response
+  appendResponse: (id: string, content: string) => Response | null
 
   // 获取 Response
   getResponses: (ids: string[]) => Response[]
 
   // 获取 Query 对应的 Response, 返回 Response 的 id
-  getResponsesOfQuery: (queryId: string) => string[]
+  getQueryResponseIds: (queryId: string) => string[]
 }
 
 export const getInteractionManager = (profileId: string): InteractionManager => {
@@ -68,7 +68,7 @@ export const getInteractionManager = (profileId: string): InteractionManager => 
       return response
     },
 
-    getResponsesOfQuery: (queryId: string) => {
+    getQueryResponseIds: (queryId: string) => {
       return db.response.getByQueryId(queryId)
     },
   }

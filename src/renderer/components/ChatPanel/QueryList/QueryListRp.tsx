@@ -2,16 +2,17 @@ import React, { useEffect, useRef } from 'react'
 import { Box, List, ListItem, Divider, CircularProgress } from '@mui/material'
 import { useInView } from 'react-intersection-observer'
 import QueryView from '../QueryView'
+import { Query } from '@/shared/types/interactions'
 
 interface QueryListRpProps {
-  queryIds: string[]
+  queries: Query[]
   onQueryClick?: (queryId: string) => void
   loadMore: (() => void) | null
   hasMore: boolean
 }
 
 export default function QueryListRp({ 
-  queryIds,
+  queries,
   onQueryClick,
   loadMore,
   hasMore
@@ -69,11 +70,11 @@ export default function QueryListRp({
 
       {/* Query List */}
       <List disablePadding>
-        {queryIds.map((queryId, index) => (
-          <React.Fragment key={queryId}>
+        {queries.map((query, index) => (
+          <React.Fragment key={query.id}>
             <ListItem 
               disablePadding
-              onClick={() => onQueryClick?.(queryId)}
+              onClick={() => onQueryClick?.(query.id)}
               sx={{
                 cursor: onQueryClick ? 'pointer' : 'default',
                 '&:hover': onQueryClick ? {
@@ -82,10 +83,10 @@ export default function QueryListRp({
               }}
             >
               <Box sx={{ width: '100%' }}>
-                <QueryView queryId={queryId} />
+                <QueryView query={query} />
               </Box>
             </ListItem>
-            {index < queryIds.length - 1 && (
+            {index < queries.length - 1 && (
               <Divider component="li" />
             )}
           </React.Fragment>

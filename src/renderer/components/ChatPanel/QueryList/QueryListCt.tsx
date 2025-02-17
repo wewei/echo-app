@@ -1,18 +1,15 @@
 import React, { useEffect } from 'react'
 import QueryListRp from './QueryListRp'
-import { useRecentQueryIds } from '@/renderer/data/interactions'
-
+import { Query } from '@/shared/types/interactions'
 interface Props {
-  queryIds: string[]
+  queries: Query[]
   onQueryClick?: (queryId: string) => void
   loadMore: (() => void) | null
   hasMore: boolean
 }
 
-const BATCH_SIZE = 20
-
 export default function QueryListCt({ 
-  queryIds,
+  queries,
   onQueryClick,
   loadMore,
   hasMore 
@@ -20,7 +17,7 @@ export default function QueryListCt({
 
   return (
     <QueryListRp
-      queryIds={queryIds}
+      queries={queries}
       onQueryClick={onQueryClick}
       loadMore={loadMore}
       hasMore={hasMore}

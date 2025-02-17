@@ -10,13 +10,13 @@ import {
 import { type EntityState } from "@/shared/utils/cache/cache";
 import { type CacheStrategy, unlimited } from "@/shared/utils/cache/strategies";
 import { useCurrentProfileId } from "./profile";
-export const ENTITY_LOADING = Symbol('ENTITY_LOADING')
-export type EntityLoading = typeof ENTITY_LOADING
-export type EntityStoreState<V> = EntityState<V> | EntityLoading
+export const ENTITY_PENDING = Symbol('ENTITY_PENDING')
+export type EntityPending = typeof ENTITY_PENDING
+export type EntityRendererState<V> = EntityState<V> | EntityPending
 
 export { ENTITY_NOT_EXIST, EntityNotExist }
 
-export type CachedEntityHook<K, V> = (key: K) => EntityStoreState<V>
+export type CachedEntityHook<K, V> = (key: K) => EntityRendererState<V>
 
 export type UpdateEntity<K, V> = (profileId: string, key: K, fn: (value: V) => EntityState<V>) => Promise<EntityState<V>>
 
@@ -25,8 +25,8 @@ export const cachedEntity = <K, V>(
   cacheStrategy: CacheStrategy<K> = unlimited<K>()
 ): [CachedEntityHook<K, V>, AsyncCacheUpdater<K, V>] => {
   const [cachedFn, updater] = cachedWithAsync<K>(cacheStrategy)(fetchFn);
-  const hook = (key: K): EntityStoreState<V> => {
-    const [state, setState] = useState<EntityStoreState<V>>(ENTITY_LOADING);
+  const hook = (key: K): EntityRendererState<V> => {
+    const [state, setState] = useState<EntityRendererState<V>>(ENTITY_PENDING);
     const keyRef = useRef(key);
     useEffect(() => {
       keyRef.current = key;
@@ -49,9 +49,9 @@ export const profileCachedEntity = <K, V>(
   const [getFns] = cachedWith<string>(unlimited())((profileId) =>
     cachedWithAsync<K>(cacheStrategy)(fetchForProfile(profileId))
   );
-  const hook = (key: K): EntityStoreState<V> => {
+  const hook = (key: K): EntityRendererState<V> => {
     const currentProfileId = useCurrentProfileId();
-    const [state, setState] = useState<EntityStoreState<V>>(ENTITY_LOADING);
+    const [state, setState] = useState<EntityRendererState<V>>(ENTITY_PENDING);
     const [cachedFn] = getFns(currentProfileId);
 
     const keyRef = useRef(key);
@@ -74,5 +74,5 @@ export const profileCachedEntity = <K, V>(
   return [hook, update];
 };
 
-export const isEntityReady = <V>(entity: EntityStoreState<V>): entity is V => 
-  entity && entity !== ENTITY_LOADING && entity !== ENTITY_NOT_EXIST
+export const isEntityReady = <V>(entity: EntityRendererState<V>): entity is V => 
+  entity && entity !== ENTITY_PENDING && entity !== ENTITY_NOT_EXIST

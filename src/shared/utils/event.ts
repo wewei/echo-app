@@ -22,3 +22,45 @@ export const makeEventSource = <V>(): EventSource<V> => {
         }
     }
 }
+
+export type EventHub<V> = {
+    notify: (keyPath: string[], value: V) => void
+    watch: (keyPath: string[], handler: EventHandler<V>) => () => boolean
+}
+
+export const makeEventHub = <V>(): EventHub<V> => {
+    const children = new Map<string, EventHub<V>>()
+    const eventSource = makeEventSource<V>()
+
+    return {
+        notify: (keyPath: string[], value: V) => {
+            eventSource.notify(value)
+            if (keyPath.length > 0) {
+                const [head, ...tail] = keyPath
+                const child = children.get(head)
+                if (child) {
+                    child.notify(tail, value)
+                }
+            }
+        },
+        watch: (keyPath: string[], handler: EventHandler<V>) => {
+            const unwatch = eventSource.watch(handler)
+            if (keyPath.length > 0) {
+                const [head, ...tail] = keyPath
+                const child = children.get(head) ?? (() => {
+                    const child = makeEventHub<V>()
+                    children.set(head, child)
+                    return child
+                })()
+                const unwatchChild = child.watch(tail, handler)
+                return () => {
+                    if (unwatchChild()) {
+                        children.delete(head)
+                    }
+                    return unwatch()
+                }
+            }
+            return unwatch
+        }
+    }
+}

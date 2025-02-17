@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useQueryResponses } from '@/renderer/data/interactions'
+import { useQueryResponseIds } from '@/renderer/data/interactions'
 import { isEntityReady } from '@/renderer/data/cachedEntity'
 import ResponseListRp from './ResponseListRp'
 import Loading from '@/renderer/components/Loading'
@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function ResponseListCt({ queryId }: Props) {
-  const responseIds = useQueryResponses(queryId)
+  const { items: responseIds } = useQueryResponseIds(queryId)
   const [currentIndex, setCurrentIndex] = useState(0)
 
   // 当获取到新的 responseIds 时，显示最新的 response

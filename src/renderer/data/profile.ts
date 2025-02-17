@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import type { Profile } from "@/shared/types/profile";
-import { EntityState, cachedEntity } from "./cachedEntity";
+import { cachedEntity, EntityRendererState } from "./cachedEntity";
 
 const [useProfile, updateProfile] = cachedEntity(window.electron.profile.get)
 
@@ -42,7 +42,7 @@ export const useProfiles = (): [
 
 export const useCurrentProfileId = (): string | null => useParams().profileId ?? null;
 
-export const useCurrentProfile = (): EntityState<Profile> => {
+export const useCurrentProfile = (): EntityRendererState<Profile> => {
   const profileId = useCurrentProfileId();
   const profile = useProfile(profileId);
   return profile;

@@ -15,26 +15,18 @@ const initializeDb = (db: Database): void => {
     CREATE TABLE IF NOT EXISTS queries (
       id TEXT PRIMARY KEY,
       content TEXT NOT NULL,
+      contextId TEXT,
       timestamp INTEGER NOT NULL,
-      type TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS query_contexts (
-      id TEXT PRIMARY KEY,
-      query_id TEXT NOT NULL,
-      context_id TEXT NOT NULL,
-      FOREIGN KEY (query_id) REFERENCES queries(id) ON DELETE CASCADE,
-      FOREIGN KEY (context_id) REFERENCES responses(id) ON DELETE CASCADE,
-      UNIQUE(query_id, context_id)
+      FOREIGN KEY (contextId) REFERENCES responses(id) ON DELETE SET NULL
     );
 
     CREATE TABLE IF NOT EXISTS responses (
       id TEXT PRIMARY KEY,
-      query TEXT NOT NULL,
+      queryId TEXT NOT NULL,
       content TEXT NOT NULL,
       timestamp INTEGER NOT NULL,
-      agents TEXT NOT NULL,
-      FOREIGN KEY (query) REFERENCES queries(id) ON DELETE CASCADE
+      agent TEXT NOT NULL,
+      FOREIGN KEY (queryId) REFERENCES queries(id) ON DELETE CASCADE
     );
 
   `);
@@ -71,9 +63,7 @@ const createConnection = (profileId: string): Database => {
 }
 
 const getQueryId = (input: QueryInput): string => {
-  // 将输入的查询内容、类型和上下文排序后，转换为JSON字符串
-  const key = JSON.stringify([input.type, input.content, [...input.contexts].sort()])
-  // 使用SHA-256哈希算法对JSON字符串进行哈希，并返回十六进制表示的哈希值
+  const key = JSON.stringify([input.content, input.contextId])
   return crypto.createHash('sha256').update(key).digest('hex')
 }
 
@@ -86,29 +76,16 @@ const createQuery = (db: Database) => (input: QueryInput): Query => {
     return query
   }
 
-  const { contexts, ...queryData } = input
+  const { contextId, content, timestamp } = input
   
   const insertQuery = db.prepare(`
-    INSERT INTO queries (id, content, timestamp, type)
-    VALUES (@id, @content, @timestamp, @type)
+    INSERT INTO queries (id, content, contextId, timestamp)
+    VALUES (@id, @content, @contextId, @timestamp)
   `)
   
-  const insertContext = db.prepare(`
-    INSERT INTO query_contexts (id, query_id, context_id)
-    VALUES (?, ?, ?)
-  `)
+  insertQuery.run({ id, content, contextId, timestamp })
 
-  db.transaction(() => {
-    insertQuery.run({ ...queryData, id })
-    
-    if (contexts) {
-      contexts.forEach(contextId => {
-        insertContext.run(uuidv4(), id, contextId)
-      })
-    }
-  })()
-
-  return { ...queryData, id }
+  return { id, content, timestamp, contextId }
 }
 
 const updateQuery = (db: Database) => (id: string, input: Partial<QueryInput>): void => {
@@ -121,7 +98,7 @@ const updateQuery = (db: Database) => (id: string, input: Partial<QueryInput>): 
 
 const getQuery = (db: Database) => (id: string): Query | null => {
   const stmt = db.prepare('SELECT * FROM queries WHERE id = ?')
-  return stmt.get(id) || null
+  return stmt.get(id) as Query | null
 }
 
 const getQueriesByIds = (db: Database) => (ids: string[]): Query[] => {
@@ -154,8 +131,7 @@ const searchQueries = (db: Database) => (options: QuerySearchOptions): Query[] =
   let query = 'SELECT * FROM queries'
   
   if (options.contextId) {
-    query += ` INNER JOIN query_contexts ON queries.id = query_contexts.query_id`
-    conditions.push(`query_contexts.context_id = ?`)
+    conditions.push(`contextId = ?`)
     params.push(options.contextId)
   }
 
@@ -171,11 +147,11 @@ const searchQueries = (db: Database) => (options: QuerySearchOptions): Query[] =
 
 // Response 相关操作
 const getResponseId = (input: ResponseInput): string => {
-  const key = JSON.stringify([input.query, input.agents, input.timestamp])
+  const key = JSON.stringify([input.queryId, input.agent, input.timestamp])
   return crypto.createHash('sha256').update(key).digest('hex')
 }
 
-const createResponse = (db: Database) => (input: ResponseInput): Response => {
+const createResponse = (db: Database) => (input: ResponseInput): Response | null => {
   const id = getResponseId(input)
 
   const response = getResponse(db)(id)
@@ -184,10 +160,13 @@ const createResponse = (db: Database) => (input: ResponseInput): Response => {
   }
 
   const stmt = db.prepare(`
-    INSERT INTO responses (id, query, content, timestamp, agents)
-    VALUES (@id, @query, @content, @timestamp, @agents)
+    INSERT INTO responses (id, queryId, content, timestamp, agent)
+    VALUES (@id, @queryId, @content, @timestamp, @agent)
   `)
+  
   stmt.run({ ...input, id })
+  // TODO: error handling
+
   return { ...input, id }
 }
 
@@ -201,7 +180,10 @@ const updateResponse = (db: Database) => (id: string, input: Partial<ResponseInp
 
 const getResponse = (db: Database) => (id: string): Response | null => {
   const stmt = db.prepare('SELECT * FROM responses WHERE id = ?')
-  return stmt.get(id) || null
+  const row = stmt.get(id) as Response | null
+  if (!row) return null
+  
+  return row
 }
 
 const getResponsesByIds = (db: Database) => (ids: string[]): Response[] => {
@@ -214,14 +196,30 @@ const getResponsesByIds = (db: Database) => (ids: string[]): Response[] => {
   return stmt.all(...ids) as Response[]
 }
 
-const getResponsesByQueryId = (db: Database) => (queryId: string): string[] => {
-  const stmt = db.prepare('SELECT id FROM responses WHERE query = ?')
-  const results = stmt.all(queryId) as { id: string }[]
-  return results.map(r => r.id)
+const getQueryResponseIds = (db: Database) => (queryId: string): string[] => {
+  const stmt = db.prepare('SELECT id FROM responses WHERE queryId = ? ORDER BY timestamp ASC')
+  return stmt.all(queryId) as string[]
 }
 
+const appendResponse = (db: Database) => (id: string, content: string): Response | null => {
+  const response = getResponse(db)(id)
+  if (!response) return null
 
-// 修改工厂函数，添加新方法
+  const updatedResponse = {
+    ...response,
+    content: response.content + content,
+    timestamp: Date.now()
+  }
+
+  updateResponse(db)(id, {
+    content: updatedResponse.content,
+    timestamp: updatedResponse.timestamp
+  })
+
+  return updatedResponse
+}
+
+// 更新工厂函数
 export const getDatabaseService = (profileId: string) => {
   const db = getStore(profileId)
   
@@ -238,7 +236,8 @@ export const getDatabaseService = (profileId: string) => {
       update: updateResponse(db),
       get: getResponse(db),
       getByIds: getResponsesByIds(db),
-      getByQueryId: getResponsesByQueryId(db),
+      getByQueryId: getQueryResponseIds(db),
+      append: appendResponse(db),
     },
   }
 }

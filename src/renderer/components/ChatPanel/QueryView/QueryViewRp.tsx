@@ -17,12 +17,6 @@ export default function QueryViewRp({ query }: QueryViewRpProps) {
         <Typography variant="body2" color="text.secondary">
           {new Date(query.timestamp).toLocaleString()}
         </Typography>
-        <Chip 
-          label={t(`query.type.${query.type}`)}
-          size="small"
-          color="primary"
-          variant="outlined"
-        />
       </Box>
       <Typography sx={{ mb: 2 }}>
         {query.content}

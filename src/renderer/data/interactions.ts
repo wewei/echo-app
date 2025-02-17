@@ -1,135 +1,224 @@
-import { useState, useEffect, useCallback } from "react";
-import {
-  type Query,
-  type QueryInput,
-  type ResponseInput,
-} from "@/shared/types/interactions";
+import { useState, useEffect, useReducer, useCallback } from "react";
+import { Query, Response } from "@/shared/types/interactions";
+import { ENTITY_NOT_EXIST } from "@/shared/utils/cache";
+import { makeEventHub } from "@/shared/utils/event";
+import { useCurrentProfileId } from "./profile";
+import { EntityRendererState, ENTITY_PENDING } from "./cachedEntity";
 
-import { useCurrentProfileId } from "@/renderer/data/profile";
-import { profileCachedEntity } from "./cachedEntity";
+export type CreateParams<T extends { id: string }> = Omit<T, 'id'>;
 
-const [useQuery, updateQuery] = profileCachedEntity(
-  (profileId: string) => async (key: string) => {
-    const queries = await window.electron.interactions.getQueries(profileId, [
-      key,
-    ]);
-    return queries[0];
+type ListResult<T> = {
+  items: T[]
+  hasMore: boolean
+  loadMore: () => void
+  refresh: () => void
+}
+
+// Route /profileId/responseId
+const createQueryEventHub = makeEventHub<Query>()
+// Route /profileId/queryId
+const createResponseEventHub = makeEventHub<Response>()
+// Route /profileId/responseId
+const appendQueryContentEventHub = makeEventHub<string>()
+
+const useRecentQueries = (contextId?: string): ListResult<Query> => {
+  type RecentQueryState = {
+    items: Query[]
+    hasMore: boolean
   }
-);
-
-const [useResponse, updateResponse] = profileCachedEntity(
-  (profileId: string) => async (key: string) => {
-    const responses = await window.electron.interactions.getResponses(
-      profileId,
-      [key]
-    );
-    return responses[0];
+  type RecentQueryAction = {
+    type: 'newQueryCreated'
+    query: Query
+  } | {
+    type: 'moreQueriesLoaded'
+    queries: Query[]
+    hasMore: boolean
+  } | {
+    type: 'refreshed'
+    queries: Query[]
+    hasMore: boolean
   }
-);
 
-const BATCH_SIZE = 20;
+  const [state, dispatch] = useReducer<RecentQueryState, [RecentQueryAction]>((current, action) => {
+    switch (action.type) {
+      case 'newQueryCreated':
+        return { items: [...current.items, action.query], hasMore: current.hasMore }
+      case 'moreQueriesLoaded':
+        return { items: [...action.queries, ...current.items], hasMore: action.hasMore }
+      case 'refreshed':
+        return { items: action.queries, hasMore: action.hasMore }
+    }
+  }, { items: [], hasMore: true });
 
-const useRecentQueryIds = (): {
-  ids: string[];
-  loadMore: (maxCount: number) => void;
-  hasMore: boolean;
-  createQuery: (input: QueryInput) => Promise<Query>;
-} => {
-  const [ids, setIds] = useState<string[]>([]);
-  const [maxCount, setMaxCount] = useState(BATCH_SIZE);
-  const [hasMore, setHasMore] = useState(true);
-  const profileId = useCurrentProfileId();
-  const count = ids.length;
+  const profileId = useCurrentProfileId()
+  const earliestTimestamp = state.items[0]?.timestamp ?? Date.now()
+
+  const loadMore = useCallback(async () => {
+    const queries = await window.electron.interactions.searchQueries(profileId, {
+      created: {
+        type: 'before',
+        timestamp: earliestTimestamp
+      },
+      contextId,
+      maxCount: 100,
+    })
+    dispatch({ type: 'moreQueriesLoaded', queries, hasMore: queries.length > 0 })
+  }, [profileId, contextId, earliestTimestamp])
+
+  const refresh = useCallback(async () => {
+    const queries = await window.electron.interactions.searchQueries(profileId, {
+      created: {
+        type: 'before',
+        timestamp: Date.now()
+      },
+      contextId,
+      maxCount: 100,
+    })
+    dispatch({ type: 'refreshed', queries, hasMore: queries.length > 0 })
+  }, [profileId, contextId])
 
   useEffect(() => {
-    if (count < maxCount && hasMore) {
-      window.electron.interactions
-        .searchQueries(profileId, {
-          maxCount: maxCount - count,
-          created: {
-            type: "before",
-            timestamp: Date.now(),
-          },
-        })
-        .then((result) => {
-          for (const query of result) {
-            updateQuery(profileId, query.id, () => query);
-          }
-          setIds([...result.map((q) => q.id), ...ids]);
-          setHasMore(result.length === maxCount - count);
-        });
+    refresh();
+    const unwatch = createQueryEventHub.watch(contextId ? [contextId, profileId] : [profileId], (query) => {
+      dispatch({ type: 'newQueryCreated', query })
+    })
+    return () => { unwatch() }
+  }, [profileId, contextId])
+
+  return {
+    items: state.items,
+    hasMore: state.hasMore,
+    loadMore,
+    refresh,
+  };
+}
+
+const useQuery = (id: string): EntityRendererState<Query> => {
+  const [state, setState] = useState<EntityRendererState<Query>>(ENTITY_PENDING);
+  const profileId = useCurrentProfileId()
+
+  useEffect(() => {
+    const load = async () => {
+      const [query] = await window.electron.interactions.getQueries(profileId, [id])
+      if (query) {
+        setState(query)
+      } else {
+        setState(ENTITY_NOT_EXIST)
+      }
     }
-  }, [count, maxCount, hasMore]);
 
-  const loadMore = useCallback(() => {
-    if (count === maxCount && hasMore) {
-      setMaxCount(maxCount + 10);
+    load()
+  }, [id])
+
+  return state;
+}
+
+const useResponse = (id: string): EntityRendererState<Response> => {
+  const [state, setState] = useState<EntityRendererState<Response>>(ENTITY_PENDING);
+  const profileId = useCurrentProfileId()
+
+  useEffect(() => {
+    const load = async () => {
+      const [response] = await window.electron.interactions.getResponses(profileId, [id])
+      if (response) {
+        setState(response)
+      } else {
+        setState(ENTITY_NOT_EXIST)
+      }
     }
-  }, [count, maxCount, hasMore]);
 
-  const createQuery = useCallback(
-    async (input: QueryInput) => {
-      const query = await window.electron.interactions.createQuery(
-        profileId,
-        input
-      );
-      updateQuery(profileId, query.id, () => query);
-      setIds([...ids, query.id]);
-      setMaxCount((c) => c + 1);
-      return query;
-    },
-    [profileId, ids]
-  );
+    load()
 
-  return { ids, loadMore, hasMore, createQuery };
-};
+    const unwatch = appendQueryContentEventHub.watch([profileId, id], (content) => {
+      setState(prev => {
+        if (prev === ENTITY_NOT_EXIST) {
+          return ENTITY_NOT_EXIST
+        }
+        if (prev === ENTITY_PENDING) {
+          return ENTITY_PENDING
+        }
+        return { ...prev, content: prev.content + content }
+      })
+    })
 
-const [useQueryResponses, updateQueryResponses] = profileCachedEntity(
-  (profileId: string) => async (queryId: string) => {
-    const responses = await window.electron.interactions.getResponsesOfQuery(
-      profileId,
-      queryId
-    );
-    return responses;
+    return () => { unwatch() }
+  }, [id])
+
+  return state;
+}
+
+const useQueryResponseIds = (queryId: string): ListResult<string> => {
+  type QueryResponseIdsState = {
+    items: string[]
+    hasMore: boolean
   }
-);
+  type QueryResponseIdsAction = {
+    type: 'newResponseCreated'
+    responseId: string
+  } | {
+    type: 'moreResponsesLoaded'
+    responseIds: string[]
+    hasMore: boolean
+  } | {
+    type: 'refreshed'
+    responseIds: string[]
+    hasMore: boolean
+  }
 
-const createResponse = async (profileId: string, input: ResponseInput) => {
-  const response = await window.electron.interactions.createResponse(
-    profileId,
-    input
-  );
-  updateResponse(profileId, response.id, () => response);
-  updateQueryResponses(profileId, response.query, (cur) => [
-    ...cur,
-    response.id,
-  ]);
-  return response;
-};
+  const [state, dispatch] = useReducer<QueryResponseIdsState, [QueryResponseIdsAction]>(  
+    (current, action) => {
+      switch (action.type) {
+        case 'newResponseCreated':
+          return { items: [...current.items, action.responseId], hasMore: current.hasMore }
+        case 'moreResponsesLoaded':
+          return { items: [...action.responseIds, ...current.items], hasMore: action.hasMore }
+        case 'refreshed':
+          return { items: action.responseIds, hasMore: action.hasMore }
+      }
+    }, { items: [], hasMore: true }
+  )
+  const profileId = useCurrentProfileId()
+  const refresh = useCallback(async () => {
+    const responseIds = await window.electron.interactions.getQueryResponseIds(profileId, queryId)
+    dispatch({ type: 'moreResponsesLoaded', responseIds, hasMore: responseIds.length > 0 })
+  }, [profileId, queryId])
 
-const appendResponseContent = async (profileId: string, responseId: string, content: string) => {
-  const response = await window.electron.interactions.appendResponse(
-    profileId,
-    responseId,
-    content
-  );
-  updateResponse(profileId, response.id, () => response);
-  return response;
-};
+  useEffect(() => {
+    refresh()
+    const unwatch = createResponseEventHub.watch([profileId, queryId], (response) => {
+      dispatch({ type: 'newResponseCreated', responseId: response.id })
+    })
+    return () => { unwatch() }
+  }, [profileId, queryId])
 
-// TODO, use the cached entities
-const getQueries = window.electron.interactions.getQueries;
-const getResponses = window.electron.interactions.getResponses;
-const getResponsesOfQuery = window.electron.interactions.getResponsesOfQuery;
+  return {
+    items: state.items,
+    hasMore: state.hasMore,
+    loadMore: () => {},
+    refresh,
+  };
+}
 
-export {
-  useQuery,
-  useResponse,
-  useRecentQueryIds,
-  useQueryResponses,
-  createResponse,
-  appendResponseContent,
-  getQueries,
-  getResponses,
-  getResponsesOfQuery,
-};
+const createQuery = async (profileId: string, params: CreateParams<Query>): Promise<Query> => {
+  const query = await window.electron.interactions.createQuery(profileId, params)
+  createQueryEventHub.notify(params.contextId ? [profileId, params.contextId] : [profileId], query)
+  return query
+}
+
+const createResponse = async (profileId: string, params: CreateParams<Response>): Promise<Response> => {
+  const response = await window.electron.interactions.createResponse(profileId, params)
+  const queryId = response.queryId
+  createResponseEventHub.notify([profileId, queryId], response)
+  return response
+}
+
+
+const appendResponseContent = async (profileId: string, responseId: string, content: string): Promise<Response | null> => {
+  const response = await window.electron.interactions.appendResponse(profileId, responseId, content)
+  if (response) {
+    appendQueryContentEventHub.notify([profileId, response.queryId], content)
+  }
+  return response
+}
+
+export { useRecentQueries, useQuery, useResponse, useQueryResponseIds, createQuery, createResponse, appendResponseContent };
