@@ -26,12 +26,9 @@ export default function QueryListRp({
       const callback = () => {
         elem.scrollTop = elem.scrollHeight
       }
-      const resizeObserver = new ResizeObserver(callback)
       const mutationObserver = new MutationObserver(callback)
-      resizeObserver.observe(elem)
       mutationObserver.observe(elem, { childList: true, subtree: true })
       return () => {
-        resizeObserver.unobserve(elem)
         mutationObserver.disconnect()
       }
     }
