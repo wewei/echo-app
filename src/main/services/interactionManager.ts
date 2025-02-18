@@ -1,6 +1,8 @@
 import { getDatabaseService } from '../store/interactions'
 import { QueryInput, ResponseInput, Query, Response, QuerySearchOptions } from '@/shared/types/interactions'
 import { onProfileDeleted } from './profileManager'
+import { makeCache, EntityState, isEntityExist } from '@/shared/utils/cache/cache'
+import { debounce } from '@/shared/utils/timing'
 
 const managers = new Map<string, InteractionManager>()
 
@@ -9,7 +11,7 @@ export interface InteractionManager {
   createQuery: (input: QueryInput) => Query
 
   // 获取 Query
-  getQueries: (ids: string[]) => Query[]
+  getQuery: (id: string) => EntityState<Query>
 
   // 搜索 Query, 返回 Query 的 id
   searchQueries: (options: QuerySearchOptions) => Query[]
@@ -18,10 +20,10 @@ export interface InteractionManager {
   createResponse: (input: ResponseInput) => Response
 
   // 追加 Response
-  appendResponse: (id: string, content: string) => Response | null
+  appendResponse: (id: string, content: string) => EntityState<Response>
 
   // 获取 Response
-  getResponses: (ids: string[]) => Response[]
+  getResponse: (id: string) => EntityState<Response>
 
   // 获取 Query 对应的 Response, 返回 Response 的 id
   getQueryResponseIds: (queryId: string) => string[]
@@ -34,43 +36,75 @@ export const getInteractionManager = (profileId: string): InteractionManager => 
 
   const db = getDatabaseService(profileId)
 
-  const manager: InteractionManager = {
-    createQuery: (input: QueryInput) => {
-      return db.query.create(input)
-    },
+  const responeCache = makeCache<string, Response>()
+  const queryCache = makeCache<string, Query>()
 
-    getQueries: (ids: string[]) => {
-      const result = db.query.getByIds(ids);
-      console.log("getQueries", result);
-      return result;
-    },
+  const createQuery = (input: QueryInput) => {
+    return db.query.create(input)
+  }
 
-    getResponses: (ids: string[]) => {
-      return db.response.getByIds(ids)
-    },
+  const getQuery = (id: string) => {
+    if (!queryCache.has(id)) {
+      const query = db.query.get(id)
+      if (isEntityExist(query)) {
+          queryCache.set(id, query)
+        }
+    }
+    return queryCache.get(id)
+  }
 
-    searchQueries: (options: QuerySearchOptions) => {
-      return db.query.search(options)
-    },
+  const searchQueries = (options: QuerySearchOptions) => {
+    const queries = db.query.search(options)
+    queries.forEach(query => queryCache.set(query.id, query))
+    return queries
+  }
 
-    createResponse: (input: ResponseInput) => {
-      return db.response.create(input)
-    },
-
-    appendResponse: (id: string, content: string) => {
-      const response = db.response.get(id) || null
-      if (response) {
-        db.response.update(id, {
-          content: response.content + content,
-          timestamp: Date.now()
-        })
+  const getResponse = (id: string) => {
+    if (!responeCache.has(id)) {
+      const response = db.response.get(id)
+      if (isEntityExist(response)) {
+          responeCache.set(id, response)
+        }
       }
-      return response
-    },
+    return responeCache.get(id)
+  }
 
-    getQueryResponseIds: (queryId: string) => {
-      return db.response.getByQueryId(queryId)
-    },
+  const createResponse = (input: ResponseInput) => {
+    return db.response.create(input)
+  }
+
+  const saveCachedResponse = (id: string) => {
+    const response = responeCache.get(id)
+    if (isEntityExist(response)) {
+      db.response.update(id, response)
+    }
+  }
+
+  const saveResponseAfterAppending = debounce(saveCachedResponse, 2000)
+
+  const appendResponse = (id: string, content: string) => {
+    const response = getResponse(id)
+    if (isEntityExist(response)) {
+      const newResponse = { ...response, content: response.content + content, timestamp: Date.now() }
+      responeCache.set(id, newResponse)
+      saveResponseAfterAppending(id)
+      return newResponse
+    }
+    return response
+  }
+
+  const getQueryResponseIds = (queryId: string) => {
+    return db.response.getByQueryId(queryId)
+  }
+
+  const manager: InteractionManager = {
+    createQuery,
+    getQuery,
+    searchQueries,
+    createResponse,
+    appendResponse,
+    getResponse,
+    getQueryResponseIds
   }
 
   managers.set(profileId, manager)

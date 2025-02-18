@@ -28,7 +28,7 @@ const prepareMessages = async (profileId: string, { content, contextId, id }: Qu
           .then((ids) => (ids.length > 0 ? ids[0] : null))
       )
   );
-  const referingResponses = await window.electron.interactions.getResponses(profileId, referingResponseIds)
+  const referingResponses = await Promise.all(referingResponseIds.map((id) => window.electron.interactions.getResponse(profileId, id)))
   const messages = [
     ...referingQueries.map(({ content, timestamp }) => ({
       role: "user",

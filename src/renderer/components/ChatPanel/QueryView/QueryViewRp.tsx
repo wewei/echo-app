@@ -93,9 +93,6 @@ export default function QueryViewRp({ query, onResponseClick }: QueryViewRpProps
       }}>
         <ResponseList queryId={query.id} onResponseClick={onResponseClick} />
       </Box>
-      <Typography sx={{ mb: 2 }}>
-        {query.content}
-      </Typography>
     </Box>
   )
 } 

@@ -4,7 +4,7 @@ import crypto from 'node:crypto'
 
 import { app } from 'electron'
 import Sqlite, { Database } from 'better-sqlite3'
-import { v4 as uuidv4 } from 'uuid'
+import { EntityState, ENTITY_NOT_EXIST, isEntityExist } from '@/shared/utils/cache/cache'
 
 import { QueryInput, ResponseInput, Query, Response, QuerySearchOptions } from '@/shared/types/interactions'
 import { getProfileDir, onProfileWillBeDeleted } from '@/main/services/profileManager'
@@ -80,7 +80,7 @@ const createQuery = (db: Database) => (input: QueryInput): Query => {
   const id = getQueryId(input)
 
   const query = getQuery(db)(id)
-  if (query) {
+  if (isEntityExist(query)) {
     return query
   }
 
@@ -104,19 +104,10 @@ const updateQuery = (db: Database) => (id: string, input: Partial<QueryInput>): 
   stmt.run({ ...input, id })
 }
 
-const getQuery = (db: Database) => (id: string): Query | null => {
-  const stmt = db.prepare('SELECT * FROM queries WHERE id = ?')
-  return stmt.get(id) as Query | null
-}
-
-const getQueriesByIds = (db: Database) => (ids: string[]): Query[] => {
-  if (ids.length === 0) return []
-  
-  const stmt = db.prepare(`
-    SELECT * FROM queries 
-    WHERE id IN (${ids.map(() => '?').join(',')})
-  `)
-  return stmt.all(...ids) as Query[]
+const getQuery = (db: Database) => (id: string): EntityState<Query> => {
+  const stmt = db.prepare<string, Query>('SELECT * FROM queries WHERE id = ?')
+  const query = stmt.get(id)
+  return query ?? ENTITY_NOT_EXIST
 }
 
 const MAX_COUNT = 100
@@ -159,11 +150,11 @@ const getResponseId = (input: ResponseInput): string => {
   return crypto.createHash('sha256').update(key).digest('hex')
 }
 
-const createResponse = (db: Database) => (input: ResponseInput): Response | null => {
+const createResponse = (db: Database) => (input: ResponseInput): Response => {
   const id = getResponseId(input)
 
   const response = getResponse(db)(id)
-  if (response) {
+  if (isEntityExist(response)) {
     return response
   }
 
@@ -186,33 +177,21 @@ const updateResponse = (db: Database) => (id: string, input: Partial<ResponseInp
   stmt.run({ ...input, id })
 }
 
-const getResponse = (db: Database) => (id: string): Response | null => {
-  const stmt = db.prepare('SELECT * FROM responses WHERE id = ?')
-  const row = stmt.get(id) as Response | null
-  if (!row) return null
-  
-  return row
-}
-
-const getResponsesByIds = (db: Database) => (ids: string[]): Response[] => {
-  if (ids.length === 0) return []
-  
-  const stmt = db.prepare(`
-    SELECT * FROM responses 
-    WHERE id IN (${ids.map(() => '?').join(',')})
-  `)
-  return stmt.all(...ids) as Response[]
+const getResponse = (db: Database) => (id: string): EntityState<Response> => {
+  const stmt = db.prepare<string, Response>('SELECT * FROM responses WHERE id = ?')
+  const row = stmt.get(id)
+  return row ?? ENTITY_NOT_EXIST
 }
 
 const getQueryResponseIds = (db: Database) => (queryId: string): string[] => {
-  const stmt = db.prepare('SELECT id FROM responses WHERE queryId = ? ORDER BY timestamp ASC')
-  const rows = stmt.all(queryId) as { id: string }[]
+  const stmt = db.prepare<string, { id: string }>('SELECT id FROM responses WHERE queryId = ? ORDER BY timestamp ASC')
+  const rows = stmt.all(queryId)
   return rows.map(row => row.id)
 }
 
-const appendResponse = (db: Database) => (id: string, content: string): Response | null => {
+const appendResponse = (db: Database) => (id: string, content: string): EntityState<Response> => {
   const response = getResponse(db)(id)
-  if (!response) return null
+  if (!isEntityExist(response)) return ENTITY_NOT_EXIST
 
   const updatedResponse = {
     ...response,
@@ -237,14 +216,12 @@ export const getDatabaseService = (profileId: string) => {
       create: createQuery(db),
       update: updateQuery(db),
       get: getQuery(db),
-      getByIds: getQueriesByIds(db),
       search: searchQueries(db),
     },
     response: {
       create: createResponse(db),
       update: updateResponse(db),
       get: getResponse(db),
-      getByIds: getResponsesByIds(db),
       getByQueryId: getQueryResponseIds(db),
       append: appendResponse(db),
     },

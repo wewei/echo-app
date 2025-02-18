@@ -100,7 +100,7 @@ const useQuery = (id: string): EntityRendererState<Query> => {
 
   useEffect(() => {
     const load = async () => {
-      const [query] = await window.electron.interactions.getQueries(profileId, [id])
+      const query = await window.electron.interactions.getQuery(profileId, id)
       if (query) {
         setState(query)
       } else {
@@ -120,7 +120,7 @@ const useResponse = (id: string): EntityRendererState<Response> => {
 
   useEffect(() => {
     const load = async () => {
-      const [response] = await window.electron.interactions.getResponses(profileId, [id])
+      const response = await window.electron.interactions.getResponse(profileId, id)
       if (response) {
         setState(response)
       } else {

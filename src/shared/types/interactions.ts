@@ -60,8 +60,8 @@ export const IPC_CHANNELS = {
   CREATE_RESPONSE: 'interaction:createResponse',
   APPEND_RESPONSE: 'interaction:appendResponse',
   SEARCH_QUERIES: 'interaction:searchQueries',
-  GET_RESPONSES: 'interaction:getResponses',
-  GET_QUERIES: 'interaction:getQueries',
+  GET_RESPONSE: 'interaction:getResponse',
+  GET_QUERY: 'interaction:getQuery',
   GET_QUERY_RESPONSE_IDS: 'interaction:getQueryResponseIds',
 } as const
 
