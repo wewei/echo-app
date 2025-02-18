@@ -5,7 +5,6 @@ import { registerAssetHandlers } from './ipc/assetHandlers'
 import { registerAssetProtocol } from './services/assetManager'
 import { registerSettingsHandlers } from './ipc/settingsHandlers'
 import { registerChatHandlers } from './ipc/chatHandler'
-import { registerMessageHandlers } from './ipc/messageHandlers'
 import { registerInteractionHandlers } from './ipc/interactionHandler';
 
 updateElectronApp();
@@ -52,7 +51,6 @@ app.on('ready', () => {
   registerSettingsHandlers();
   registerAssetProtocol();
   registerChatHandlers();
-  registerMessageHandlers();
   registerInteractionHandlers();
 });
 
