@@ -4,4 +4,4 @@
  */
 export * from './cached'
 export * from './strategies'
-export { EntityState } from './cache'
+export { makeCache } from './cache'

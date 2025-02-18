@@ -4,7 +4,7 @@ import crypto from 'node:crypto'
 
 import { app } from 'electron'
 import Sqlite, { Database } from 'better-sqlite3'
-import { EntityState, ENTITY_NOT_EXIST, isEntityExist } from '@/shared/utils/cache/cache'
+import { EntityState, ENTITY_NOT_EXIST, isEntityExist } from '@/shared/types/entity'
 
 import { QueryInput, ResponseInput, Query, Response, QuerySearchOptions } from '@/shared/types/interactions'
 import { getProfileDir, onProfileWillBeDeleted } from '@/main/services/profileManager'

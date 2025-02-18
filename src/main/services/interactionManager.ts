@@ -1,7 +1,8 @@
 import { getDatabaseService } from '../store/interactions'
 import { QueryInput, ResponseInput, Query, Response, QuerySearchOptions } from '@/shared/types/interactions'
 import { onProfileDeleted } from './profileManager'
-import { makeCache, EntityState, isEntityExist } from '@/shared/utils/cache/cache'
+import { EntityState, isEntityExist } from '@/shared/types/entity'
+import { makeCache } from '@/shared/utils/cache'
 import { debounce } from '@/shared/utils/timing'
 
 const managers = new Map<string, InteractionManager>()

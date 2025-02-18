@@ -1,5 +1,6 @@
 import { type CacheStrategy, unlimited } from "./strategies"
-import { makeCache, type EntityNotExist, ENTITY_NOT_EXIST, type EntityState } from "./cache"
+import { makeCache } from "./cache"
+import { type EntityState, ENTITY_NOT_EXIST } from "@/shared/types/entity"
 
 export type Fetch<K, V> = (key: K) => V
 export type CacheUpdater<K, V> = (key: K, fn: (value: V) => EntityState<V>) => EntityState<V>
@@ -104,4 +105,3 @@ export const cachedWithAsync =
     return [cachedFn, updater];
   };
 
-export { ENTITY_NOT_EXIST, EntityNotExist };

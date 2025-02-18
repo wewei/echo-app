@@ -1,12 +1,11 @@
 import React from "react";
-import { useSearchParams, useParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import SplitView from "./SplitView";
 import ContentPanel from "./ContentPanel";
 import ChatPanel from "./ChatPanel";
 import { Drawer, IconButton, Box } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import AppMenu from "./AppMenu";
-import { useResponse } from "@/renderer/data/interactions";
 import { isEntityReady } from "../data/cachedEntity";
 import { Response } from '../../shared/types/interactions';
 

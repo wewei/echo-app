@@ -1,13 +1,11 @@
-import React from 'react';
-import { Box, Tabs, Tab, IconButton, Menu, MenuItem } from '@mui/material';
+import React, { useCallback } from 'react';
+import { Box, IconButton, Menu, MenuItem } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import WebPanel from '../WebPanel/WebPanel';
 import type { TypeString } from '@/renderer/data/contentSession';
-import { isEntityReady } from '@/renderer/data/cachedEntity';
 import { Query } from '@/shared/types/interactions';
 import ResponseView from '@/renderer/components/ChatPanel/ResponseView'
-import { useCallback } from 'react';
 
 export interface TabItem {
   id: string;
@@ -130,7 +128,7 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
                 <span style={{ maxWidth: '200px',textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}>{tab.title}</span>
                 <IconButton
                   size="small"
-                  onClick={(e) => {
+                  onClick={() => {
                     onCloseTab(tab.id);
                   }}
                 >

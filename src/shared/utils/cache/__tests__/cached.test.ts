@@ -1,7 +1,7 @@
 import { makeEventSource } from '../../event';
 import { cachedWithAsync, cachedWith } from '../cached';
 import { lru, unlimited } from '../strategies';
-import { ENTITY_NOT_EXIST } from '../cache';
+import { ENTITY_NOT_EXIST } from '@/shared/types/entity';
 
 describe('cachedWithAsync', () => {
   it('should cache function results', async () => {

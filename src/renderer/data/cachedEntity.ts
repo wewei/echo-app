@@ -2,19 +2,16 @@ import { useEffect, useRef, useState } from "react"
 import {
   cachedWith,
   cachedWithAsync,
-  ENTITY_NOT_EXIST,
   type AsyncFetch,
   type AsyncCacheUpdater,
-  type EntityNotExist,
 } from "@/shared/utils/cache/cached";
-import { type EntityState } from "@/shared/utils/cache/cache";
+import { type EntityState, ENTITY_NOT_EXIST } from "@/shared/types/entity";
 import { type CacheStrategy, unlimited } from "@/shared/utils/cache/strategies";
 import { useCurrentProfileId } from "./profile";
+
 export const ENTITY_PENDING = Symbol('ENTITY_PENDING')
 export type EntityPending = typeof ENTITY_PENDING
 export type EntityRendererState<V> = EntityState<V> | EntityPending
-
-export { ENTITY_NOT_EXIST, EntityNotExist }
 
 export type CachedEntityHook<K, V> = (key: K) => EntityRendererState<V>
 

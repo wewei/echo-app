@@ -1,19 +1,17 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useLocation, useSearchParams } from 'react-router-dom';
-import { ContentPanelRp, TabItem } from './ContentPanelRp';
-import useContentSession from '../../data/contentSession';
-import { TypeString } from '../../data/contentSession';
+import React, { useState, useEffect } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
+import { ContentPanelRp } from './ContentPanelRp';
+import useContentSession, { TypeString } from '../../data/contentSession';
 import { useResponse } from '../../data/interactions';
 import { isEntityReady } from '@/renderer/data/cachedEntity';
 
 export const ContentPanelCt: React.FC = () => {
   const { profileId } = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
   const {
     contentSession,
     setContentSession,
-    handleTabActiveOrCreate,
     handleTabClick,
     handleTabClose,
     handleHiddenTabClick,

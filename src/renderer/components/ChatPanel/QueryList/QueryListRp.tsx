@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Box, List, ListItem, CircularProgress } from '@mui/material'
-import { useInView } from 'react-intersection-observer'
+import { Box, List, ListItem } from '@mui/material'
 import QueryView from '../QueryView'
 import { Query, Response } from '@/shared/types/interactions'
 
@@ -14,8 +13,6 @@ interface QueryListRpProps {
 export default function QueryListRp({ 
   queries,
   onResponseClick,
-  loadMore,
-  hasMore
 }: QueryListRpProps) {
   const listRef = useRef<HTMLDivElement>(null)
   const [stayAtBottom, setStayAtBottom] = useState(true)
@@ -68,7 +65,7 @@ export default function QueryListRp({
       }}
     >
       <List disablePadding>
-        {queries.map((query, index) => (
+        {queries.map((query) => (
           <React.Fragment key={query.id}>
             <ListItem disablePadding>
               <Box sx={{ width: '100%' }}>

@@ -5,7 +5,6 @@ import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import 'katex/dist/katex.min.css'
-import { useTranslation } from 'react-i18next'
 import type { Query, Response } from '@/shared/types/interactions'
 import ResponseList from '@/renderer/components/ChatPanel/ResponseList'
 

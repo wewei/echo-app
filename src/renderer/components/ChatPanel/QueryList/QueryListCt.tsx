@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import QueryListRp from './QueryListRp'
 import { Query, Response } from '@/shared/types/interactions'
 
@@ -8,8 +8,6 @@ interface Props {
   loadMore: (() => void) | null
   hasMore: boolean
 }
-
-const BATCH_SIZE = 20
 
 export default function QueryListCt({ 
   queries,

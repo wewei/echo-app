@@ -2,7 +2,7 @@ import { ipcMain } from 'electron'
 
 import { QueryInput, ResponseInput, IPC_CHANNELS, QuerySearchOptions } from '@/shared/types/interactions'
 import { getInteractionManager } from '@/main/services/interactionManager'
-import { isEntityExist } from '@/shared/utils/cache/cache'
+import { isEntityExist } from '@/shared/types/entity'
 
 export const registerInteractionHandlers = () => {
   ipcMain.handle(IPC_CHANNELS.CREATE_QUERY, 

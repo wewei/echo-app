@@ -1,6 +1,6 @@
-const throttle = (func: Function, wait: number) => {
+const throttle = <Args extends unknown[]>(func: (...args: Args) => void, wait: number) => {
   let timeout: NodeJS.Timeout | null = null
-  return function(...args: any[]) {
+  return function(...args: Args) {
     if (!timeout) {
       timeout = setTimeout(() => {
         func.apply(this, args)
@@ -10,9 +10,9 @@ const throttle = (func: Function, wait: number) => {
   }
 }
 
-const debounce = (func: Function, wait: number) => {
+const debounce = <Args extends unknown[]>(func: (...args: Args) => void, wait: number) => {
   let timeout: NodeJS.Timeout | null = null
-  return function(...args: any[]) {
+  return function(...args: Args) {
     clearTimeout(timeout)
     timeout = setTimeout(() => func.apply(this, args), wait)
   }

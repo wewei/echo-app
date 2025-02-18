@@ -5,7 +5,7 @@ import SettingsPanelRp from "./SettingsPanelRp";
 import { isEntityReady } from "@/renderer/data/cachedEntity";
 
 export default function SettingsPanelCt() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [, setSearchParams] = useSearchParams();
   const [isEditing, setIsEditing] = useState(false);
   const [avatarAssetId, setAvatarAssetId] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);

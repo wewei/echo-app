@@ -1,9 +1,9 @@
 import { useState, useEffect, useReducer, useCallback } from "react";
 import { Query, Response } from "@/shared/types/interactions";
-import { ENTITY_NOT_EXIST } from "@/shared/utils/cache";
 import { makeEventHub } from "@/shared/utils/event";
 import { useCurrentProfileId } from "./profile";
 import { EntityRendererState, ENTITY_PENDING } from "./cachedEntity";
+import { ENTITY_NOT_EXIST } from "@/shared/types/entity";
 
 export type CreateParams<T extends { id: string }> = Omit<T, 'id'>;
 
