@@ -155,7 +155,7 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
       )}
       
       <Box sx={{ flexGrow: 1}}>
-        {activeTab ? (
+        {activeTab && (
           (() => {
             
             const currentTab = tabs.find(tab => tab.id === activeTab);
@@ -182,16 +182,9 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
               onNext={() => { /* function logic */ }}
             />
             } 
-            return <div style={{ padding: '20px', border: '1px solid black' }}>
-            <h3>Test View 3</h3>
-            <pre>{JSON.stringify(currentTab, null, 2)}</pre>
-          </div>;
+            
+            return null;
           })()
-        ) : (
-          <div style={{ padding: '20px', border: '1px solid black' }}>
-                <h3>Test View 4</h3>
-                <pre>{JSON.stringify("hhahahahahha", null, 2)}</pre>
-              </div>
         )}
       </Box>
     </Box>

@@ -29,15 +29,14 @@ type Props = {
 export default function ResponseViewRp({ response, onResponseClick,hasPrevious, hasNext, onPrevious, onNext }: Props) {
   const processedContent = convertLatexDelimiters(response.content)
 
-  console.log(response)
+  console.log("ResponseViewRp", response, onResponseClick);
   return (
     <Box sx={{ 
       display: 'flex',
       justifyContent: 'flex-start',
       px: 2 
-    }} onClick={(e) => {
-      e.stopPropagation();
-      console.log("response", response, onResponseClick);
+    }} onClick={() => {
+      console.log("ResponseViewRp onclick", response, onResponseClick);
       onResponseClick?.(response)
       }}>
       <Paper

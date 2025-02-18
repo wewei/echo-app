@@ -17,7 +17,7 @@ interface Props {
 export default function ResponseViewCt({ responseId, onResponseClick, hasPrevious, hasNext, onPrevious, onNext }: Props) {
   const response = useResponse(responseId)
 
-  console.log("ResponseViewCt", response, isEntityReady(response))
+  console.log("ResponseViewCt", response, isEntityReady(response), onResponseClick)
   return isEntityReady(response) ? (
     <ResponseViewRp
       response={response}

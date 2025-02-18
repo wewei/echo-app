@@ -23,11 +23,11 @@ export default function ResponseListRp({
   if (!hasResponses) {
     return null
   }
-
   return (
     <Box sx={{ position: 'relative', mb: 2  }}>
       <ResponseView
         responseId={responseIds[currentIndex]}
+        onResponseClick={onResponseClick}
         hasPrevious={currentIndex > 0}
         hasNext={currentIndex < responseIds.length - 1}
         onPrevious={onPrevious}
