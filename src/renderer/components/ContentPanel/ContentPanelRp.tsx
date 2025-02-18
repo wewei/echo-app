@@ -7,13 +7,14 @@ import type { TypeString } from '@/renderer/data/contentSession';
 import { isEntityReady } from '@/renderer/data/cachedEntity';
 import { Query } from '@/shared/types/interactions';
 import ResponseView from '@/renderer/components/ChatPanel/ResponseView'
+import { useCallback } from 'react';
 
 export interface TabItem {
   id: string;
   title: string;
   type: TypeString;
   lastAccessed: number;
-  context?: string;
+  link?: string;
   responseId?: string;
 }
 
@@ -26,13 +27,14 @@ interface ContentPanelRpProps {
   type?: TypeString;
   query?: Query;
   responseId?: string | null;
-  context?: string | null;
+  link?: string | null;
   onTabClick: (tab: TabItem) => void;
   onCloseTab: (id: string) => void;
   onHiddenTabClick: (tab: TabItem) => void;
   onMenuClick: (event: React.MouseEvent<HTMLElement>) => void;
   onMenuClose: () => void;
   onTitleChange: (id: string, title: string) => void;
+  handleLinkClick?: (url: string) => void;
 }
 
 export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
@@ -44,15 +46,27 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
   type,
   responseId,
   query,
-  context,
+  link,
   onTabClick,
   onCloseTab,
   onHiddenTabClick,
   onMenuClick,
   onMenuClose,
   onTitleChange,
+  handleLinkClick,
 }) => {
-  console.log("ContentPanelRp tabs", tabs, "hiddenTabs", hiddenTabs, "activeTab", activeTab, "menuAnchor", menuAnchor, "profileId", profileId, "type", type, "responseId", responseId, "query", query, "context", context);
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const link = target.closest('a');
+    
+    if (link) {
+      e.preventDefault();
+      console.log("handleClick", link.href);
+      handleLinkClick?.(link.href);
+    }
+  }, [handleLinkClick]);
+
+  console.log("ContentPanelRp", "tabs", tabs, "hiddenTabs", hiddenTabs, "activeTab", activeTab, "profileId", profileId, "type", type, "responseId", responseId, "query", query, "link", link);
   return (
     <Box sx={{
       width: '100%', 
@@ -60,7 +74,7 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
       display: 'flex', 
       flexDirection: 'column',
       overflow: 'hidden' 
-    }}>
+    }} onClick={handleClick}>
       {tabs.length > 0 && (
         <Box sx={{ borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center', position: 'relative' }}>
           <Box
@@ -81,22 +95,23 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
             {tabs.map((tab) => (
               <Box
                 key={tab.id}
+                data-key={tab.id} // 添加data-key属性
                 onClick={() => onTabClick(tab)}
                 sx={{
                   display: 'flex',
                   alignItems: 'center', 
-                  padding: '8px 16px',
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
                   borderRight: '1px solid rgba(0,0,0,0.12)',
-                  backgroundColor: tab.id === activeTab ? 'rgba(0,0,0,0.04)' : 'transparent',
-                  boxShadow: tab.id === activeTab ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                  backgroundColor: tab.id === activeTab ? '#3c3c3c' : '#2d2d2d', // 使用深色背景
+                  color: '#ffffff', // 浅色文字
+                  boxShadow: 'none', // 移除阴影效果
+                  borderBottom: tab.id === activeTab ? '2px solid #f0f0f0' : '1px solid #444', // 选中状态使用更亮的底部边框
                   borderRadius: '4px 4px 0 0',
-                  marginTop: '2px',
-                  position: 'relative',
+                  padding: '8px 16px', // 增加内边距
                   '&:hover': {
-                    backgroundColor: 'rgba(0,0,0,0.08)',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    backgroundColor: '#4a4a4a', // hover时背景颜色稍微加深
+                    boxShadow: 'none', // 移除hover时的阴影效果
                   },
                   '&:before': {
                     content: '""',
@@ -107,14 +122,15 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
                     height: '2px',
                     background: tab.id === activeTab ? 'primary.main' : 'transparent',
                     borderRadius: '4px 4px 0 0'
-                  }
+                  },
+                  marginTop: '2px',
+                  position: 'relative',
                 }}
               >
-                <span style={{ marginRight: '8px' }}>{tab.title}</span>
+                <span style={{ maxWidth: '200px',textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}>{tab.title}</span>
                 <IconButton
                   size="small"
                   onClick={(e) => {
-                    e.stopPropagation();
                     onCloseTab(tab.id);
                   }}
                 >
@@ -159,21 +175,18 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
           (() => {
             
             const currentTab = tabs.find(tab => tab.id === activeTab);
-            // if (!currentTab) return null;
+            if (!currentTab) return null;
 
             // 如果标签有 context，显示网页
-            if (currentTab.context) {
+            if (currentTab.type === "Link") {
               return (
                 <WebPanel
-                  url={currentTab.context}
+                  url={currentTab.link}
                   tabId={currentTab.id}
                   onTitleChange={onTitleChange}
                 />
               );
-            }
-
-            // 如果标签有 messageId，显示消息详情
-            if (currentTab.type === "Response") {
+            } else if (currentTab.type === "Response") {
               return <ResponseView 
               responseId={currentTab.responseId}
               hasPrevious={false}

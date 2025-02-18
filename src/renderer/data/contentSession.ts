@@ -13,7 +13,7 @@ export interface ContentSession {
   type: TypeString;
   queryId: string | null;
   responseId: string | null;
-  context: string | null;
+  link: string | null;
 }
 
 const MAX_VISIBLE_TABS = 5; // Maximum number of visible tabs
@@ -27,7 +27,7 @@ const useContentSession = () => {
     type: null,
     queryId: null,
     responseId: null,
-    context: null
+    link: null
   });
 
   useEffect(() => {
@@ -42,7 +42,7 @@ const useContentSession = () => {
     if (!hasInitialized) {
       return;
     }
-
+    
     if (contentSession.type === "Response") {
       if (contentSession.queryId && contentSession.responseId) {
         handleTabActiveOrCreate("Response", contentSession.queryId, null, contentSession.responseId);
@@ -50,12 +50,12 @@ const useContentSession = () => {
     }
 
     if (contentSession.type === "Link") {
-      if (contentSession.queryId && contentSession.context) {
-        handleTabActiveOrCreate("Link", contentSession.queryId, contentSession.context, null);
+      if (contentSession.queryId && contentSession.link) {
+        handleTabActiveOrCreate("Link", contentSession.queryId, contentSession.link, null);
       }
     }
 
-  }, [hasInitialized, contentSession.type, contentSession.queryId, contentSession.context, contentSession.responseId]);
+  }, [hasInitialized, contentSession.type, contentSession.queryId, contentSession.link, contentSession.responseId]);
 
   const handleTabClick = (tab: TabItem) => {
     setContentSession(prevState => ({
@@ -131,6 +131,10 @@ const useContentSession = () => {
     const existingHiddenTab = contentSession.hiddenTabs.find(tab => tab.id === queryId);
 
     if (existingVisibleTab) {
+      existingVisibleTab.link = context;
+      existingVisibleTab.responseId = responseId;
+      existingVisibleTab.type = type;
+
       handleTabClick(existingVisibleTab);
     } else if (existingHiddenTab) {
       handleHiddenTabClick(existingHiddenTab);
@@ -139,7 +143,6 @@ const useContentSession = () => {
         id: queryId,
         title: context || `Query ${queryId}`,
         lastAccessed: Date.now(),
-        context,
         responseId: responseId || undefined,
         type
       };
