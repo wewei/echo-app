@@ -42,12 +42,12 @@ export default function ChatPanelRp({
   disabled
 }: Props) {
   const handleClick = useCallback((e: React.MouseEvent) => {
-    // const target = e.target as HTMLElement;
-    // const link = target.closest('a');
-    // if (link) {
-    //   e.preventDefault();
-    //   handleLinkClick?.(link.href);
-    // }
+    const target = e.target as HTMLElement;
+    const link = target.closest('a');
+    if (link) {
+      e.preventDefault();
+      handleLinkClick?.(link.href);
+    }
   }, [handleLinkClick]);
 
   return (
