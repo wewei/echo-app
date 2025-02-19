@@ -44,3 +44,33 @@ export type NavigationInfo = {
 }
 
 export type Interaction = ChatInteraction | NavigationInteraction
+
+// generate the next chat id
+export const nextChatId = (interactionId: string | null): string => {
+  if (interactionId === null) {
+    return ':0'
+  }
+  const [prefix, indexStr] = interactionId.split(':')
+  if (indexStr) {
+    const index = parseInt(indexStr)
+    const nextIndex = index + 1
+    return `${prefix}:${nextIndex}`
+  }
+  return `${prefix}:0`
+}
+
+// generate the previous chat id
+export const prevChatId = (interactionId: string | null): string | null => {
+  if (interactionId === null) {
+    return null
+  }
+  const [prefix, indexStr] = interactionId.split(':')
+  if (indexStr) {
+    const index = parseInt(indexStr)
+    if (index > 0) {
+      const prevIndex = index - 1
+      return `${prefix}:${prevIndex}`
+    }
+  }
+  return null
+}

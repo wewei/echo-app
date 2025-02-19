@@ -6,14 +6,23 @@ import {
   Interaction,
   ChatInfo,
   NavigationInfo,
+  nextChatId,
 } from "@/shared/types/interactionsV2"
 import path from 'path'
+import { EntityData } from '@/shared/types/entity'
+import crypto from 'node:crypto'
 
 type InteractionStore = {
-  createChat: (chat: ChatInteraction) => void
-  createNavigation: (navigation: NavigationInteraction) => void
+  createChat: (chat: EntityData<ChatInteraction>) => ChatInteraction
+  createNavigation: (navigation: EntityData<NavigationInteraction>) => NavigationInteraction
   getInteraction: (id: string) => Interaction | null
+  getNavigationByUrl: (url: string) => NavigationInteraction | null
   close: () => void
+}
+
+const generateNavId = (contextId: string, url: string): string => {
+  const id = crypto.createHash('sha256').update(`${contextId}:${url}`).digest('hex')
+  return id
 }
 
 const initDatabase = (db: Database): void => {
@@ -24,10 +33,8 @@ const initDatabase = (db: Database): void => {
       type TEXT NOT NULL,
       userContent TEXT NOT NULL,
       contextId TEXT,
-      nextChatId TEXT,
       createdAt INTEGER NOT NULL,
-      FOREIGN KEY (contextId) REFERENCES interaction(id),
-      FOREIGN KEY (nextChatId) REFERENCES interaction(id)
+      FOREIGN KEY (contextId) REFERENCES interaction(id)
     )
   `)
 
@@ -54,23 +61,40 @@ const initDatabase = (db: Database): void => {
       FOREIGN KEY (id) REFERENCES interaction(id)
     )
   `)
+
+  // 为 navigation 的 URL (userContent) 创建索引
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_navigation_url 
+    ON interaction (userContent) 
+    WHERE type = 'navigation'
+  `)
 }
 
 const createInteractionStore = (dbPath: string): InteractionStore => {
   const db = new Sqlite(path.resolve(dbPath))
   initDatabase(db)
 
-  const createChat = (chat: ChatInteraction): void => {
-    const { id, type, userContent, contextId, createdAt, model, assistantContent, updatedAt } = chat
-    
+  const createChat = (chat: EntityData<ChatInteraction>): ChatInteraction => {
+    const { type, userContent, contextId, createdAt, model, assistantContent, updatedAt } = chat
+    const id = nextChatId(contextId)
+
     const insertInteraction = db.prepare(`
       INSERT INTO interaction (id, type, userContent, contextId, createdAt)
       VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        type = excluded.type,
+        userContent = excluded.userContent,
+        contextId = excluded.contextId,
+        createdAt = excluded.createdAt
     `)
 
     const insertChat = db.prepare(`
       INSERT INTO chat (id, model, assistantContent, updatedAt)
       VALUES (?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        model = excluded.model,
+        assistantContent = excluded.assistantContent,
+        updatedAt = excluded.updatedAt
     `)
 
     const transaction = db.transaction(() => {
@@ -79,22 +103,39 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     })
 
     transaction()
+
+    return {
+      ...chat,
+      id,
+    }
   }
 
-  const createNavigation = (navigation: NavigationInteraction): void => {
+  const createNavigation = (navigation: EntityData<NavigationInteraction>): NavigationInteraction => {
     const { 
-      id, type, userContent, contextId, createdAt,
+      type, userContent, contextId, createdAt,
       title, description, favIconUrl, imageAssetId, updatedAt 
     } = navigation
+    const id = generateNavId(contextId, userContent)
 
     const insertInteraction = db.prepare(`
       INSERT INTO interaction (id, type, userContent, contextId, createdAt)
       VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        type = excluded.type,
+        userContent = excluded.userContent,
+        contextId = excluded.contextId,
+        createdAt = excluded.createdAt
     `)
 
     const insertNavigation = db.prepare(`
       INSERT INTO navigation (id, title, description, favIconUrl, imageAssetId, updatedAt)
       VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        title = excluded.title,
+        description = excluded.description,
+        favIconUrl = excluded.favIconUrl,
+        imageAssetId = excluded.imageAssetId,
+        updatedAt = excluded.updatedAt
     `)
 
     const transaction = db.transaction(() => {
@@ -103,6 +144,27 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     })
 
     transaction()
+
+    return {
+      ...navigation,
+      id,
+    }
+  }
+
+  const getNavigationByUrl = (url: string): NavigationInteraction | null => {
+    const result = db.prepare(`
+      SELECT 
+        i.id, i.type, i.userContent, i.contextId, i.createdAt,
+        n.title, n.description, n.favIconUrl, n.imageAssetId, n.updatedAt
+      FROM interaction i
+      JOIN navigation n ON i.id = n.id
+      WHERE i.type = 'navigation' AND i.userContent = ?
+      ORDER BY i.createdAt DESC
+      LIMIT 1
+    `).get(url) as (BaseInteraction & NavigationInfo) | undefined
+
+    if (!result) return null
+    return result as NavigationInteraction
   }
 
   const getInteraction = (id: string): Interaction | null => {
@@ -137,6 +199,7 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     createChat,
     createNavigation,
     getInteraction,
+    getNavigationByUrl,
     close
   }
 }
