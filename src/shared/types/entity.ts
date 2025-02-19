@@ -1,6 +1,9 @@
+export type Entity = { id: string }
 export const ENTITY_NOT_EXIST = Symbol("ENTITY_NOT_EXIST")
 export type EntityNotExist = typeof ENTITY_NOT_EXIST
-export type EntityState<Entity> = Entity | EntityNotExist
+export type EntityState<E> = E | EntityNotExist
 
-export const isEntityExist = <Entity>(entity: EntityState<Entity>): entity is Entity =>
+export const isEntityExist = <E>(entity: EntityState<E>): entity is E =>
   entity !== ENTITY_NOT_EXIST
+
+export type EntityData<E extends Entity> = Omit<E, 'id'>
