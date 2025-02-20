@@ -1,22 +1,17 @@
 import Sqlite, { Database } from 'better-sqlite3'
 import {
-  BaseInteraction,
-  ChatInteraction,
-  NavInteraction,
-  Interaction,
-  ChatInfo,
-  NavInfo,
-  nextChatId,
+  Chat,
+  Nav,
+  ChatState,
+  NavState,
 } from "@/shared/types/interactionsV2"
 import path from 'path'
-import { EntityData } from '@/shared/types/entity'
 import crypto from 'node:crypto'
 
 type InteractionStore = {
-  createChat: (chat: EntityData<ChatInteraction>) => ChatInteraction
-  createNav: (nav: EntityData<NavInteraction>) => NavInteraction
-  getInteraction: (id: string) => Interaction | null
-  getNavsByUrl: (url: string) => NavInteraction[]
+  createChat: (chat: Chat) => void
+  createNav: (nav: Nav) => string
+  getNavsByUrl: (url: string) => Nav[]
   close: () => void
 }
 
@@ -28,45 +23,53 @@ const generateNavId = (contextId: string, url: string): string => {
 const initDatabase = (db: Database): void => {
   // 创建基础交互表
   db.exec(`
-    CREATE TABLE IF NOT EXISTS interaction (
+    CREATE TABLE IF NOT EXISTS navProps (
       id TEXT PRIMARY KEY,
-      type TEXT NOT NULL,
-      userContent TEXT NOT NULL,
+      url TEXT NOT NULL,
       contextId TEXT,
+      contextIndex INTEGER NOT NULL,
       createdAt INTEGER NOT NULL,
-      FOREIGN KEY (contextId) REFERENCES interaction(id)
+      FOREIGN KEY (contextId) REFERENCES navs(id)
     )
   `)
 
-  // 创建聊天交互表
   db.exec(`
-    CREATE TABLE IF NOT EXISTS chat (
-      id TEXT PRIMARY KEY,
-      model TEXT NOT NULL,
-      assistantContent TEXT NOT NULL,
-      updatedAt INTEGER NOT NULL,
-      FOREIGN KEY (id) REFERENCES interaction(id)
+    CREATE TABLE IF NOT EXISTS chatProps (
+      contextId TEXT,
+      index INTEGER NOT NULL,
+      userContent TEXT NOT NULL,
+      createdAt INTEGER NOT NULL,
+      PRIMARY KEY (contextId, index),
+      FOREIGN KEY (contextId) REFERENCES navProps(id)
     )
   `)
 
-  // 创建导航交互表
   db.exec(`
-    CREATE TABLE IF NOT EXISTS navs (
+    CREATE TABLE IF NOT EXISTS navStates (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
       description TEXT,
       favIconUrl TEXT,
       imageAssetId TEXT,
       updatedAt INTEGER NOT NULL,
-      FOREIGN KEY (id) REFERENCES interaction(id)
+      FOREIGN KEY (id) REFERENCES navProps(id)
     )
   `)
 
-  // 为 nav 的 URL (userContent) 创建索引
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS chatStates (
+      id TEXT PRIMARY KEY,
+      model TEXT NOT NULL,
+      assistantContent TEXT NOT NULL,
+      updatedAt INTEGER NOT NULL,
+      FOREIGN KEY (id) REFERENCES chatProps(id)
+    )
+  `)
+
+  // 为 nav 的 url 创建索引
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_nav_url 
-    ON interaction (userContent) 
-    WHERE type = 'nav'
+    ON navs (url) 
   `)
 }
 
@@ -74,7 +77,7 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
   const db = new Sqlite(path.resolve(dbPath))
   initDatabase(db)
 
-  const createChat = (chat: EntityData<ChatInteraction>): ChatInteraction => {
+  const createChat = (chat: EntityData<Chat>): Chat => {
     const { type, userContent, contextId, createdAt, model, assistantContent, updatedAt } = chat
     const id = nextChatId(contextId)
 
@@ -110,7 +113,7 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     }
   }
 
-  const createNav = (nav: EntityData<NavInteraction>): NavInteraction => {
+  const createNav = (nav: EntityData<Nav>): Nav => {
     const { 
       type, userContent, contextId, createdAt,
       title, description, favIconUrl, imageAssetId, updatedAt 
@@ -151,8 +154,8 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     }
   }
 
-  const getNavsByUrl = (url: string): NavInteraction[] => {
-    const results = db.prepare<string, NavInteraction>(`
+  const getNavsByUrl = (url: string): Nav[] => {
+    const results = db.prepare<string, Nav>(`
       SELECT 
         i.id, i.type, i.userContent, i.contextId, i.createdAt,
         n.title, n.description, n.favIconUrl, n.imageAssetId, n.updatedAt
@@ -173,17 +176,17 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     if (!baseInteraction) return null
 
     if (baseInteraction.type === 'chat') {
-      const chatData = db.prepare<string, ChatInfo>(`
+      const chatData = db.prepare<string, ChatState>(`
         SELECT id, model, assistantContent, updatedAt FROM chat WHERE id = ?
       `).get(id)
 
-      return { ...baseInteraction, ...chatData } as ChatInteraction
+      return { ...baseInteraction, ...chatData } as Chat
     } else if (baseInteraction.type === 'nav') {
-      const navData = db.prepare<string, NavInfo>(`
+      const navData = db.prepare<string, NavState>(`
         SELECT id, title, description, favIconUrl, imageAssetId, updatedAt FROM navs WHERE id = ?
       `).get(id)
 
-      return { ...baseInteraction, ...navData } as NavInteraction
+      return { ...baseInteraction, ...navData } as Nav
     }
 
     return null
