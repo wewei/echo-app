@@ -1,8 +1,5 @@
 import { useState, useEffect } from 'react';
 import { TabItem } from '../components/ContentPanel/ContentPanelRp';
-import { useQuery } from './interactions';
-import { Query } from '@/shared/types/interactions';
-import { isEntityReady } from './cachedEntity';
 
 export type TypeString = "Response" | "Link";
 

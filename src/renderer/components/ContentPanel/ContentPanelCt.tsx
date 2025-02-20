@@ -3,7 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { ContentPanelRp } from './ContentPanelRp';
 import useContentSession, { TypeString } from '../../data/contentSession';
 import { useResponse } from '../../data/interactions';
-import { isEntityReady } from '@/renderer/data/cachedEntity';
+import { isEntityReady } from '@/renderer/data/entity';
 
 export const ContentPanelCt: React.FC = () => {
   const { profileId } = useParams();

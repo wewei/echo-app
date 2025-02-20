@@ -1,6 +1,6 @@
 import React from 'react'
 import { useResponse } from '@/renderer/data/interactions'
-import { isEntityReady } from '@/renderer/data/cachedEntity'
+import { isEntityReady } from '@/renderer/data/entity'
 import ResponseViewRp from './ResponseViewRp'
 import Loading from '@/renderer/components/Loading'
 import { Response } from '@/shared/types/interactions'

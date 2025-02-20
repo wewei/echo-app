@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useProfile, updateProfile } from "@/renderer/data/profile";
 import SettingsPanelRp from "./SettingsPanelRp";
-import { isEntityReady } from "@/renderer/data/cachedEntity";
+import { isEntityReady } from "@/renderer/data/entity";
 
 export default function SettingsPanelCt() {
   const [, setSearchParams] = useSearchParams();
@@ -46,7 +46,7 @@ export default function SettingsPanelCt() {
 
     setIsEditing(false);
     setAvatarAssetId("");
-    updateProfile(profileId, (prev) => isEntityReady(prev) ? { ...prev, username, avatar: avatarUrl } : prev);
+    updateProfile(profileId, { ...profile, username, avatar: avatarUrl });
   };
 
   const handleEditStart = () => {

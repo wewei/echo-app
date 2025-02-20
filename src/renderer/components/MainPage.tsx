@@ -6,7 +6,7 @@ import ChatPanel from "./ChatPanel";
 import { Drawer, IconButton, Box } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import AppMenu from "./AppMenu";
-import { isEntityReady } from "../data/cachedEntity";
+import { isEntityReady } from "../data/entity";
 import { Response } from '../../shared/types/interactions';
 
 export default function MainPage() {

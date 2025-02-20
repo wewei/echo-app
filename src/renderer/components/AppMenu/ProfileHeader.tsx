@@ -4,7 +4,7 @@ import SettingsIcon from '@mui/icons-material/Settings'
 import { Profile } from '@/shared/types/profile'
 import { useTranslation } from 'react-i18next'
 import Loading from '@/renderer/components/Loading'
-import { EntityRendererState, isEntityReady } from '@/renderer/data/cachedEntity'
+import { EntityRendererState, isEntityReady } from '@/renderer/data/entity'
 
 type ProfileHeaderProps = {
   profile: EntityRendererState<Profile>

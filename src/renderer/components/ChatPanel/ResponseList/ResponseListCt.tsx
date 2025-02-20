@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useQueryResponseIds } from '@/renderer/data/interactions'
-import { isEntityReady } from '@/renderer/data/cachedEntity'
+import { isEntityReady } from '@/renderer/data/entity'
 import ResponseListRp from './ResponseListRp'
 import Loading from '@/renderer/components/Loading'
 import { Response } from '@/shared/types/interactions'

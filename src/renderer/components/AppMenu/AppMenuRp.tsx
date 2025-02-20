@@ -4,7 +4,7 @@ import ProfileHeader from './ProfileHeader'
 import ProfileList from './ProfileList'
 import SettingsPanel from './SettingsPanel'
 import type { Profile } from '@/shared/types/profile'
-import { EntityRendererState } from '@/renderer/data/cachedEntity'
+import { EntityRendererState } from '@/renderer/data/entity'
 
 interface AppMenuPrProps {
   profile: EntityRendererState<Profile>

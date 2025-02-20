@@ -28,7 +28,7 @@ import type { Profile } from "@/shared/types/profile";
 import Loading from "@/renderer/components/Loading";
 import SearchSettingsView from './SearchSettingsView';
 import ChatSettingsView from './ChatSettingsView';
-import { EntityRendererState, isEntityReady } from "@/renderer/data/cachedEntity";
+import { EntityRendererState, isEntityReady } from "@/renderer/data/entity";
 
 interface SettingsPanelRpProps {
   profile: EntityRendererState<Profile>

@@ -2,9 +2,30 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import type { Profile } from "@/shared/types/profile";
-import { cachedEntity, EntityRendererState } from "./cachedEntity";
+import { EntityRendererState, ENTITY_PENDING, ENTITY_NOT_EXIST } from "./entity";
+import { makeEventHub } from "@/shared/utils/event";
 
-const [useProfile, updateProfile] = cachedEntity(window.electron.profile.get)
+// Route /profileId
+const updateProfileEventHub = makeEventHub<Profile>()
+
+const useProfile = (profileId: string) => {
+  const [profile, setProfile] = useState<EntityRendererState<Profile>>(ENTITY_PENDING);
+  useEffect(() => {
+    const loadProfile = async () => {
+      const profile = await window.electron.profile.get(profileId);
+      setProfile(profile ?? ENTITY_NOT_EXIST);
+    }
+    loadProfile();
+    const unwatch = updateProfileEventHub.watch([profileId], setProfile);
+    return () => { unwatch() };
+  }, [profileId]);
+  return profile;
+}
+
+const updateProfile = (profileId: string, profile: Profile) => {
+  updateProfileEventHub.notify([profileId], profile);
+  return window.electron.profile.update(profileId, profile);
+}
 
 export { useProfile, updateProfile }
 
