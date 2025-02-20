@@ -92,21 +92,3 @@ export const makeAsyncCache = <Key, Entity>(
     },
   };
 };
-
-export const cachedWith =
-  <Key, Entity>(cache: Cache<Key, Entity>) =>
-  (fn: (key: Key) => Entity) =>
-  (key: Key): Entity => {
-    const cached = cache.get(key);
-    if (isEntityExist(cached)) {
-      return cached;
-    }
-
-    const result = fn(key);
-
-    if (isEntityExist(result)) {
-      cache.set(key, result);
-    }
-
-    return result;
-  };
