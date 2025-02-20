@@ -7,7 +7,6 @@ export type Cache<Key, Entity> = {
   set: (key: Key, entity: Entity) => void
   del: (key: Key) => void
   has: (key: Key) => boolean
-  update: (key: Key, updater: (entity: EntityState<Entity>) => EntityState<Entity>) => EntityState<Entity>
 }
 
 /**
@@ -49,18 +48,7 @@ export const makeCache = <Key, Entity>({
   }
   const has = (key: Key) => entities.has(key)
 
-  const update = (key: Key, updater: (entity: EntityState<Entity>) => EntityState<Entity>) => {
-    const entity = entities.get(key) ?? ENTITY_NOT_EXIST
-    const updated = updater(entity)
-    if (isEntityExist(updated)) {
-      set(key, updated)
-    } else {
-      del(key)
-    }
-    return updated
-  }
-
-  return { get, set, del, has, update }
+  return { get, set, del, has }
 }
 
 export type AsyncCache<Key, Entity> = Cache<Key, Promise<Entity>>
