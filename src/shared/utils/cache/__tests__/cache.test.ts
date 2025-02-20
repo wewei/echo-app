@@ -175,4 +175,13 @@ describe('makeAsyncCache', () => {
       expect(cache.has('key1')).toBe(false)
     })
   })
+
+  describe('keys 方法', () => {
+    it('应该返回所有缓存键', () => {
+      const cache = makeAsyncCache<string, number>()
+      cache.set('key1', Promise.resolve(100))
+      cache.set('key2', Promise.resolve(200))
+      expect(cache.keys()).toEqual(['key1', 'key2'])
+    })
+  })
 }) 

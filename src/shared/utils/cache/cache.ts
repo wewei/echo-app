@@ -7,6 +7,7 @@ export type Cache<Key, Entity> = {
   set: (key: Key, entity: Entity) => void
   del: (key: Key) => void
   has: (key: Key) => boolean
+  keys: () => Key[]
 }
 
 /**
@@ -47,8 +48,9 @@ export const makeCache = <Key, Entity>({
     onDel?.(key)
   }
   const has = (key: Key) => entities.has(key)
+  const keys = () => Array.from(entities.keys())
 
-  return { get, set, del, has }
+  return { get, set, del, has, keys }
 }
 
 export type AsyncCache<Key, Entity> = Cache<Key, Promise<Entity>>
