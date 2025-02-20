@@ -3,36 +3,35 @@ import {
   BaseInteraction,
   ChatInteraction,
   NavInteraction,
-  Interaction,
-  ChatInfo,
-  NavInfo,
-  nextChatId,
+  ChatState,
+  NavState,
 } from "@/shared/types/interactionsV2"
 import path from 'path'
 import { EntityData } from '@/shared/types/entity'
-import crypto from 'node:crypto'
 
 type InteractionStore = {
   createChat: (chat: EntityData<ChatInteraction>) => ChatInteraction
   createNav: (nav: EntityData<NavInteraction>) => NavInteraction
-  getInteraction: (id: string) => Interaction | null
+  getInteraction: (id: number) => BaseInteraction | null
+  getChatState: (id: number) => ChatState | null
+  getNavState: (id: number) => NavState | null
+  getChatsByContextId: (contextId: number) => ChatInteraction[]
+  getChatIdsByContextId: (contextId: number) => number[]
   getNavsByUrl: (url: string) => NavInteraction[]
+  getNavIdsByUrl: (url: string) => number[]
+  appendAssistantContent: (id: number, content: string, timestamp: number) => void
+  updateNavState: (id: number, state: Partial<NavState>) => void
   close: () => void
 }
 
-const generateNavId = (contextId: string, url: string): string => {
-  const id = crypto.createHash('sha256').update(`${contextId}:${url}`).digest('hex')
-  return id
-}
-
 const initDatabase = (db: Database): void => {
-  // 创建基础交互表
+  // 创建基础交互表，使用自增主键
   db.exec(`
     CREATE TABLE IF NOT EXISTS interaction (
-      id TEXT PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       type TEXT NOT NULL,
       userContent TEXT NOT NULL,
-      contextId TEXT,
+      contextId INTEGER,
       createdAt INTEGER NOT NULL,
       FOREIGN KEY (contextId) REFERENCES interaction(id)
     )
@@ -41,7 +40,7 @@ const initDatabase = (db: Database): void => {
   // 创建聊天交互表
   db.exec(`
     CREATE TABLE IF NOT EXISTS chat (
-      id TEXT PRIMARY KEY,
+      id INTEGER PRIMARY KEY,
       model TEXT NOT NULL,
       assistantContent TEXT NOT NULL,
       updatedAt INTEGER NOT NULL,
@@ -52,7 +51,7 @@ const initDatabase = (db: Database): void => {
   // 创建导航交互表
   db.exec(`
     CREATE TABLE IF NOT EXISTS navs (
-      id TEXT PRIMARY KEY,
+      id INTEGER PRIMARY KEY,
       title TEXT NOT NULL,
       description TEXT,
       favIconUrl TEXT,
@@ -76,29 +75,21 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
 
   const createChat = (chat: EntityData<ChatInteraction>): ChatInteraction => {
     const { type, userContent, contextId, createdAt, model, assistantContent, updatedAt } = chat
-    const id = nextChatId(contextId)
 
     const insertInteraction = db.prepare(`
-      INSERT INTO interaction (id, type, userContent, contextId, createdAt)
-      VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        type = excluded.type,
-        userContent = excluded.userContent,
-        contextId = excluded.contextId,
-        createdAt = excluded.createdAt
+      INSERT INTO interaction (type, userContent, contextId, createdAt)
+      VALUES (?, ?, ?, ?)
     `)
 
     const insertChat = db.prepare(`
       INSERT INTO chat (id, model, assistantContent, updatedAt)
       VALUES (?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        model = excluded.model,
-        assistantContent = excluded.assistantContent,
-        updatedAt = excluded.updatedAt
     `)
 
+    let id: number
     const transaction = db.transaction(() => {
-      insertInteraction.run(id, type, userContent, contextId, createdAt)
+      const result = insertInteraction.run(type, userContent, contextId, createdAt)
+      id = result.lastInsertRowid as number
       insertChat.run(id, model, assistantContent, updatedAt)
     })
 
@@ -115,31 +106,21 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
       type, userContent, contextId, createdAt,
       title, description, favIconUrl, imageAssetId, updatedAt 
     } = nav
-    const id = generateNavId(contextId, userContent)
 
     const insertInteraction = db.prepare(`
-      INSERT INTO interaction (id, type, userContent, contextId, createdAt)
-      VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        type = excluded.type,
-        userContent = excluded.userContent,
-        contextId = excluded.contextId,
-        createdAt = excluded.createdAt
+      INSERT INTO interaction (type, userContent, contextId, createdAt)
+      VALUES (?, ?, ?, ?)
     `)
 
     const insertNav = db.prepare(`
       INSERT INTO navs (id, title, description, favIconUrl, imageAssetId, updatedAt)
       VALUES (?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        title = excluded.title,
-        description = excluded.description,
-        favIconUrl = excluded.favIconUrl,
-        imageAssetId = excluded.imageAssetId,
-        updatedAt = excluded.updatedAt
     `)
 
+    let id: number
     const transaction = db.transaction(() => {
-      insertInteraction.run(id, type, userContent, contextId, createdAt)
+      const result = insertInteraction.run(type, userContent, contextId, createdAt)
+      id = result.lastInsertRowid as number
       insertNav.run(id, title, description, favIconUrl, imageAssetId, updatedAt)
     })
 
@@ -151,42 +132,77 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     }
   }
 
+  const getInteraction = (id: number): BaseInteraction | null => {
+    return db.prepare<number, BaseInteraction>(`
+      SELECT id, type, userContent, contextId, createdAt FROM interaction WHERE id = ?
+    `).get(id) ?? null
+  }
+
+  const getChatState = (id: number): ChatState | null => {
+    return db.prepare<number, ChatState>(`
+      SELECT model, assistantContent, updatedAt FROM chat WHERE id = ?
+    `).get(id) ?? null
+  }
+
+  const getNavState = (id: number): NavState | null => {
+    return db.prepare<number, NavState>(`
+      SELECT title, description, favIconUrl, imageAssetId, updatedAt FROM navs WHERE id = ?
+    `).get(id) ?? null
+  }
+
   const getNavsByUrl = (url: string): NavInteraction[] => {
     const results = db.prepare<string, NavInteraction>(`
       SELECT 
         i.id, i.type, i.userContent, i.contextId, i.createdAt,
         n.title, n.description, n.favIconUrl, n.imageAssetId, n.updatedAt
-      FROM interaction i
-      JOIN navs n ON i.id = n.id
-      WHERE i.type = 'nav' AND i.userContent = ?
+      FROM navs n
+      LEFT JOIN interaction i ON n.id = i.id
+      WHERE i.userContent = ?
       ORDER BY i.createdAt DESC
     `).all(url)
 
     return results
   }
 
-  const getInteraction = (id: string): Interaction | null => {
-    const baseInteraction = db.prepare(`
-      SELECT id, type, userContent, contextId, createdAt FROM interaction WHERE id = ?
-    `).get(id) as BaseInteraction | undefined
+  const getNavIdsByUrl = (url: string): number[] => {
+    return db.prepare<string, { id: number }>(`
+      SELECT id FROM interaction WHERE type = 'nav' AND userContent = ?
+    `).all(url).map(result => result.id)
+  }
 
-    if (!baseInteraction) return null
+  const getChatsByContextId = (contextId: number): ChatInteraction[] => {
+    const results = db.prepare<number, ChatInteraction>(`
+      SELECT
+        i.id, i.type, i.userContent, i.contextId, i.createdAt,
+        c.model, c.assistantContent, c.updatedAt
+      FROM chat c
+      LEFT JOIN interaction i ON c.id = i.id
+      WHERE i.contextId = ?
+    `).all(contextId)
 
-    if (baseInteraction.type === 'chat') {
-      const chatData = db.prepare<string, ChatInfo>(`
-        SELECT id, model, assistantContent, updatedAt FROM chat WHERE id = ?
-      `).get(id)
+    return results
+  }
 
-      return { ...baseInteraction, ...chatData } as ChatInteraction
-    } else if (baseInteraction.type === 'nav') {
-      const navData = db.prepare<string, NavInfo>(`
-        SELECT id, title, description, favIconUrl, imageAssetId, updatedAt FROM navs WHERE id = ?
-      `).get(id)
+  const getChatIdsByContextId = (contextId: number): number[] => {
+    return db.prepare<number, { id: number }>(`
+      SELECT id FROM interaction WHERE type = 'chat' AND contextId = ?
+    `).all(contextId).map(result => result.id)
+  }
 
-      return { ...baseInteraction, ...navData } as NavInteraction
-    }
+  const appendAssistantContent = (id: number, content: string, timestamp: number): void => {
+    db.prepare<[string, number, number], void>(`
+      UPDATE chat SET assistantContent = assistantContent || ?, updatedAt = ? WHERE id = ?
+    `).run(content, timestamp, id)
+  }
 
-    return null
+  const updateNavState = (id: number, state: Partial<NavState>): void => {
+    const [updates, values] = Object.entries(state).reduce(([updates, values], [key, value]) => {
+      values.push(value)
+      return [updates + `${key} = ?, `, values]
+    }, ['', []])
+    values.push(id)
+    const sql = `UPDATE navs SET ${updates.slice(0, -2)} WHERE id = ?`
+    db.prepare(sql).run(...values)
   }
 
   const close = (): void => {
@@ -195,9 +211,16 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
 
   return {
     createChat,
-    createNav: createNav,
+    createNav,
     getInteraction,
+    getChatState,
+    getNavState,
+    getChatsByContextId,
+    getChatIdsByContextId,
     getNavsByUrl,
+    getNavIdsByUrl,
+    appendAssistantContent,
+    updateNavState,
     close
   }
 }
