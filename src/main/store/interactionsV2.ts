@@ -2,10 +2,10 @@ import Sqlite, { Database } from 'better-sqlite3'
 import {
   BaseInteraction,
   ChatInteraction,
-  NavigationInteraction,
+  NavInteraction,
   Interaction,
   ChatInfo,
-  NavigationInfo,
+  NavInfo,
   nextChatId,
 } from "@/shared/types/interactionsV2"
 import path from 'path'
@@ -14,9 +14,9 @@ import crypto from 'node:crypto'
 
 type InteractionStore = {
   createChat: (chat: EntityData<ChatInteraction>) => ChatInteraction
-  createNavigation: (navigation: EntityData<NavigationInteraction>) => NavigationInteraction
+  createNav: (nav: EntityData<NavInteraction>) => NavInteraction
   getInteraction: (id: string) => Interaction | null
-  getNavigationByUrl: (url: string) => NavigationInteraction | null
+  getNavByUrl: (url: string) => NavInteraction | null
   close: () => void
 }
 
@@ -51,7 +51,7 @@ const initDatabase = (db: Database): void => {
 
   // 创建导航交互表
   db.exec(`
-    CREATE TABLE IF NOT EXISTS navigation (
+    CREATE TABLE IF NOT EXISTS navs (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
       description TEXT,
@@ -62,11 +62,11 @@ const initDatabase = (db: Database): void => {
     )
   `)
 
-  // 为 navigation 的 URL (userContent) 创建索引
+  // 为 nav 的 URL (userContent) 创建索引
   db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_navigation_url 
+    CREATE INDEX IF NOT EXISTS idx_nav_url 
     ON interaction (userContent) 
-    WHERE type = 'navigation'
+    WHERE type = 'nav'
   `)
 }
 
@@ -110,11 +110,11 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     }
   }
 
-  const createNavigation = (navigation: EntityData<NavigationInteraction>): NavigationInteraction => {
+  const createNav = (nav: EntityData<NavInteraction>): NavInteraction => {
     const { 
       type, userContent, contextId, createdAt,
       title, description, favIconUrl, imageAssetId, updatedAt 
-    } = navigation
+    } = nav
     const id = generateNavId(contextId, userContent)
 
     const insertInteraction = db.prepare(`
@@ -127,8 +127,8 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
         createdAt = excluded.createdAt
     `)
 
-    const insertNavigation = db.prepare(`
-      INSERT INTO navigation (id, title, description, favIconUrl, imageAssetId, updatedAt)
+    const insertNav = db.prepare(`
+      INSERT INTO navs (id, title, description, favIconUrl, imageAssetId, updatedAt)
       VALUES (?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
@@ -140,31 +140,31 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
 
     const transaction = db.transaction(() => {
       insertInteraction.run(id, type, userContent, contextId, createdAt)
-      insertNavigation.run(id, title, description, favIconUrl, imageAssetId, updatedAt)
+      insertNav.run(id, title, description, favIconUrl, imageAssetId, updatedAt)
     })
 
     transaction()
 
     return {
-      ...navigation,
+      ...nav,
       id,
     }
   }
 
-  const getNavigationByUrl = (url: string): NavigationInteraction | null => {
+  const getNavByUrl = (url: string): NavInteraction | null => {
     const result = db.prepare(`
       SELECT 
         i.id, i.type, i.userContent, i.contextId, i.createdAt,
         n.title, n.description, n.favIconUrl, n.imageAssetId, n.updatedAt
       FROM interaction i
-      JOIN navigation n ON i.id = n.id
-      WHERE i.type = 'navigation' AND i.userContent = ?
+      JOIN navs n ON i.id = n.id
+      WHERE i.type = 'nav' AND i.userContent = ?
       ORDER BY i.createdAt DESC
       LIMIT 1
-    `).get(url) as (BaseInteraction & NavigationInfo) | undefined
+    `).get(url) as (BaseInteraction & NavInfo) | undefined
 
     if (!result) return null
-    return result as NavigationInteraction
+    return result as NavInteraction
   }
 
   const getInteraction = (id: string): Interaction | null => {
@@ -180,12 +180,12 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
       `).get(id)
 
       return { ...baseInteraction, ...chatData } as ChatInteraction
-    } else if (baseInteraction.type === 'navigation') {
-      const navigationData = db.prepare<string, NavigationInfo>(`
-        SELECT id, title, description, favIconUrl, imageAssetId, updatedAt FROM navigation WHERE id = ?
+    } else if (baseInteraction.type === 'nav') {
+      const navData = db.prepare<string, NavInfo>(`
+        SELECT id, title, description, favIconUrl, imageAssetId, updatedAt FROM navs WHERE id = ?
       `).get(id)
 
-      return { ...baseInteraction, ...navigationData } as NavigationInteraction
+      return { ...baseInteraction, ...navData } as NavInteraction
     }
 
     return null
@@ -197,9 +197,9 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
 
   return {
     createChat,
-    createNavigation,
+    createNav: createNav,
     getInteraction,
-    getNavigationByUrl,
+    getNavByUrl: getNavByUrl,
     close
   }
 }

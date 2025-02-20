@@ -28,9 +28,9 @@ export type ChatInfo = {
 
 // Navigation interaction
 // This is a mutable object
-export type NavigationInteraction = BaseInteraction & NavigationInfo & { type: 'navigation' }
+export type NavInteraction = BaseInteraction & NavInfo & { type: 'nav' }
 
-export type NavigationInfo = {
+export type NavInfo = {
   // title of the page
   title: string
   // description of the page
@@ -43,7 +43,7 @@ export type NavigationInfo = {
   updatedAt: number
 }
 
-export type Interaction = ChatInteraction | NavigationInteraction
+export type Interaction = ChatInteraction | NavInteraction
 
 // generate the next chat id
 export const nextChatId = (interactionId: string | null): string => {

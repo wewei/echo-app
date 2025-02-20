@@ -1,5 +1,5 @@
 import { createInteractionStore } from '../interactionsV2'
-import { ChatInteraction, NavigationInteraction } from '@/shared/types/interactionsV2'
+import { ChatInteraction, NavInteraction } from '@/shared/types/interactionsV2'
 import { EntityData } from '@/shared/types/entity'
 import path from 'path'
 import fs from 'fs'
@@ -103,10 +103,10 @@ describe('InteractionStore', () => {
     })
   })
 
-  describe('createNavigation', () => {
+  describe('createNav', () => {
     it('应该正确创建导航交互并生成ID', () => {
-      const navigationData: EntityData<NavigationInteraction> = {
-        type: 'navigation',
+      const navData: EntityData<NavInteraction> = {
+        type: 'nav',
         userContent: 'https://example.com',
         contextId: null,
         createdAt: 1234567890,
@@ -117,15 +117,15 @@ describe('InteractionStore', () => {
         updatedAt: 1234567891
       }
 
-      store.createNavigation(navigationData)
-      const result = store.getNavigationByUrl('https://example.com')
+      store.createNav(navData)
+      const result = store.getNavByUrl('https://example.com')
       expect(result).toBeDefined()
       expect(result?.title).toBe('示例网站')
     })
 
     it('相同URL和上下文的导航应更新而不是创建新记录', () => {
-      const navigationData: EntityData<NavigationInteraction> = {
-        type: 'navigation',
+      const navData: EntityData<NavInteraction> = {
+        type: 'nav',
         userContent: 'https://example.com',
         contextId: null,
         createdAt: 1234567890,
@@ -136,25 +136,25 @@ describe('InteractionStore', () => {
         updatedAt: 1234567891
       }
 
-      store.createNavigation(navigationData)
+      store.createNav(navData)
       
-      const updatedNavigationData = {
-        ...navigationData,
+      const updatedNavData = {
+        ...navData,
         title: '更新的标题',
         updatedAt: 1234567892
       }
 
-      store.createNavigation(updatedNavigationData)
+      store.createNav(updatedNavData)
       
-      const result = store.getNavigationByUrl('https://example.com')
+      const result = store.getNavByUrl('https://example.com')
       expect(result?.title).toBe('更新的标题')
     })
   })
 
-  describe('getNavigationByUrl', () => {
+  describe('getNavByUrl', () => {
     it('当有多条相同 URL 记录时应返回最新的一条', () => {
-      const navigation1: EntityData<NavigationInteraction> = {
-        type: 'navigation',
+      const nav1: EntityData<NavInteraction> = {
+        type: 'nav',
         userContent: 'https://example.com',
         contextId: null,
         createdAt: 1234567890,
@@ -165,8 +165,8 @@ describe('InteractionStore', () => {
         updatedAt: 1234567891
       }
 
-      const navigation2: EntityData<NavigationInteraction> = {
-        type: 'navigation',
+      const nav2: EntityData<NavInteraction> = {
+        type: 'nav',
         userContent: 'https://example.com',
         contextId: null,
         createdAt: 1234567892,
@@ -177,15 +177,15 @@ describe('InteractionStore', () => {
         updatedAt: 1234567893
       }
 
-      store.createNavigation(navigation1)
-      store.createNavigation(navigation2)
+      store.createNav(nav1)
+      store.createNav(nav2)
       
-      const result = store.getNavigationByUrl('https://example.com')
+      const result = store.getNavByUrl('https://example.com')
       expect(result?.title).toBe('新记录')
     })
 
     it('当 URL 不存在时应返回 null', () => {
-      const result = store.getNavigationByUrl('https://nonexistent.com')
+      const result = store.getNavByUrl('https://nonexistent.com')
       expect(result).toBeNull()
     })
   })
@@ -207,8 +207,8 @@ describe('InteractionStore', () => {
         updatedAt: 1234567891
       }
 
-      const navigationData: EntityData<NavigationInteraction> = {
-        type: 'navigation',
+      const navData: EntityData<NavInteraction> = {
+        type: 'nav',
         userContent: 'https://example.com',
         contextId: null,
         createdAt: 1234567890,
@@ -220,15 +220,15 @@ describe('InteractionStore', () => {
       }
 
       const chat = store.createChat(chatData)
-      const navigation = store.createNavigation(navigationData)
+      const nav = store.createNav(navData)
 
       const chatResult = store.getInteraction(chat.id)
-      const navResult = store.getInteraction(navigation.id)
+      const navResult = store.getInteraction(nav.id)
 
       expect(chatResult?.type).toBe('chat')
-      expect(navResult?.type).toBe('navigation')
+      expect(navResult?.type).toBe('nav')
       expect((chatResult as ChatInteraction).model).toBe('gpt-3.5')
-      expect((navResult as NavigationInteraction).title).toBe('示例网站')
+      expect((navResult as NavInteraction).title).toBe('示例网站')
     })
   })
 }) 
