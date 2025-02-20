@@ -94,7 +94,7 @@ export const makeRing = <T>(): Ring<T> => {
       head.prev = head.next = head
       size = 0
     },
-    first: () => head.next.value,
-    last: () => head.prev.value,
+    first: () => head.next === head ? undefined : head.next.value,
+    last: () => head.prev === head ? undefined : head.prev.value,
   }
 }

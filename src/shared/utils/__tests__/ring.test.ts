@@ -113,4 +113,136 @@ describe('Ring', () => {
       expect(ring.toArray()).toEqual([]);
     });
   });
+
+  describe('first & last', () => {
+    it('空环应返回 undefined', () => {
+      const ring = makeRing<number>();
+      expect(ring.first()).toBeUndefined();
+      expect(ring.last()).toBeUndefined();
+    });
+
+    it('单元素环的首尾应该相同', () => {
+      const ring = makeRing<number>();
+      ring.push(1);
+      expect(ring.first()).toBe(1);
+      expect(ring.last()).toBe(1);
+    });
+
+    it('多元素环应正确返回首尾元素', () => {
+      const ring = makeRing<number>();
+      ring.push(1);
+      ring.push(2);
+      ring.push(3);
+      expect(ring.first()).toBe(1);
+      expect(ring.last()).toBe(3);
+    });
+  });
+
+  describe('shift & pop', () => {
+    it('空环的 shift/pop 应返回 undefined', () => {
+      const ring = makeRing<number>();
+      expect(ring.shift()).toBeUndefined();
+      expect(ring.pop()).toBeUndefined();
+    });
+
+    it('shift 应移除并返回第一个元素', () => {
+      const ring = makeRing<number>();
+      ring.push(1);
+      ring.push(2);
+      ring.push(3);
+
+      expect(ring.shift()).toBe(1);
+      expect(ring.size()).toBe(2);
+      expect(ring.first()).toBe(2);
+      expect(ring.last()).toBe(3);
+    });
+
+    it('pop 应移除并返回最后一个元素', () => {
+      const ring = makeRing<number>();
+      ring.push(1);
+      ring.push(2);
+      ring.push(3);
+
+      expect(ring.pop()).toBe(3);
+      expect(ring.size()).toBe(2);
+      expect(ring.first()).toBe(1);
+      expect(ring.last()).toBe(2);
+    });
+
+    it('单元素环的 shift/pop 后应为空', () => {
+      const ring = makeRing<number>();
+      ring.push(1);
+
+      ring.shift();
+      expect(ring.size()).toBe(0);
+      expect(ring.first()).toBeUndefined();
+      expect(ring.last()).toBeUndefined();
+
+      ring.push(1);
+      ring.pop();
+      expect(ring.size()).toBe(0);
+      expect(ring.first()).toBeUndefined();
+      expect(ring.last()).toBeUndefined();
+    });
+
+    it('反复 shift/pop 应保持环的一致性', () => {
+      const ring = makeRing<number>();
+      ring.push(1);
+      ring.push(2);
+      ring.push(3);
+
+      expect(ring.shift()).toBe(1);
+      expect(ring.pop()).toBe(3);
+      expect(ring.size()).toBe(1);
+      expect(ring.first()).toBe(2);
+      expect(ring.last()).toBe(2);
+
+      ring.push(4);
+      expect(ring.shift()).toBe(2);
+      expect(ring.shift()).toBe(4);
+      expect(ring.size()).toBe(0);
+    });
+  });
+
+  describe('clear', () => {
+    it('应清空环并重置大小', () => {
+      const ring = makeRing<number>();
+      ring.push(1);
+      ring.push(2);
+      ring.push(3);
+
+      ring.clear();
+      expect(ring.size()).toBe(0);
+      expect(ring.first()).toBeUndefined();
+      expect(ring.last()).toBeUndefined();
+      expect(ring.toArray()).toEqual([]);
+    });
+
+    it('清空后应可以继续使用', () => {
+      const ring = makeRing<number>();
+      ring.push(1);
+      ring.push(2);
+      
+      ring.clear();
+      
+      ring.push(3);
+      ring.push(4);
+      expect(ring.size()).toBe(2);
+      expect(ring.first()).toBe(3);
+      expect(ring.last()).toBe(4);
+      expect(ring.toArray()).toEqual([3, 4]);
+    });
+
+    it('重复清空应该是安全的', () => {
+      const ring = makeRing<number>();
+      ring.push(1);
+      
+      ring.clear();
+      ring.clear();
+      
+      expect(ring.size()).toBe(0);
+      expect(ring.first()).toBeUndefined();
+      expect(ring.last()).toBeUndefined();
+    });
+  });
 }); 

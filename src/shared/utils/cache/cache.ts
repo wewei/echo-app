@@ -64,19 +64,15 @@ export const makeAsyncCache = <Key, Entity>(
   return {
     ...cache,
     set: (key: Key, entity: Promise<Entity>) => {
-      cache.set(key, entity);
-      entity.then(
-        (value) => {
-          if (!isEntityExist(value)) {
-            deleteInvalidEntity(key, entity);
-          }
-          return value;
-        },
-        (error) => {
+      entity.then((value) => {
+        if (!isEntityExist(value)) {
           deleteInvalidEntity(key, entity);
-          throw error;
         }
-      );
+        return value;
+      }, () => {
+        deleteInvalidEntity(key, entity);
+      });
+      cache.set(key, entity);
     },
   };
 };
