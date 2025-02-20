@@ -118,9 +118,9 @@ describe('InteractionStore', () => {
       }
 
       store.createNav(navData)
-      const result = store.getNavByUrl('https://example.com')
+      const result = store.getNavsByUrl('https://example.com')
       expect(result).toBeDefined()
-      expect(result?.title).toBe('示例网站')
+      expect(result[0].title).toBe('示例网站')
     })
 
     it('相同URL和上下文的导航应更新而不是创建新记录', () => {
@@ -146,14 +146,15 @@ describe('InteractionStore', () => {
 
       store.createNav(updatedNavData)
       
-      const result = store.getNavByUrl('https://example.com')
-      expect(result?.title).toBe('更新的标题')
+      const result = store.getNavsByUrl('https://example.com')
+      expect(result[0].title).toBe('更新的标题')
     })
   })
 
-  describe('getNavByUrl', () => {
-    it('当有多条相同 URL 记录时应返回最新的一条', () => {
-      const nav1: EntityData<NavInteraction> = {
+
+  describe('getNavsByUrl', () => {
+    it('应该返回所有匹配 URL 的导航记录，按创建时间降序排序', () => {
+      const navData1: EntityData<NavInteraction> = {
         type: 'nav',
         userContent: 'https://example.com',
         contextId: null,
@@ -165,10 +166,12 @@ describe('InteractionStore', () => {
         updatedAt: 1234567891
       }
 
-      const nav2: EntityData<NavInteraction> = {
+      const nav1 = store.createNav(navData1)
+
+      const navData2: EntityData<NavInteraction> = {
         type: 'nav',
         userContent: 'https://example.com',
-        contextId: null,
+        contextId: nav1.id,
         createdAt: 1234567892,
         title: '新记录',
         description: null,
@@ -177,16 +180,52 @@ describe('InteractionStore', () => {
         updatedAt: 1234567893
       }
 
-      store.createNav(nav1)
-      store.createNav(nav2)
+      const nav2 = store.createNav(navData2)
       
-      const result = store.getNavByUrl('https://example.com')
-      expect(result?.title).toBe('新记录')
+      const results = store.getNavsByUrl('https://example.com')
+      expect(results).toHaveLength(2)
+      expect(results[0].title).toBe('新记录')
+      expect(results[1].title).toBe('旧记录')
+      expect(results[0].createdAt).toBeGreaterThan(results[1].createdAt)
     })
 
-    it('当 URL 不存在时应返回 null', () => {
-      const result = store.getNavByUrl('https://nonexistent.com')
-      expect(result).toBeNull()
+    it('当 URL 不存在时应返回空数组', () => {
+      const results = store.getNavsByUrl('https://nonexistent.com')
+      expect(results).toEqual([])
+    })
+
+    it('应该只返回匹配 URL 的导航记录', () => {
+      const nav1: EntityData<NavInteraction> = {
+        type: 'nav',
+        userContent: 'https://example.com',
+        contextId: null,
+        createdAt: 1234567890,
+        title: '示例网站',
+        description: null,
+        favIconUrl: null,
+        imageAssetId: null,
+        updatedAt: 1234567891
+      }
+
+      const nav2: EntityData<NavInteraction> = {
+        type: 'nav',
+        userContent: 'https://other.com',
+        contextId: null,
+        createdAt: 1234567892,
+        title: '其他网站',
+        description: null,
+        favIconUrl: null,
+        imageAssetId: null,
+        updatedAt: 1234567893
+      }
+
+      store.createNav(nav1)
+      store.createNav(nav2)
+
+      const results = store.getNavsByUrl('https://example.com')
+      expect(results).toHaveLength(1)
+      expect(results[0].title).toBe('示例网站')
+      expect(results[0].userContent).toBe('https://example.com')
     })
   })
 

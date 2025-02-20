@@ -16,7 +16,7 @@ type InteractionStore = {
   createChat: (chat: EntityData<ChatInteraction>) => ChatInteraction
   createNav: (nav: EntityData<NavInteraction>) => NavInteraction
   getInteraction: (id: string) => Interaction | null
-  getNavByUrl: (url: string) => NavInteraction | null
+  getNavsByUrl: (url: string) => NavInteraction[]
   close: () => void
 }
 
@@ -151,8 +151,8 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     }
   }
 
-  const getNavByUrl = (url: string): NavInteraction | null => {
-    const result = db.prepare(`
+  const getNavsByUrl = (url: string): NavInteraction[] => {
+    const results = db.prepare<string, NavInteraction>(`
       SELECT 
         i.id, i.type, i.userContent, i.contextId, i.createdAt,
         n.title, n.description, n.favIconUrl, n.imageAssetId, n.updatedAt
@@ -160,11 +160,9 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
       JOIN navs n ON i.id = n.id
       WHERE i.type = 'nav' AND i.userContent = ?
       ORDER BY i.createdAt DESC
-      LIMIT 1
-    `).get(url) as (BaseInteraction & NavInfo) | undefined
+    `).all(url)
 
-    if (!result) return null
-    return result as NavInteraction
+    return results
   }
 
   const getInteraction = (id: string): Interaction | null => {
@@ -199,7 +197,7 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     createChat,
     createNav: createNav,
     getInteraction,
-    getNavByUrl: getNavByUrl,
+    getNavsByUrl,
     close
   }
 }
