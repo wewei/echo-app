@@ -18,8 +18,8 @@ type InteractionStore = {
   getInteraction: (id: number) => BaseInteraction | null
   getChatState: (id: number) => ChatState | null
   getNavState: (id: number) => NavState | null
-  getChatsByContextId: (params: QueryChatsParams) => ChatInteraction[]
-  getChatIdsByContextId: (params: QueryChatsParams) => number[]
+  getChats: (params: QueryChatsParams) => ChatInteraction[]
+  getChatIds: (params: QueryChatsParams) => number[]
   getNavsByUrl: (url: string) => NavInteraction[]
   getNavIdsByUrl: (url: string) => number[]
   appendAssistantContent: (id: number, content: string, timestamp: number) => void
@@ -261,8 +261,8 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     getInteraction,
     getChatState,
     getNavState,
-    getChatsByContextId,
-    getChatIdsByContextId,
+    getChats: getChatsByContextId,
+    getChatIds: getChatIdsByContextId,
     getNavsByUrl,
     getNavIdsByUrl,
     appendAssistantContent,

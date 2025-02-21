@@ -413,13 +413,13 @@ describe('InteractionStore', () => {
     })
 
     it('应该根据 contextId 查询对话', () => {
-      const chats = store.getChatsByContextId({ contextId: null })
+      const chats = store.getChats({ contextId: null })
       expect(chats).toHaveLength(2)
       expect(chats.map(c => c.userContent)).toEqual(['根对话', '第一条'])
     })
 
     it('应该根据时间范围筛选', () => {
-      const chats = store.getChatsByContextId({
+      const chats = store.getChats({
         contextId: null,
         created: {
           after: 1500,
@@ -431,7 +431,7 @@ describe('InteractionStore', () => {
     })
 
     it('应该根据更新时间筛选', () => {
-      const chats = store.getChatsByContextId({
+      const chats = store.getChats({
         contextId: null,
         updated: {
           after: 2000,
@@ -443,7 +443,7 @@ describe('InteractionStore', () => {
     })
 
     it('应该根据模型筛选', () => {
-      const chats = store.getChatsByContextId({
+      const chats = store.getChats({
         contextId: null,
         model: 'gpt-4'
       })
@@ -452,7 +452,7 @@ describe('InteractionStore', () => {
     })
 
     it('应该限制返回数量', () => {
-      const chats = store.getChatsByContextId({
+      const chats = store.getChats({
         contextId: null,
         limit: 1
       })
@@ -460,7 +460,7 @@ describe('InteractionStore', () => {
     })
 
     it('应该组合多个条件', () => {
-      const chats = store.getChatsByContextId({
+      const chats = store.getChats({
         contextId: null,
         created: { after: 1500 },
         model: 'gpt-4',
@@ -502,14 +502,14 @@ describe('InteractionStore', () => {
     })
 
     it('应该返回符合条件的对话 ID 列表', () => {
-      const ids = store.getChatIdsByContextId({
+      const ids = store.getChatIds({
         contextId: rootChat.id
       })
       expect(ids).toEqual(replyIds)
     })
 
     it('应该根据创建时间筛选 ID', () => {
-      const ids = store.getChatIdsByContextId({
+      const ids = store.getChatIds({
         contextId: rootChat.id,
         created: {
           after: 2500,
@@ -520,7 +520,7 @@ describe('InteractionStore', () => {
     })
 
     it('应该根据更新时间筛选 ID', () => {
-      const ids = store.getChatIdsByContextId({
+      const ids = store.getChatIds({
         contextId: rootChat.id,
         updated: {
           after: 2100,
@@ -531,7 +531,7 @@ describe('InteractionStore', () => {
     })
 
     it('应该根据模型筛选 ID', () => {
-      const ids = store.getChatIdsByContextId({
+      const ids = store.getChatIds({
         contextId: rootChat.id,
         model: 'gpt-4'
       })
@@ -539,7 +539,7 @@ describe('InteractionStore', () => {
     })
 
     it('应该限制返回 ID 数量', () => {
-      const ids = store.getChatIdsByContextId({
+      const ids = store.getChatIds({
         contextId: rootChat.id,
         limit: 2
       })
@@ -548,7 +548,7 @@ describe('InteractionStore', () => {
     })
 
     it('应该组合多个条件筛选 ID', () => {
-      const ids = store.getChatIdsByContextId({
+      const ids = store.getChatIds({
         contextId: rootChat.id,
         created: { after: 2500 },
         model: 'gpt-3.5',

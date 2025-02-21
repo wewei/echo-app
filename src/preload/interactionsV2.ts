@@ -18,11 +18,11 @@ export const interactionAPI = {
   getNavState: (profileId: string, id: number): Promise<NavState | null> =>
     ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_NAV_STATE, profileId, id),
 
-  getChatsByContextId: (profileId: string, params: QueryChatsParams): Promise<ChatInteraction[]> =>
-    ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_CHATS_BY_CONTEXT_ID, profileId, params),
+  getChats: (profileId: string, params: QueryChatsParams): Promise<ChatInteraction[]> =>
+    ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_CHATS, profileId, params),
 
-  getChatIdsByContextId: (profileId: string, params: QueryChatsParams): Promise<number[]> =>
-    ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_CHAT_IDS_BY_CONTEXT_ID, profileId, params),
+  getChatIds: (profileId: string, params: QueryChatsParams): Promise<number[]> =>
+    ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_CHAT_IDS, profileId, params),
 
   getNavsByUrl: (profileId: string, url: string): Promise<NavInteraction[]> =>
     ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_NAVS_BY_URL, profileId, url),

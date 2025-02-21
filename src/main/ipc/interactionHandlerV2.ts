@@ -35,15 +35,15 @@ export const registerInteractionHandlersV2 = () => {
   )
 
   ipcMain.handle(
-    INTERACTION_IPC_CHANNELS.GET_CHATS_BY_CONTEXT_ID,
+    INTERACTION_IPC_CHANNELS.GET_CHATS,
     (_, profileId: string, params: QueryChatsParams) =>
-      getInteractionStore(profileId).getChatsByContextId(params)
+      getInteractionStore(profileId).getChats(params)
   )
 
   ipcMain.handle(
-    INTERACTION_IPC_CHANNELS.GET_CHAT_IDS_BY_CONTEXT_ID,
+    INTERACTION_IPC_CHANNELS.GET_CHAT_IDS,
     (_, profileId: string, params: QueryChatsParams) =>
-      getInteractionStore(profileId).getChatIdsByContextId(params)
+      getInteractionStore(profileId).getChatIds(params)
   )
 
   ipcMain.handle(
