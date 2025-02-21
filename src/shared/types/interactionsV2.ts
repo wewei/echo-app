@@ -43,3 +43,18 @@ export type NavState = {
 }
 
 export type Interaction = ChatInteraction | NavInteraction
+
+export const INTERACTION_IPC_CHANNELS = {
+  CREATE_CHAT: 'interaction:createChat',
+  CREATE_NAV: 'interaction:createNav',
+  GET_INTERACTION: 'interaction:getInteraction',
+  GET_CHAT_STATE: 'interaction:getChatState',
+  GET_NAV_STATE: 'interaction:getNavState',
+  GET_CHATS_BY_CONTEXT_ID: 'interaction:getChatsByContextId',
+  GET_CHAT_IDS_BY_CONTEXT_ID: 'interaction:getChatIdsByContextId',
+  GET_NAVS_BY_URL: 'interaction:getNavsByUrl',
+  GET_NAV_IDS_BY_URL: 'interaction:getNavIdsByUrl',
+  APPEND_ASSISTANT_CONTENT: 'interaction:appendAssistantContent',
+  UPDATE_NAV_STATE: 'interaction:updateNavState',
+} as const
+
