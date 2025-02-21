@@ -317,13 +317,13 @@ describe('InteractionStore', () => {
         updatedAt: 1234567895
       })
 
-      const results = store.getChatsByContextId(chat1.id, null)
+      const results = store.getChatsByContextId(chat1.id, null, 10)
       expect(results).toHaveLength(2)
       expect(results.map(r => r.id)).toEqual([chat2.id, chat3.id])
     })
 
     it('当上下文不存在时应返回空数组', () => {
-      const results = store.getChatsByContextId(-1, null)
+      const results = store.getChatsByContextId(-1, null, 10)
       expect(results).toEqual([])
     })
 
@@ -349,7 +349,7 @@ describe('InteractionStore', () => {
       })
       console.log(chat1, chat2)
 
-      const results = store.getChatsByContextId(null, null)
+      const results = store.getChatsByContextId(null, null, 10)
       expect(results).toHaveLength(2)
       expect(results.map(r => r.id)).toEqual([chat1.id, chat2.id])
     })
@@ -368,7 +368,7 @@ describe('InteractionStore', () => {
       )
 
       // 按创建时间顺序排列，获取第二页
-      const results = store.getChatsByContextId(null, chats[1].id)
+      const results = store.getChatsByContextId(null, chats[1].id, 10)
       expect(results).toHaveLength(2)
       expect(results.map(r => r.id)).toEqual([chats[0].id, chats[1].id])
     })
@@ -397,9 +397,27 @@ describe('InteractionStore', () => {
       )
 
       // 按创建时间顺序排列，获取第二页的上下文消息
-      const results = store.getChatsByContextId(rootChat.id, contextChats[1].id)
+      const results = store.getChatsByContextId(rootChat.id, contextChats[1].id, 10)
       expect(results).toHaveLength(2)
       expect(results.map(r => r.id)).toEqual([contextChats[0].id, contextChats[1].id])
+    })
+
+    it('应该根据 limit 限制返回聊天记录', () => {
+      const chats = Array.from({ length: 3 }).map((_, i) => 
+        store.createChat({
+          type: 'chat',
+          userContent: `消息${i}`,
+          contextId: null,
+          createdAt: 1234567890 + i * 2,
+          model: 'gpt-3.5',
+          assistantContent: `回答${i}`,
+          updatedAt: 1234567891 + i * 2
+        }) 
+      )
+
+      const results = store.getChatsByContextId(null, null, 1)
+      expect(results).toHaveLength(1)
+      expect(results.map(r => r.id)).toEqual([chats[0].id])
     })
   })
 
@@ -425,7 +443,7 @@ describe('InteractionStore', () => {
         updatedAt: 1234567893
       })
 
-      const ids = store.getChatIdsByContextId(chat1.id, null)
+      const ids = store.getChatIdsByContextId(chat1.id, null, 10)
       expect(ids).toHaveLength(1)
       expect(typeof ids[0]).toBe('number')
     })
@@ -481,7 +499,7 @@ describe('InteractionStore', () => {
         updatedAt: 1234567893
       })
 
-      const ids = store.getChatIdsByContextId(null, null)
+      const ids = store.getChatIdsByContextId(null, null, 10)
       expect(ids).toHaveLength(2)
       expect(ids).toEqual([chat1.id, chat2.id])
     })
@@ -500,7 +518,7 @@ describe('InteractionStore', () => {
       )
 
       // 按创建时间降序排列，获取第二页
-      const ids = store.getChatIdsByContextId(null, chats[1].id)
+      const ids = store.getChatIdsByContextId(null, chats[1].id, 10)
       expect(ids).toHaveLength(2)
       expect(ids).toEqual([chats[0].id, chats[1].id])
     })
@@ -529,9 +547,27 @@ describe('InteractionStore', () => {
       )
 
       // 按创建时间降序排列，获取第二页的上下文消息ID
-      const ids = store.getChatIdsByContextId(rootChat.id, contextChats[1].id)
+      const ids = store.getChatIdsByContextId(rootChat.id, contextChats[1].id, 10)
       expect(ids).toHaveLength(2)
       expect(ids).toEqual([contextChats[0].id, contextChats[1].id])
+    })
+
+    it('应该根据 limit 限制返回聊天ID列表', () => {
+      const chats = Array.from({ length: 3 }).map((_, i) => 
+        store.createChat({
+          type: 'chat',
+          userContent: `消息${i}`,
+          contextId: null,
+          createdAt: 1234567890 + i * 2,
+          model: 'gpt-3.5',
+          assistantContent: `回答${i}`,
+          updatedAt: 1234567891 + i * 2
+        })
+      )
+
+      const ids = store.getChatIdsByContextId(null, null, 1)
+      expect(ids).toHaveLength(1)
+      expect(ids).toEqual([chats[0].id])
     })
   })
 

@@ -15,8 +15,8 @@ type InteractionStore = {
   getInteraction: (id: number) => BaseInteraction | null
   getChatState: (id: number) => ChatState | null
   getNavState: (id: number) => NavState | null
-  getChatsByContextId: (contextId: number | null, lastId: number | null) => ChatInteraction[]
-  getChatIdsByContextId: (contextId: number | null, lastId: number | null) => number[]
+  getChatsByContextId: (contextId: number | null, lastId: number | null, limit: number) => ChatInteraction[]
+  getChatIdsByContextId: (contextId: number | null, lastId: number | null, limit: number) => number[]
   getNavsByUrl: (url: string) => NavInteraction[]
   getNavIdsByUrl: (url: string) => number[]
   appendAssistantContent: (id: number, content: string, timestamp: number) => void
@@ -183,8 +183,8 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     return conditions
   }
 
-  const getChatsByContextId = (contextId: number | null, lastId: number | null): ChatInteraction[] => {
-    const sql =  (`
+  const getChatsByContextId = (contextId: number | null, lastId: number | null, limit: number): ChatInteraction[] => 
+    db.prepare<number, ChatInteraction>(`
       SELECT
         i.id, i.type, i.userContent, i.contextId, i.createdAt,
         c.model, c.assistantContent, c.updatedAt
@@ -192,22 +192,16 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
       LEFT JOIN interaction i ON c.id = i.id
       WHERE ${prepareGetChatsConditions(contextId, lastId).join(' AND ')}
       ORDER BY i.id ASC
-    `)
-    console.log(sql)
-    const results = db.prepare<[], ChatInteraction>(sql).all()
+      LIMIT ?
+    `).all(limit)
 
-    return results
-  }
-
-  const getChatIdsByContextId = (contextId: number | null, lastId: number | null): number[] => {
-    const sql =  (`
+  const getChatIdsByContextId = (contextId: number | null, lastId: number | null, limit: number): number[] => 
+    db.prepare<number, { id: number }>(`
       SELECT i.id FROM interaction i
       WHERE ${prepareGetChatsConditions(contextId, lastId).join(' AND ')}
       ORDER BY i.id ASC
-    `)
-    console.log(sql)
-    return db.prepare<[], { id: number }>(sql).all().map(result => result.id)
-  }
+      LIMIT ?
+    `).all(limit).map(result => result.id)
 
   const appendAssistantContent = (id: number, content: string, timestamp: number): void => {
     db.prepare<[string, number, number], void>(`

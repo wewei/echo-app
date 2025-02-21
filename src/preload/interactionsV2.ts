@@ -18,11 +18,11 @@ export const interactionAPI = {
   getNavState: (profileId: string, id: number): Promise<NavState | null> =>
     ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_NAV_STATE, profileId, id),
 
-  getChatsByContextId: (profileId: string, contextId: number | null, lastId: number | null): Promise<ChatInteraction[]> =>
-    ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_CHATS_BY_CONTEXT_ID, profileId, contextId, lastId),
+  getChatsByContextId: (profileId: string, contextId: number | null, lastId: number | null, limit: number): Promise<ChatInteraction[]> =>
+    ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_CHATS_BY_CONTEXT_ID, profileId, contextId, lastId, limit),
 
-  getChatIdsByContextId: (profileId: string, contextId: number | null, lastId: number | null): Promise<number[]> =>
-    ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_CHAT_IDS_BY_CONTEXT_ID, profileId, contextId, lastId),
+  getChatIdsByContextId: (profileId: string, contextId: number | null, lastId: number | null, limit: number): Promise<number[]> =>
+    ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_CHAT_IDS_BY_CONTEXT_ID, profileId, contextId, lastId, limit),
 
   getNavsByUrl: (profileId: string, url: string): Promise<NavInteraction[]> =>
     ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_NAVS_BY_URL, profileId, url),
