@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Box, List, ListItem } from '@mui/material';
 import { Interaction } from '@/shared/types/interactionsV2';
-import { useRecentInteractions } from '../data/interaction2';
+import { useRecentInteractions } from '../data/interactionsV2';
 
 interface InteractionListProps {
   contextId?: number;
