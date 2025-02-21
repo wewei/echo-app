@@ -36,13 +36,13 @@ export const registerInteractionHandlersV2 = () => {
 
   ipcMain.handle(
     INTERACTION_IPC_CHANNELS.GET_CHATS_BY_CONTEXT_ID,
-    (_, profileId: string, contextId: number, lastId: number | null) =>
+    (_, profileId: string, contextId: number | null, lastId: number | null) =>
       getInteractionStore(profileId).getChatsByContextId(contextId, lastId)
   )
 
   ipcMain.handle(
     INTERACTION_IPC_CHANNELS.GET_CHAT_IDS_BY_CONTEXT_ID,
-    (_, profileId: string, contextId: number, lastId: number | null) =>
+    (_, profileId: string, contextId: number | null, lastId: number | null) =>
       getInteractionStore(profileId).getChatIdsByContextId(contextId, lastId)
   )
 

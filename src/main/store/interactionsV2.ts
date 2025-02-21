@@ -15,8 +15,8 @@ type InteractionStore = {
   getInteraction: (id: number) => BaseInteraction | null
   getChatState: (id: number) => ChatState | null
   getNavState: (id: number) => NavState | null
-  getChatsByContextId: (contextId: number, lastId: number | null) => ChatInteraction[]
-  getChatIdsByContextId: (contextId: number, lastId: number | null) => number[]
+  getChatsByContextId: (contextId: number | null, lastId: number | null) => ChatInteraction[]
+  getChatIdsByContextId: (contextId: number | null, lastId: number | null) => number[]
   getNavsByUrl: (url: string) => NavInteraction[]
   getNavIdsByUrl: (url: string) => number[]
   appendAssistantContent: (id: number, content: string, timestamp: number) => void
@@ -170,27 +170,43 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     `).all(url).map(result => result.id)
   }
 
-  const getChatsByContextId = (contextId: number, lastId: number | null): ChatInteraction[] => {
-    const results = db.prepare<number, ChatInteraction>(`
+  const prepareGetChatsConditions = (contextId: number | null, lastId: number | null): string[] => {  
+    const conditions = ['i.type = \'chat\'']
+    if (contextId) {
+      conditions.push(`i.contextId = ${contextId}`)
+    } else {
+      conditions.push(`i.contextId IS NULL`)
+    }
+    if (lastId) {
+      conditions.push(`i.id <= ${lastId}`)
+    }
+    return conditions
+  }
+
+  const getChatsByContextId = (contextId: number | null, lastId: number | null): ChatInteraction[] => {
+    const sql =  (`
       SELECT
         i.id, i.type, i.userContent, i.contextId, i.createdAt,
         c.model, c.assistantContent, c.updatedAt
       FROM chat c
       LEFT JOIN interaction i ON c.id = i.id
-      WHERE i.contextId = ?
-      ${lastId ? `AND i.id < ${lastId}` : ''}
-      ORDER BY i.createdAt DESC
-    `).all(contextId)
+      WHERE ${prepareGetChatsConditions(contextId, lastId).join(' AND ')}
+      ORDER BY i.id ASC
+    `)
+    console.log(sql)
+    const results = db.prepare<[], ChatInteraction>(sql).all()
 
     return results
   }
 
-  const getChatIdsByContextId = (contextId: number, lastId: number | null): number[] => {
-    return db.prepare<number, { id: number }>(`
-      SELECT id FROM interaction WHERE type = 'chat' AND contextId = ?
-      ${lastId ? `AND id < ${lastId}` : ''}
-      ORDER BY createdAt DESC
-    `).all(contextId).map(result => result.id)
+  const getChatIdsByContextId = (contextId: number | null, lastId: number | null): number[] => {
+    const sql =  (`
+      SELECT i.id FROM interaction i
+      WHERE ${prepareGetChatsConditions(contextId, lastId).join(' AND ')}
+      ORDER BY i.id ASC
+    `)
+    console.log(sql)
+    return db.prepare<[], { id: number }>(sql).all().map(result => result.id)
   }
 
   const appendAssistantContent = (id: number, content: string, timestamp: number): void => {

@@ -317,14 +317,89 @@ describe('InteractionStore', () => {
         updatedAt: 1234567895
       })
 
-      const results = store.getChatsByContextId(chat1.id)
+      const results = store.getChatsByContextId(chat1.id, null)
       expect(results).toHaveLength(2)
       expect(results.map(r => r.id)).toEqual([chat2.id, chat3.id])
     })
 
     it('当上下文不存在时应返回空数组', () => {
-      const results = store.getChatsByContextId(-1)
+      const results = store.getChatsByContextId(-1, null)
       expect(results).toEqual([])
+    })
+
+    it('应该返回没有上下文的聊天记录', () => {
+      const chat1 = store.createChat({
+        type: 'chat',
+        userContent: '你好',
+        contextId: null,
+        createdAt: 1234567890,
+        model: 'gpt-3.5',
+        assistantContent: '你好！',
+        updatedAt: 1234567891
+      })
+
+      const chat2 = store.createChat({
+        type: 'chat',
+        userContent: '另一个问题',
+        contextId: null,
+        createdAt: 1234567892,
+        model: 'gpt-3.5',
+        assistantContent: '另一个回答',
+        updatedAt: 1234567893
+      })
+      console.log(chat1, chat2)
+
+      const results = store.getChatsByContextId(null, null)
+      expect(results).toHaveLength(2)
+      expect(results.map(r => r.id)).toEqual([chat1.id, chat2.id])
+    })
+
+    it('应该根据 lastId 分页返回聊天记录', () => {
+      const chats = Array.from({ length: 3 }).map((_, i) => 
+        store.createChat({
+          type: 'chat',
+          userContent: `消息${i}`,
+          contextId: null,
+          createdAt: 1234567890 + i * 2,
+          model: 'gpt-3.5',
+          assistantContent: `回答${i}`,
+          updatedAt: 1234567891 + i * 2
+        })
+      )
+
+      // 按创建时间顺序排列，获取第二页
+      const results = store.getChatsByContextId(null, chats[1].id)
+      expect(results).toHaveLength(2)
+      expect(results.map(r => r.id)).toEqual([chats[0].id, chats[1].id])
+    })
+
+    it('应该根据 lastId 分页返回特定上下文的聊天记录', () => {
+      const rootChat = store.createChat({
+        type: 'chat',
+        userContent: '根消息',
+        contextId: null,
+        createdAt: 1234567880,
+        model: 'gpt-3.5',
+        assistantContent: '根回答',
+        updatedAt: 1234567881
+      })
+
+      const contextChats = Array.from({ length: 3 }).map((_, i) => 
+        store.createChat({
+          type: 'chat',
+          userContent: `上下文消息${i}`,
+          contextId: rootChat.id,
+          createdAt: 1234567890 + i * 2,
+          model: 'gpt-3.5',
+          assistantContent: `上下文回答${i}`,
+          updatedAt: 1234567891 + i * 2
+        })
+      )
+
+      // 按创建时间顺序排列，获取第二页的上下文消息
+      const results = store.getChatsByContextId(rootChat.id, contextChats[1].id)
+      expect(results).toHaveLength(2)
+      expect(results.map(r => r.id)).toEqual([contextChats[0].id, contextChats[1].id])
     })
   })
 
@@ -350,7 +425,7 @@ describe('InteractionStore', () => {
         updatedAt: 1234567893
       })
 
-      const ids = store.getChatIdsByContextId(chat1.id)
+      const ids = store.getChatIdsByContextId(chat1.id, null)
       expect(ids).toHaveLength(1)
       expect(typeof ids[0]).toBe('number')
     })
@@ -383,6 +458,80 @@ describe('InteractionStore', () => {
       const ids = store.getNavIdsByUrl('https://example.com')
       expect(ids).toHaveLength(2)
       expect(ids).toEqual([nav1.id, nav2.id])
+    })
+
+    it('应该返回没有上下文的聊天ID列表', () => {
+      const chat1 = store.createChat({
+        type: 'chat',
+        userContent: '你好',
+        contextId: null,
+        createdAt: 1234567890,
+        model: 'gpt-3.5',
+        assistantContent: '你好！',
+        updatedAt: 1234567891
+      })
+
+      const chat2 = store.createChat({
+        type: 'chat',
+        userContent: '另一个问题',
+        contextId: null,
+        createdAt: 1234567892,
+        model: 'gpt-3.5',
+        assistantContent: '另一个回答',
+        updatedAt: 1234567893
+      })
+
+      const ids = store.getChatIdsByContextId(null, null)
+      expect(ids).toHaveLength(2)
+      expect(ids).toEqual([chat1.id, chat2.id])
+    })
+
+    it('应该根据 lastId 分页返回聊天ID列表', () => {
+      const chats = Array.from({ length: 3 }).map((_, i) => 
+        store.createChat({
+          type: 'chat',
+          userContent: `消息${i}`,
+          contextId: null,
+          createdAt: 1234567890 + i * 2,
+          model: 'gpt-3.5',
+          assistantContent: `回答${i}`,
+          updatedAt: 1234567891 + i * 2
+        })
+      )
+
+      // 按创建时间降序排列，获取第二页
+      const ids = store.getChatIdsByContextId(null, chats[1].id)
+      expect(ids).toHaveLength(2)
+      expect(ids).toEqual([chats[0].id, chats[1].id])
+    })
+
+    it('应该根据 lastId 分页返回特定上下文的聊天ID列表', () => {
+      const rootChat = store.createChat({
+        type: 'chat',
+        userContent: '根消息',
+        contextId: null,
+        createdAt: 1234567880,
+        model: 'gpt-3.5',
+        assistantContent: '根回答',
+        updatedAt: 1234567881
+      })
+
+      const contextChats = Array.from({ length: 3 }).map((_, i) => 
+        store.createChat({
+          type: 'chat',
+          userContent: `上下文消息${i}`,
+          contextId: rootChat.id,
+          createdAt: 1234567890 + i * 2,
+          model: 'gpt-3.5',
+          assistantContent: `上下文回答${i}`,
+          updatedAt: 1234567891 + i * 2
+        })
+      )
+
+      // 按创建时间降序排列，获取第二页的上下文消息ID
+      const ids = store.getChatIdsByContextId(rootChat.id, contextChats[1].id)
+      expect(ids).toHaveLength(2)
+      expect(ids).toEqual([contextChats[0].id, contextChats[1].id])
     })
   })
 
