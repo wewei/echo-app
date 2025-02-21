@@ -42,6 +42,19 @@ export type NavState = {
   updatedAt: number
 }
 
+export type TimeRange = Partial<{
+  before: number
+  after: number
+}>
+
+export type QueryChatsParams = Partial<{
+  contextId: number | null
+  created: TimeRange
+  updated: TimeRange
+  model: string
+  limit: number
+}>
+
 export type Interaction = ChatInteraction | NavInteraction
 
 export const INTERACTION_IPC_CHANNELS = {

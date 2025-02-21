@@ -5,9 +5,12 @@ import {
   NavInteraction,
   ChatState,
   NavState,
+  QueryChatsParams,
 } from "@/shared/types/interactionsV2"
 import path from 'path'
 import { EntityData } from '@/shared/types/entity'
+
+export const DEFAULT_LIMIT = 10
 
 type InteractionStore = {
   createChat: (chat: EntityData<ChatInteraction>) => ChatInteraction
@@ -15,8 +18,8 @@ type InteractionStore = {
   getInteraction: (id: number) => BaseInteraction | null
   getChatState: (id: number) => ChatState | null
   getNavState: (id: number) => NavState | null
-  getChatsByContextId: (contextId: number | null, lastId: number | null, limit: number) => ChatInteraction[]
-  getChatIdsByContextId: (contextId: number | null, lastId: number | null, limit: number) => number[]
+  getChatsByContextId: (params: QueryChatsParams) => ChatInteraction[]
+  getChatIdsByContextId: (params: QueryChatsParams) => number[]
   getNavsByUrl: (url: string) => NavInteraction[]
   getNavIdsByUrl: (url: string) => number[]
   appendAssistantContent: (id: number, content: string, timestamp: number) => void
@@ -170,38 +173,67 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     `).all(url).map(result => result.id)
   }
 
-  const prepareGetChatsConditions = (contextId: number | null, lastId: number | null): string[] => {  
-    const conditions = ['i.type = \'chat\'']
-    if (contextId) {
-      conditions.push(`i.contextId = ${contextId}`)
-    } else {
+  const prepareGetChatsConditions = ({
+    contextId,
+    created,
+    updated,
+    model,
+  }: Omit<QueryChatsParams, 'limit'>): [string[], (string | number)[]] => {  
+    const conditions: string[] = []
+    const values: (string | number)[] = []
+    if (Number.isSafeInteger(contextId)) {
+      conditions.push(`i.contextId = ?`)
+      values.push(contextId)
+    } else if (contextId === null) {
       conditions.push(`i.contextId IS NULL`)
     }
-    if (lastId) {
-      conditions.push(`i.id <= ${lastId}`)
+    if (Number.isFinite(created?.before)) {
+      conditions.push(`i.createdAt < ?`)
+      values.push(created.before)
     }
-    return conditions
+    if (Number.isFinite(created?.after)) {
+      conditions.push(`i.createdAt > ?`)
+      values.push(created.after)
+    }
+    if (Number.isFinite(updated?.before)) {
+      conditions.push(`c.updatedAt < ?`)
+      values.push(updated.before)
+    }
+    if (Number.isFinite(updated?.after)) {
+      conditions.push(`c.updatedAt > ?`)
+      values.push(updated.after)
+    }
+    if (model) {
+      conditions.push(`c.model = ?`)
+      values.push(model)
+    }
+    return [conditions, values]
   }
 
-  const getChatsByContextId = (contextId: number | null, lastId: number | null, limit: number): ChatInteraction[] => 
-    db.prepare<number, ChatInteraction>(`
+  const getChatsByContextId = (params: QueryChatsParams): ChatInteraction[] => {
+    const [conditions, values] = prepareGetChatsConditions(params)
+    return db.prepare<(string | number)[], ChatInteraction>(`
       SELECT
         i.id, i.type, i.userContent, i.contextId, i.createdAt,
         c.model, c.assistantContent, c.updatedAt
       FROM chat c
       LEFT JOIN interaction i ON c.id = i.id
-      WHERE ${prepareGetChatsConditions(contextId, lastId).join(' AND ')}
-      ORDER BY i.id ASC
+      WHERE ${conditions.join(' AND ')}
+      ORDER BY i.createdAt ASC
       LIMIT ?
-    `).all(limit)
+    `).all(...values, params.limit ?? DEFAULT_LIMIT)
+  }
 
-  const getChatIdsByContextId = (contextId: number | null, lastId: number | null, limit: number): number[] => 
-    db.prepare<number, { id: number }>(`
-      SELECT i.id FROM interaction i
-      WHERE ${prepareGetChatsConditions(contextId, lastId).join(' AND ')}
-      ORDER BY i.id ASC
+  const getChatIdsByContextId = (params: QueryChatsParams): number[] => {
+    const [conditions, values] = prepareGetChatsConditions(params)
+    return db.prepare<(string | number)[], { id: number }>(`
+      SELECT c.id FROM chat c
+      LEFT JOIN interaction i ON c.id = i.id
+      WHERE ${conditions.join(' AND ')}
+      ORDER BY i.createdAt ASC
       LIMIT ?
-    `).all(limit).map(result => result.id)
+    `).all(...values, params.limit ?? DEFAULT_LIMIT).map(result => result.id)
+  }
 
   const appendAssistantContent = (id: number, content: string, timestamp: number): void => {
     db.prepare<[string, number, number], void>(`

@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron'
-import { ChatInteraction, INTERACTION_IPC_CHANNELS, NavInteraction, ChatState, NavState, BaseInteraction } from '@/shared/types/interactionsV2'
+import { ChatInteraction, INTERACTION_IPC_CHANNELS, NavInteraction, ChatState, NavState, BaseInteraction, QueryChatsParams } from '@/shared/types/interactionsV2'
 import { EntityData } from '@/shared/types/entity'
 
 export const interactionAPI = {
@@ -18,11 +18,11 @@ export const interactionAPI = {
   getNavState: (profileId: string, id: number): Promise<NavState | null> =>
     ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_NAV_STATE, profileId, id),
 
-  getChatsByContextId: (profileId: string, contextId: number | null, lastId: number | null, limit: number): Promise<ChatInteraction[]> =>
-    ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_CHATS_BY_CONTEXT_ID, profileId, contextId, lastId, limit),
+  getChatsByContextId: (profileId: string, params: QueryChatsParams): Promise<ChatInteraction[]> =>
+    ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_CHATS_BY_CONTEXT_ID, profileId, params),
 
-  getChatIdsByContextId: (profileId: string, contextId: number | null, lastId: number | null, limit: number): Promise<number[]> =>
-    ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_CHAT_IDS_BY_CONTEXT_ID, profileId, contextId, lastId, limit),
+  getChatIdsByContextId: (profileId: string, params: QueryChatsParams): Promise<number[]> =>
+    ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_CHAT_IDS_BY_CONTEXT_ID, profileId, params),
 
   getNavsByUrl: (profileId: string, url: string): Promise<NavInteraction[]> =>
     ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_NAVS_BY_URL, profileId, url),

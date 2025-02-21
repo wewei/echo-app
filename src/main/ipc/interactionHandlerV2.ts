@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron'
-import { ChatInteraction, INTERACTION_IPC_CHANNELS, NavInteraction, NavState } from '@/shared/types/interactionsV2'
+import { ChatInteraction, INTERACTION_IPC_CHANNELS, NavInteraction, NavState, QueryChatsParams } from '@/shared/types/interactionsV2'
 import { getInteractionStore } from '@/main/services/interactionManagerV2'
 import { EntityData } from '@/shared/types/entity'
 
@@ -36,14 +36,14 @@ export const registerInteractionHandlersV2 = () => {
 
   ipcMain.handle(
     INTERACTION_IPC_CHANNELS.GET_CHATS_BY_CONTEXT_ID,
-    (_, profileId: string, contextId: number | null, lastId: number | null, limit: number) =>
-      getInteractionStore(profileId).getChatsByContextId(contextId, lastId, limit)
+    (_, profileId: string, params: QueryChatsParams) =>
+      getInteractionStore(profileId).getChatsByContextId(params)
   )
 
   ipcMain.handle(
     INTERACTION_IPC_CHANNELS.GET_CHAT_IDS_BY_CONTEXT_ID,
-    (_, profileId: string, contextId: number | null, lastId: number | null, limit: number) =>
-      getInteractionStore(profileId).getChatIdsByContextId(contextId, lastId, limit)
+    (_, profileId: string, params: QueryChatsParams) =>
+      getInteractionStore(profileId).getChatIdsByContextId(params)
   )
 
   ipcMain.handle(
