@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { Box, styled } from '@mui/material';
 import { Query, Response } from '@/shared/types/interactions';
-import QueryList from './QueryList';
+import InteractionList from './InteractionList';
 import MessageInput from './MessageInput';
 
 interface Props {
@@ -21,7 +21,7 @@ const Container = styled(Box)({
   overflow: 'hidden'
 });
 
-const QueryListContainer = styled(Box)({
+const InteractionListContainer = styled(Box)({
   flexGrow: 1,
   overflow: 'auto',
   marginBottom: '16px'
@@ -52,18 +52,15 @@ export default function ChatPanelRp({
 
   return (
     <Container onClick={handleClick}>
-      <QueryListContainer>
-        <QueryList
-          queries={queries}
-          onResponseClick={onResponseClick}
-          loadMore={loadMore}
-          hasMore={hasMore}
+      <InteractionListContainer>
+        <InteractionList
+          contextId={undefined} // Pass appropriate contextId if needed
         />
-      </QueryListContainer>
+      </InteractionListContainer>
       <InputContainer>
-        <MessageInput 
+        <MessageInput
           onSend={onSendMessage} 
-          disabled={disabled} 
+          disabled={disabled}
           placeholder="输入消息..."
         />
       </InputContainer>
