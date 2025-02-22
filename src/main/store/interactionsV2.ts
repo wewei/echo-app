@@ -9,6 +9,8 @@ import {
 } from "@/shared/types/interactionsV2"
 import path from 'path'
 import { EntityData } from '@/shared/types/entity'
+import { getProfileDir } from '@/main/services/profileManager'
+import fs from 'node:fs'
 
 export const DEFAULT_LIMIT = 10
 
@@ -72,8 +74,16 @@ const initDatabase = (db: Database): void => {
   `)
 }
 
-const createInteractionStore = (dbPath: string): InteractionStore => {
-  const db = new Sqlite(path.resolve(dbPath))
+const createInteractionStore = (profileId: string): InteractionStore => {
+  // console.log("interactionsV2 createInteractionStore dbpath =", dbPath);
+  // const db = new Sqlite(path.resolve(dbPath))
+
+  const dbPath = path.join(getProfileDir(profileId), 'sqlite')
+  console.log("createConnection dbpath =", dbPath);
+  if (!fs.existsSync(dbPath)) {
+    fs.mkdirSync(dbPath, { recursive: true })
+  }
+  const db = new Sqlite(path.join(dbPath, 'echo.sqlite'))
   initDatabase(db)
 
   const createChat = (chat: EntityData<ChatInteraction>): ChatInteraction => {

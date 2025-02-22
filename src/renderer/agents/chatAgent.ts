@@ -1,46 +1,30 @@
 import { OpenAI } from "openai";
 import { Agent } from "./agent";
 import { streamToAsyncIterator } from "@/shared/utils/stream";
-import { Query } from "@/shared/types/interactions";
+import { ChatInteraction } from "@/shared/types/interactionsV2";
 
 export type ChatAgentInput = {
   profileId: string
   model: string
-  query: Query
+  chatInteraction: ChatInteraction
 }
 
-const prepareMessages = async (profileId: string, { content, contextId, id }: Query): Promise<OpenAI.ChatCompletionMessageParam[]> => {
-  const recentQueries = await window.electron.interactions.searchQueries(profileId, {
+const prepareMessages = async (profileId: string, { userContent, contextId, id, assistantContent }: ChatInteraction): Promise<OpenAI.ChatCompletionMessageParam[]> => {
+  const recentInteractions = await window.electron.interactionsV2.getChats(profileId, {
     created: {
-      type: 'before',
-      timestamp: Date.now(),
+      before: Date.now(),
     },
     contextId,
-    maxCount: 30,
-  })
-  const referingQueries = recentQueries.filter(q => q.id !== id)
-  const referingResponseIds = await Promise.all(
-    recentQueries
-      .filter((q) => q.id !== id)
-      .map(({ id }) =>
-        window.electron.interactions
-          .getQueryResponseIds(profileId, id)
-          .then((ids) => (ids.length > 0 ? ids[0] : null))
-      )
-  );
-  const referingResponses = await Promise.all(referingResponseIds.map((id) => window.electron.interactions.getResponse(profileId, id)))
-  const messages = [
-    ...referingQueries.map(({ content, timestamp }) => ({
+    limit: 30,
+  });
+  const referingInteractions = recentInteractions.filter(interaction => interaction.id !== id);
+    const messages = [
+    ...referingInteractions.map(({ userContent, createdAt }) => ({
       role: "user",
-      content,
-      timestamp,
+      content: userContent,
+      timestamp: createdAt,
     })),
-    ...referingResponses.map(({ content, timestamp }) => ({
-      role: "assistant",
-      content,
-      timestamp,
-    })),
-    { role: "user", content, timestamp: Date.now() },
+    { role: "user", content: assistantContent, timestamp: Date.now() },
   ]
     .sort((a, b) => a.timestamp - b.timestamp)
     .map(({ role, content }) => ({ role, content }));
@@ -51,11 +35,11 @@ const prepareMessages = async (profileId: string, { content, contextId, id }: Qu
 export const chatAgent: Agent<ChatAgentInput, AsyncIterable<string>> = ({
   profileId,
   model,
-  query,
+  chatInteraction,
 }) => streamToAsyncIterator(
   new ReadableStream({
     async start(controller) {
-      const messages = await prepareMessages(profileId, query);
+      const messages = await prepareMessages(profileId, chatInteraction);
       window.electron.chat.stream(
         profileId,
         { messages, model },

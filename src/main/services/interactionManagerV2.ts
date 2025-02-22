@@ -6,8 +6,7 @@ import { isEntityExist } from '@/shared/types/entity'
 import { onProfileWillBeDeleted } from './profileManager'
 
 const [getInteractionStore, cache] = cached((profileId: string) => {
-  const dbPath = path.join(process.cwd(), 'db', `${profileId}.sqlite`)
-  return createInteractionStore(dbPath)
+  return createInteractionStore(profileId)
 })
 
 export { getInteractionStore }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useReducer, useCallback } from "react";
 import { Interaction, ChatInteraction } from "@/shared/types/interactionsV2";
 import { makeEventHub } from "@/shared/utils/event";
+import { useCurrentProfileId } from "./profile";
 
 export type CreateParams<T extends { id: number }> = Omit<T, 'id'>;
 
@@ -12,7 +13,7 @@ type ListResult<T> = {
 }
 
 // Event hubs for Interaction
-const createInteractionEventHub = makeEventHub<Interaction>();
+const createChatEventHub = makeEventHub<ChatInteraction>();
 
 const mockInteractions: Interaction[] = [
   {
@@ -104,7 +105,7 @@ const mockChatInteractions: ChatInteraction[] = [
   }
 ];
 
-const useMockData = true; // Set this to false to use real data
+const useMockData = false; // Set this to false to use real data
 
 const useRecentInteractions = (contextId?: number): ListResult<Interaction> => {
   if (useMockData) {
@@ -190,6 +191,15 @@ function useRecentChatInteractions(contextId?: number): ListResult<ChatInteracti
     }
   }, { items: [], hasMore: true });
 
+  const profileId = useCurrentProfileId()
+  useEffect(() => {
+    const unwatch = createChatEventHub.watch(contextId ? [profileId, String(contextId)] : [profileId], (chat) => {
+      console.log("newInteractionCreated", chat);
+      dispatch({ type: 'newInteractionCreated', interaction: chat })
+    })
+    return () => { unwatch() }
+  }, [profileId, contextId])
+
   return {
     items: state.items,
     hasMore: state.hasMore,
@@ -198,4 +208,22 @@ function useRecentChatInteractions(contextId?: number): ListResult<ChatInteracti
   };
 }
 
-export { useRecentInteractions, useRecentChatInteractions };
+const createChatInteraction = async (profileId: string, params: CreateParams<ChatInteraction>): Promise<ChatInteraction> => {
+  console.log("createChat start");
+  const chat = await window.electron.interactionsV2.createChat(profileId, params);
+  console.log("createChat", chat);
+  
+  createChatEventHub.notify(params.contextId ? [profileId, String(params.contextId)] : [profileId], chat);
+  return chat;
+};
+
+const appendAssistantContent = async (profileId: string, interactionId: number, content: string): Promise<ChatInteraction | null> => {
+  const chat = await window.electron.interactionsV2.appendAssistantContent(profileId, interactionId, content, Date.now());
+  
+  if (chat) {
+    createChatEventHub.notify([profileId, String(interactionId)], chat);
+  }
+  return chat;
+};
+
+export { useRecentInteractions, useRecentChatInteractions, createChatInteraction, appendAssistantContent };

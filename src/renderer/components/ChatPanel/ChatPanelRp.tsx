@@ -5,8 +5,6 @@ import InteractionList from './InteractionList';
 import MessageInput from './MessageInput';
 
 interface Props {
-  queries: Query[]
-  onResponseClick?: (response: Response) => void
   handleLinkClick?: (url: string) => void
   onSendMessage: (message: string) => void
   loadMore: (() => void) | null
@@ -33,8 +31,6 @@ const InputContainer = styled(Box)({
 });
 
 export default function ChatPanelRp({
-  queries,
-  onResponseClick,
   handleLinkClick,
   onSendMessage,
   loadMore,
