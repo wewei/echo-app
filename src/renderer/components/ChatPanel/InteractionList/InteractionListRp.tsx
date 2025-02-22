@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Box, List, ListItem } from '@mui/material';
-import { Interaction } from '@/shared/types/interactionsV2';
+import { ChatInteraction } from '@/shared/types/interactionsV2';
+import InteractionView from '../InteractionView/';
 
 interface InteractionListRpProps {
-  interactions: Interaction[];
+  interactions: ChatInteraction[];
   hasMore: boolean;
   loadMore: (() => void) | null;
 }
@@ -41,16 +42,31 @@ export default function InteractionListRp({ interactions, hasMore, loadMore }: I
   };
 
   return (
-    <Box ref={listRef} onScroll={handleScroll} sx={{ maxHeight: '400px', overflow: 'auto' }}>
+    <Box ref={listRef} onScroll={handleScroll} sx={{
+      overflow: 'auto',
+      '&::-webkit-scrollbar': {
+        width: '8px',
+        opacity: 0,
+        transition: 'opacity 0.3s',
+      },
+      '&:hover::-webkit-scrollbar': {
+        opacity: 1,
+      },
+      '&::-webkit-scrollbar-thumb': {
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: '4px',
+      },
+      '&::-webkit-scrollbar-thumb:hover': {
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      },
+      '&::-webkit-scrollbar-track': {
+        backgroundColor: 'transparent',
+      },
+    }} >
       <List>
         {interactions.map((interaction) => (
           <ListItem key={interaction.id}>
-            {/* You can customize the display of each interaction here */}
-            <div>
-              <p>Type: {interaction.type}</p>
-              <p>User Content: {interaction.userContent}</p>
-              <p>Created At: {new Date(interaction.createdAt).toLocaleString()}</p>
-            </div>
+            <InteractionView interaction={interaction} />
           </ListItem>
         ))}
       </List>

@@ -5,13 +5,13 @@ import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import 'katex/dist/katex.min.css'
-import { Interaction } from '@/shared/types/interactionsV2';
+import { ChatInteraction } from '@/shared/types/interactionsV2';
 
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore'
 import NavigateNextIcon from '@mui/icons-material/NavigateNext'
 
 interface InteractionViewRpProps {
-  interaction: Interaction;
+  interaction: ChatInteraction;
   hasPrevious: boolean;
   hasNext: boolean;
   onPrevious: () => void;
@@ -28,8 +28,7 @@ const convertLatexDelimiters = (content: string): string => {
 
 export default function InteractionViewRp({ interaction, hasPrevious, hasNext, onPrevious, onNext }: InteractionViewRpProps) {
   const processedContent = convertLatexDelimiters(interaction.userContent);
-  const assistantContent = 
-    interaction.type === 'chat' ? convertLatexDelimiters(interaction.assistantContent) : '';
+  const assistantContent = convertLatexDelimiters(interaction.assistantContent);
 
   return (
     <Box sx={{
@@ -41,7 +40,7 @@ export default function InteractionViewRp({ interaction, hasPrevious, hasNext, o
       {/* 用户输入内容的气泡 */}
       <Box sx={{
         display: 'flex',
-        justifyContent: 'flex-end',
+        justifyContent: 'flex-start',
         mb: 1
       }}>
         <Paper
@@ -103,7 +102,7 @@ export default function InteractionViewRp({ interaction, hasPrevious, hasNext, o
           <Paper
             elevation={1}
             sx={{
-              maxWidth: '60%',
+              width: '100%',
               bgcolor: 'background.paper',
               color: 'text.primary',
               borderRadius: 2,
