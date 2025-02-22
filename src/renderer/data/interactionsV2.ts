@@ -14,6 +14,7 @@ type ListResult<T> = {
 
 // Event hubs for Interaction
 const createChatEventHub = makeEventHub<ChatInteraction>();
+const appendContentEventHub = makeEventHub<string>()
 
 const mockInteractions: Interaction[] = [
   {
@@ -190,9 +191,19 @@ function useRecentChatInteractions(contextId?: number): ListResult<ChatInteracti
         return { items: action.interactions, hasMore: action.hasMore }
     }
   }, { items: [], hasMore: true });
+  console.log("db useRecentChatInteractions state =", state);
 
   const profileId = useCurrentProfileId()
+  const refresh = useCallback(async () => {
+    const chatInteractions = await window.electron.interactionsV2.getChats(profileId, {
+      contextId: null,
+      limit: 100
+    })
+    dispatch({ type: 'refreshed', interactions: chatInteractions, hasMore: chatInteractions.length > 0 })
+  }, [profileId, contextId])
+
   useEffect(() => {
+    refresh()
     const unwatch = createChatEventHub.watch(contextId ? [profileId, String(contextId)] : [profileId], (chat) => {
       console.log("newInteractionCreated", chat);
       dispatch({ type: 'newInteractionCreated', interaction: chat })
@@ -209,21 +220,17 @@ function useRecentChatInteractions(contextId?: number): ListResult<ChatInteracti
 }
 
 const createChatInteraction = async (profileId: string, params: CreateParams<ChatInteraction>): Promise<ChatInteraction> => {
-  console.log("createChat start");
   const chat = await window.electron.interactionsV2.createChat(profileId, params);
-  console.log("createChat", chat);
   
   createChatEventHub.notify(params.contextId ? [profileId, String(params.contextId)] : [profileId], chat);
   return chat;
 };
 
-const appendAssistantContent = async (profileId: string, interactionId: number, content: string): Promise<ChatInteraction | null> => {
-  const chat = await window.electron.interactionsV2.appendAssistantContent(profileId, interactionId, content, Date.now());
+const appendAssistantContent = async (profileId: string, interactionId: number, content: string): Promise<void> => {
+  await window.electron.interactionsV2.appendAssistantContent(profileId, interactionId, content, Date.now());
   
-  if (chat) {
-    createChatEventHub.notify([profileId, String(interactionId)], chat);
-  }
-  return chat;
+  console.log('appendContentEventHub  interactionId = ', interactionId)
+  appendContentEventHub.notify([profileId, String(interactionId)], content)
 };
 
-export { useRecentInteractions, useRecentChatInteractions, createChatInteraction, appendAssistantContent };
+export { appendContentEventHub, useRecentInteractions, useRecentChatInteractions, createChatInteraction, appendAssistantContent };

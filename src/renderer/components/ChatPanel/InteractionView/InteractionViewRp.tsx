@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Typography, Paper, IconButton } from '@mui/material';
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -6,9 +6,10 @@ import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import 'katex/dist/katex.min.css'
 import { ChatInteraction } from '@/shared/types/interactionsV2';
-
+import { appendContentEventHub } from '@/renderer/data/interactionsV2';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore'
 import NavigateNextIcon from '@mui/icons-material/NavigateNext'
+import { useCurrentProfileId } from '@/renderer/data/profile';
 
 interface InteractionViewRpProps {
   interaction: ChatInteraction;
@@ -27,8 +28,20 @@ const convertLatexDelimiters = (content: string): string => {
 }
 
 export default function InteractionViewRp({ interaction, hasPrevious, hasNext, onPrevious, onNext }: InteractionViewRpProps) {
+  const profileId = useCurrentProfileId();
   const processedContent = convertLatexDelimiters(interaction.userContent);
-  const assistantContent = convertLatexDelimiters(interaction.assistantContent);
+  const [assistantContent, setAssistantContent] = useState(interaction.assistantContent);
+
+  useEffect(() => {
+    const unwatch = appendContentEventHub.watch([profileId, String(interaction.id)], (content) => {
+      console.log('appendContentEventHub', content)
+      setAssistantContent(assistantContent + content);
+    });
+
+    return () => {
+      unwatch();
+    };
+  }, [assistantContent]);
 
   return (
     <Box sx={{

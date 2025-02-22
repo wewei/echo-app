@@ -59,6 +59,7 @@ export default function ChatPanelCt({
       model,
       chatInteraction,
     })) {
+      console.log('handle chunk', chunk)
       appendAssistantContent(profileId, chatInteraction.id, chunk)
     }
     
