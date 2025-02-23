@@ -5,7 +5,7 @@ import path from 'path'
 import fs from 'fs'
 
 describe('InteractionStore', () => {
-  const testDbPath = path.join(__dirname, 'test.db')
+  const testDbPath = path.join(__dirname, 'test.sqlite')
   let store: ReturnType<typeof createInteractionStore>
 
   beforeEach(() => {
@@ -459,6 +459,14 @@ describe('InteractionStore', () => {
       expect(chats).toHaveLength(1)
     })
 
+    it('应该根据 order 排序', () => {
+      const chats = store.getChats({
+        contextId: null,
+        order: 'desc'
+      })
+      expect(chats).toHaveLength(2)
+    })
+
     it('应该组合多个条件', () => {
       const chats = store.getChats({
         contextId: null,
@@ -545,6 +553,14 @@ describe('InteractionStore', () => {
       })
       expect(ids).toHaveLength(2)
       expect(ids).toEqual(replyIds.slice(0, 2))
+    })
+
+    it('应该根据 order 排序', () => {
+      const ids = store.getChatIds({
+        contextId: rootChat.id,
+        order: 'desc'
+      })
+      expect(ids).toEqual(replyIds.reverse())
     })
 
     it('应该组合多个条件筛选 ID', () => {

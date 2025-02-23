@@ -52,6 +52,7 @@ export type QueryChatsParams = Partial<{
   created: TimeRange
   updated: TimeRange
   model: string
+  order: 'asc' | 'desc'
   limit: number
 }>
 

@@ -7,10 +7,7 @@ import {
   NavState,
   QueryChatsParams,
 } from "@/shared/types/interactionsV2"
-import path from 'path'
 import { EntityData } from '@/shared/types/entity'
-import { getProfileDir } from '@/main/services/profileManager'
-import fs from 'node:fs'
 
 export const DEFAULT_LIMIT = 10
 
@@ -74,16 +71,8 @@ const initDatabase = (db: Database): void => {
   `)
 }
 
-const createInteractionStore = (profileId: string): InteractionStore => {
-  // console.log("interactionsV2 createInteractionStore dbpath =", dbPath);
-  // const db = new Sqlite(path.resolve(dbPath))
-
-  const dbPath = path.join(getProfileDir(profileId), 'sqlite')
-  console.log("createConnection dbpath =", dbPath);
-  if (!fs.existsSync(dbPath)) {
-    fs.mkdirSync(dbPath, { recursive: true })
-  }
-  const db = new Sqlite(path.join(dbPath, 'echo.sqlite'))
+const createInteractionStore = (dbPath: string): InteractionStore => {
+  const db = new Sqlite(dbPath)
   initDatabase(db)
 
   const createChat = (chat: EntityData<ChatInteraction>): ChatInteraction => {
@@ -188,7 +177,7 @@ const createInteractionStore = (profileId: string): InteractionStore => {
     created,
     updated,
     model,
-  }: Omit<QueryChatsParams, 'limit'>): [string[], (string | number)[]] => {  
+  }: Omit<QueryChatsParams, 'limit' | 'order'>): [string[], (string | number)[]] => {  
     const conditions: string[] = []
     const values: (string | number)[] = []
     if (Number.isSafeInteger(contextId)) {
@@ -229,7 +218,7 @@ const createInteractionStore = (profileId: string): InteractionStore => {
       FROM chat c
       LEFT JOIN interaction i ON c.id = i.id
       WHERE ${conditions.join(' AND ')}
-      ORDER BY i.createdAt ASC
+      ORDER BY i.createdAt ${params.order === 'desc' ? 'DESC' : 'ASC'}
       LIMIT ?
     `).all(...values, params.limit ?? DEFAULT_LIMIT)
   }
@@ -240,7 +229,7 @@ const createInteractionStore = (profileId: string): InteractionStore => {
       SELECT c.id FROM chat c
       LEFT JOIN interaction i ON c.id = i.id
       WHERE ${conditions.join(' AND ')}
-      ORDER BY i.createdAt ASC
+      ORDER BY i.createdAt ${params.order === 'desc' ? 'DESC' : 'ASC'}
       LIMIT ?
     `).all(...values, params.limit ?? DEFAULT_LIMIT).map(result => result.id)
   }
