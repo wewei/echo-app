@@ -9,7 +9,7 @@ interface WebViewEntry {
 
 class WebViewPool {
   private static instance: WebViewPool;
-  private pool: Map<string, WebViewEntry>;
+  private pool: Map<number, WebViewEntry>;
   private config: WebViewPoolConfig;
 
   private constructor(config: WebViewPoolConfig) {
@@ -24,7 +24,7 @@ class WebViewPool {
     return WebViewPool.instance;
   }
 
-  getWebView(tabId: string, url: string): HTMLElement {
+  getWebView(tabId: number, url: string): HTMLElement {
     // 检查是否已存在对应的WebView
     const existingEntry = this.pool.get(tabId);
     if (existingEntry) {
@@ -43,7 +43,7 @@ class WebViewPool {
     }
 
     // 使用LRU策略找到最久未使用的WebView
-    let oldestTabId: string | null = null;
+    let oldestTabId: number | null = null;
     let oldestAccessed = Infinity;
 
     this.pool.forEach((entry, id) => {
@@ -66,16 +66,16 @@ class WebViewPool {
     throw new Error('WebViewPool is full and no WebView can be removed.');
   }
 
-  private createWebView(tabId: string, url: string): HTMLElement {
+  private createWebView(tabId: number, url: string): HTMLElement {
     const webview = document.createElement('webview');
     webview.style.width = '100%';
     webview.style.height = '100%';
-    (webview as any).dataset.tabId = tabId;
+    (webview as any).dataset.tabId = tabId.toString();
     webview.src = url;
     return webview;
   }
 
-  removeWebView(tabId: string) {
+  removeWebView(tabId: number) {
     this.pool.delete(tabId);
   }
 

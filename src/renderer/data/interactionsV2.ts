@@ -168,7 +168,6 @@ function useRecentChatInteractions(contextId?: number): ListResult<ChatInteracti
         return { items: action.interactions, hasMore: action.hasMore }
     }
   }, { items: [], hasMore: true });
-  console.log("db useRecentChatInteractions state =", state);
 
   const profileId = useCurrentProfileId()
   const refresh = useCallback(async () => {
@@ -182,7 +181,6 @@ function useRecentChatInteractions(contextId?: number): ListResult<ChatInteracti
   useEffect(() => {
     refresh()
     const unwatch = createChatEventHub.watch(contextId ? [profileId, String(contextId)] : [profileId], (chat) => {
-      console.log("newInteractionCreated", chat);
       dispatch({ type: 'newInteractionCreated', interaction: chat })
     })
     return () => { unwatch() }
@@ -206,8 +204,38 @@ const createChatInteraction = async (profileId: string, params: CreateParams<Cha
 const appendAssistantContent = async (profileId: string, interactionId: number, content: string): Promise<void> => {
   await window.electron.interactionsV2.appendAssistantContent(profileId, interactionId, content, Date.now());
   
-  console.log('appendContentEventHub  interactionId = ', interactionId)
   appendContentEventHub.notify([profileId, String(interactionId)], content)
 };
 
-export { appendContentEventHub, useRecentInteractions, useRecentChatInteractions, createChatInteraction, appendAssistantContent };
+async function getInteraction(profileId: string, interactionId: number): Promise<Interaction | null> {
+  try {
+    const interactionData = await window.electron.interactionsV2.getInteraction(profileId, interactionId);
+    return interactionData;
+  } catch (error) {
+    console.error('Failed to fetch interaction:', error);
+    return null;
+  }
+}
+
+function useInteraction(profileId: string, interactionId: number): Interaction | null {
+  const [interaction, setInteraction] = useState<Interaction | null>(null);
+
+  useEffect(() => {
+    if (interactionId >= 0) {
+      const fetchInteraction = async () => {
+        try {
+          const interactionData = await getInteraction(profileId, interactionId);
+          setInteraction(interactionData);
+        } catch (error) {
+          console.error('Failed to fetch interaction:', error);
+        }
+      };
+
+      fetchInteraction();
+    }
+  }, [profileId, interactionId]);
+
+  return interaction;
+}
+
+export { getInteraction, appendContentEventHub, useRecentInteractions, useRecentChatInteractions, createChatInteraction, appendAssistantContent, useInteraction };

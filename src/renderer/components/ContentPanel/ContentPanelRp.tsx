@@ -1,50 +1,38 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Box, IconButton, Menu, MenuItem } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import WebPanel from '../WebPanel/WebPanel';
-import type { TypeString } from '@/renderer/data/contentSession';
-import { Query } from '@/shared/types/interactions';
-import ResponseView from '@/renderer/components/ChatPanel/ResponseView'
+import InteractionView from '@/renderer/components/ChatPanel/InteractionView';
+import { useInteraction } from '@/renderer/data/interactionsV2';
 
 export interface TabItem {
-  id: string;
+  id: number;
   title: string;
-  type: TypeString;
   lastAccessed: number;
-  link?: string;
-  responseId?: string;
 }
 
 interface ContentPanelRpProps {
   tabs: TabItem[];
   hiddenTabs: TabItem[];
-  activeTab: string | null;
+  activeTab: number | null;
   menuAnchor: HTMLElement | null;
   profileId?: string;
-  type?: TypeString;
-  query?: Query;
-  responseId?: string | null;
-  link?: string | null;
   onTabClick: (tab: TabItem) => void;
-  onCloseTab: (id: string) => void;
+  onCloseTab: (id: number) => void;
   onHiddenTabClick: (tab: TabItem) => void;
   onMenuClick: (event: React.MouseEvent<HTMLElement>) => void;
   onMenuClose: () => void;
-  onTitleChange: (id: string, title: string) => void;
+  onTitleChange: (id: number, title: string) => void;
   handleLinkClick?: (url: string) => void;
 }
 
 export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
   tabs,
   hiddenTabs,
-  activeTab,
   menuAnchor,
+  activeTab,
   profileId,
-  type,
-  responseId,
-  query,
-  link,
   onTabClick,
   onCloseTab,
   onHiddenTabClick,
@@ -53,6 +41,12 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
   onTitleChange,
   handleLinkClick,
 }) => {
+  const interaction = useInteraction(profileId, activeTab);
+  console.log("ContentPanelRp profileId =", profileId, "activeTab =", activeTab, "interaction =", interaction);
+  useEffect(() => {
+    console.log("ContentPanelRp interaction changed =", interaction);
+  }, [interaction])
+
   const handleClick = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     const link = target.closest('a');
@@ -63,8 +57,8 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
       handleLinkClick?.(link.href);
     }
   }, [handleLinkClick]);
+  
 
-  console.log("ContentPanelRp", "tabs", tabs, "hiddenTabs", hiddenTabs, "activeTab", activeTab, "profileId", profileId, "type", type, "responseId", responseId, "query", query, "link", link);
   return (
     <Box sx={{
       width: '100%', 
@@ -128,7 +122,8 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
                 <span style={{ maxWidth: '200px',textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}>{tab.title}</span>
                 <IconButton
                   size="small"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     onCloseTab(tab.id);
                   }}
                 >
@@ -169,29 +164,25 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
       )}
       
       <Box sx={{ flexGrow: 1}}>
-        {activeTab && (
+        {interaction && (
           (() => {
-            
-            const currentTab = tabs.find(tab => tab.id === activeTab);
+            const currentTab = tabs.find(tab => tab.id === interaction.id);
             if (!currentTab) return null;
 
             // 如果标签有 context，显示网页
-            if (currentTab.type === "Link") {
+            if (interaction.type === "nav") {
+
               return (
                 <WebPanel
-                  url={currentTab.link}
+                  url={interaction.userContent}
                   tabId={currentTab.id}
                   onTitleChange={onTitleChange}
                 />
               );
-            } else if (currentTab.type === "Response") {
-              return <ResponseView 
-              responseId={currentTab.responseId}
-              hasPrevious={false}
-              hasNext={false}
-              onPrevious={() => { /* function logic */ }}
-              onNext={() => { /* function logic */ }}
-            />
+            } else if (interaction.type === "chat") {
+              return <InteractionView 
+                interaction={interaction}
+              />;
             } 
             
             return null;

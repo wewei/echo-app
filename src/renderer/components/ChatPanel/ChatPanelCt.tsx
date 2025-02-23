@@ -23,6 +23,7 @@ export default function ChatPanelCt({
   const profileId = useCurrentProfileId()
   const [chatSettings] = useSettings(profileId, CHAT_SETTINGS, ChatSettingsSchema)
   const model = chatSettings?.[chatSettings?.provider]?.model
+  const hasMore = false;
 
   const handleSendMessage = useCallback(async (message: string) => {
     // const query = await createQuery(profileId, {
@@ -75,8 +76,8 @@ export default function ChatPanelCt({
     <ChatPanelRp
       handleLinkClick={handleLinkClick}
       onSendMessage={handleSendMessage}
-      // loadMore={hasMore ? handleLoadMore : null}
-      // hasMore={hasMore}
+      loadMore={hasMore ? handleLoadMore : null}
+      hasMore={hasMore}
       disabled={disabled}
     />
   )

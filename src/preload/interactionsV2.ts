@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron'
-import { ChatInteraction, INTERACTION_IPC_CHANNELS, NavInteraction, ChatState, NavState, BaseInteraction, QueryChatsParams } from '@/shared/types/interactionsV2'
+import { ChatInteraction, INTERACTION_IPC_CHANNELS, NavInteraction, ChatState, NavState, Interaction, QueryChatsParams } from '@/shared/types/interactionsV2'
 import { EntityData } from '@/shared/types/entity'
 
 export const interactionV2API = {
@@ -9,7 +9,7 @@ export const interactionV2API = {
   createNav: (profileId: string, nav: EntityData<NavInteraction>): Promise<NavInteraction> =>
     ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.CREATE_NAV, profileId, nav),
 
-  getInteraction: (profileId: string, id: number): Promise<BaseInteraction | null> =>
+  getInteraction: (profileId: string, id: number): Promise<Interaction | null> =>
     ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_INTERACTION, profileId, id),
 
   getChatState: (profileId: string, id: number): Promise<ChatState | null> =>

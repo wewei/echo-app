@@ -9,7 +9,10 @@ import { ChatInteraction } from '@/shared/types/interactionsV2';
 import { appendContentEventHub } from '@/renderer/data/interactionsV2';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore'
 import NavigateNextIcon from '@mui/icons-material/NavigateNext'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { useCurrentProfileId } from '@/renderer/data/profile';
+import { useSearchParams } from 'react-router-dom';
 
 interface InteractionViewRpProps {
   interaction: ChatInteraction;
@@ -31,6 +34,7 @@ export default function InteractionViewRp({ interaction, hasPrevious, hasNext, o
   const profileId = useCurrentProfileId();
   const processedContent = convertLatexDelimiters(interaction.userContent);
   const [assistantContent, setAssistantContent] = useState(interaction.assistantContent);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     const unwatch = appendContentEventHub.watch([profileId, String(interaction.id)], (content) => {
@@ -43,18 +47,36 @@ export default function InteractionViewRp({ interaction, hasPrevious, hasNext, o
     };
   }, [assistantContent]);
 
+
+
   return (
     <Box sx={{
       display: 'flex',
       flexDirection: 'column',
       mb: 2,
-      px: 2
+      px: 2,
+      width: '100%',
+      position: 'relative'
     }}>
+      <Box sx={{
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        zIndex: 1
+      }}>
+        <IconButton
+          aria-label="expand"
+          onClick={() => setSearchParams({ interactionId: String(interaction.id) })}
+        >
+          <OpenInFullIcon />
+        </IconButton>
+      </Box>
       {/* 用户输入内容的气泡 */}
       <Box sx={{
         display: 'flex',
         justifyContent: 'flex-start',
-        mb: 1
+        mb: 1,
+        position: 'relative'
       }}>
         <Paper
           elevation={1}
@@ -98,7 +120,13 @@ export default function InteractionViewRp({ interaction, hasPrevious, hasNext, o
           </Box>
           <Typography
             variant="caption"
-            sx={{ opacity: 0.7, mt: 1 }}
+            sx={{
+              opacity: 0.7,
+              mt: 1,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}
           >
             {new Date(interaction.createdAt).toLocaleString()}
           </Typography>
@@ -110,7 +138,8 @@ export default function InteractionViewRp({ interaction, hasPrevious, hasNext, o
         <Box sx={{
           display: 'flex',
           justifyContent: 'flex-start',
-          mb: 1
+          mb: 1,
+          position: 'relative'
         }}>
           <Paper
             elevation={1}
@@ -154,7 +183,13 @@ export default function InteractionViewRp({ interaction, hasPrevious, hasNext, o
             </Box>
             <Typography
               variant="caption"
-              sx={{ opacity: 0.7, mt: 1 }}
+              sx={{
+                opacity: 0.7,
+                mt: 1,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
             >
               {new Date(interaction.updatedAt).toLocaleString()}
             </Typography>

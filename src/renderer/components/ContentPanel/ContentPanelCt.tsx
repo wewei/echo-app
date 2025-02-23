@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { ContentPanelRp } from './ContentPanelRp';
-import useContentSession, { TypeString } from '../../data/contentSession';
-import { useResponse } from '../../data/interactions';
-import { isEntityReady } from '@/renderer/data/entity';
+import useContentSession from '../../data/contentSession';
+import { getInteraction } from '@/renderer/data/interactionsV2';
 
 export const ContentPanelCt: React.FC = () => {
   const { profileId } = useParams();
@@ -19,17 +18,16 @@ export const ContentPanelCt: React.FC = () => {
   } = useContentSession();
 
   useEffect(() => {
-    const type = searchParams.get("type");
-    const responseId = searchParams.get("responseId");
-    const queryId = searchParams.get("queryId");
-    const link = searchParams.get("link");
-    setContentSession(prevState => ({
-      ...prevState,
-      queryId,
-      type: (type || "Response") as TypeString,
-      link,
-      responseId
-    }))
+    const interactionIdStr = searchParams.get("interactionId");
+    console.log("ContentPanelCt useEffect interactionId =", interactionIdStr);
+
+    if (interactionIdStr) {
+      const interactionId = parseInt(interactionIdStr);
+      setContentSession(prevState => ({
+        ...prevState,
+        interactionId
+      }));
+    }
   }, [searchParams]);
 
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
@@ -38,34 +36,29 @@ export const ContentPanelCt: React.FC = () => {
     setMenuAnchor(event.currentTarget);
   };
 
-  const responseId = searchParams.get("responseId");
-  const response = useResponse(responseId);
-
   const handleLinkClick = (responseurl: string) => {
-    if (isEntityReady(response)) {
-      setContentSession(prevState => ({
-        ...prevState,
-        queryId: response.queryId,
-        type: "Link",
-        link: responseurl,
-        responseId: response.id
-      }))
-    }
+    // if (isEntityReady(response)) {
+    //   setContentSession(prevState => ({
+    //     ...prevState,
+    //     queryId: response.queryId,
+    //     type: "Link",
+    //     link: responseurl,
+    //     responseId: response.id
+    //   }))
+    // }
   }
 
   const handleMenuClose = () => {
     setMenuAnchor(null);
   };
 
+  console.log("ContentPanelCt contentSession ", contentSession);
   return (
     <ContentPanelRp
       profileId={profileId}
       tabs={contentSession.tabs}
       hiddenTabs={contentSession.hiddenTabs}
       activeTab={contentSession.activeTab}
-      responseId={contentSession.responseId}
-      type={contentSession.type}
-      link={contentSession.link}
       onTabClick={handleTabClick}
       onCloseTab={handleTabClose}
       onHiddenTabClick={handleHiddenTabClick}

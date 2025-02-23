@@ -3,6 +3,7 @@ import {
   BaseInteraction,
   ChatInteraction,
   NavInteraction,
+  Interaction,
   ChatState,
   NavState,
   QueryChatsParams,
@@ -14,7 +15,7 @@ export const DEFAULT_LIMIT = 10
 type InteractionStore = {
   createChat: (chat: EntityData<ChatInteraction>) => ChatInteraction
   createNav: (nav: EntityData<NavInteraction>) => NavInteraction
-  getInteraction: (id: number) => BaseInteraction | null
+  getInteraction: (id: number) => Interaction | null
   getChatState: (id: number) => ChatState | null
   getNavState: (id: number) => NavState | null
   getChats: (params: QueryChatsParams) => ChatInteraction[]
@@ -71,8 +72,18 @@ const initDatabase = (db: Database): void => {
   `)
 }
 
+// <<<<<<< HEAD
 const createInteractionStore = (dbPath: string): InteractionStore => {
   const db = new Sqlite(dbPath)
+// =======
+// const createInteractionStore = (profileId: string): InteractionStore => {
+//   const dbPath = path.join(getProfileDir(profileId), 'sqlite')
+
+//   if (!fs.existsSync(dbPath)) {
+//     fs.mkdirSync(dbPath, { recursive: true })
+//   }
+//   const db = new Sqlite(path.join(dbPath, 'echo.sqlite'))
+// >>>>>>> a01f959 (Update tab logic with new design)
   initDatabase(db)
 
   const createChat = (chat: EntityData<ChatInteraction>): ChatInteraction => {
@@ -134,8 +145,8 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     }
   }
 
-  const getInteraction = (id: number): BaseInteraction | null => {
-    return db.prepare<number, BaseInteraction>(`
+  const getInteraction = (id: number): Interaction | null => {
+    return db.prepare<number, Interaction>(`
       SELECT id, type, userContent, contextId, createdAt FROM interaction WHERE id = ?
     `).get(id) ?? null
   }

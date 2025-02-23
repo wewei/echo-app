@@ -5,8 +5,8 @@ import WebViewPool from './WebViewPool';
 
 interface WebPanelProps {
   url?: string;
-  tabId: string;
-  onTitleChange?: (tabId: string, title: string) => void;
+  tabId: number;
+  onTitleChange?: (tabId: number, title: string) => void;
 }
 
 const WebPanel: React.FC<WebPanelProps> = (props) => {

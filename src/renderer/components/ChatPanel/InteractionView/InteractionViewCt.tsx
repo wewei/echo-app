@@ -1,9 +1,9 @@
 import React from 'react';
 import InteractionViewRp from './InteractionViewRp';
-import { Interaction } from '@/shared/types/interactionsV2';
+import { ChatInteraction } from '@/shared/types/interactionsV2';
 
 interface InteractionViewCtProps {
-  interaction: Interaction;
+  interaction: ChatInteraction;
 }
 
 export default function InteractionViewCt({ interaction }: InteractionViewCtProps) {
