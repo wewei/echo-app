@@ -7,9 +7,10 @@ interface InteractionListRpProps {
   interactions: ChatInteraction[];
   hasMore: boolean;
   loadMore: (() => void) | null;
+  onLinkClicked?: (contextId: number, url: string) => void;
 }
 
-export default function InteractionListRp({ interactions, hasMore, loadMore }: InteractionListRpProps) {
+export default function InteractionListRp({ interactions, hasMore, loadMore, onLinkClicked }: InteractionListRpProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const [stayAtBottom, setStayAtBottom] = useState(true);
 
@@ -66,7 +67,7 @@ export default function InteractionListRp({ interactions, hasMore, loadMore }: I
       <List>
         {interactions.map((interaction) => (
           <ListItem key={interaction.id}>
-            <InteractionView interaction={interaction} />
+            <InteractionView interaction={interaction} onLinkClicked={onLinkClicked} />
           </ListItem>
         ))}
       </List>

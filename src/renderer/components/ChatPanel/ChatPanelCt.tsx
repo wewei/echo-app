@@ -9,14 +9,12 @@ import { Response } from '@/shared/types/interactions';
 import { createChatInteraction, appendAssistantContent } from '@/renderer/data/interactionsV2';
 
 interface Props {
-  onResponseClick?: (response: Response) => void
-  handleLinkClick?: (url: string) => void
+  onLinkClicked?: (contextId: number, url: string) => void
   disabled?: boolean
 }
 
 export default function ChatPanelCt({
-  onResponseClick,
-  handleLinkClick,
+  onLinkClicked,
   disabled = false
 }: Props) {
   // const { items: queries, loadMore, hasMore } = useRecentQueries()
@@ -44,7 +42,7 @@ export default function ChatPanelCt({
     // })) {
     //   appendResponseContent(profileId, response.id, chunk)
     // }
-
+console.log("handleSendMessage message =", message);
     const chatInteraction = await createChatInteraction(profileId, {
       type: 'chat',
       model,
@@ -60,7 +58,6 @@ export default function ChatPanelCt({
       model,
       chatInteraction,
     })) {
-      console.log('handle chunk', chunk)
       appendAssistantContent(profileId, chatInteraction.id, chunk)
     }
     
@@ -74,7 +71,7 @@ export default function ChatPanelCt({
 
   return (
     <ChatPanelRp
-      handleLinkClick={handleLinkClick}
+      onLinkClicked={onLinkClicked}
       onSendMessage={handleSendMessage}
       loadMore={hasMore ? handleLoadMore : null}
       hasMore={hasMore}

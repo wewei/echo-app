@@ -56,6 +56,15 @@ export type QueryChatsParams = Partial<{
   limit: number
 }>
 
+export type QueryNavsParams = Partial<{
+  contextId: number | null
+  userContent: string
+  created: TimeRange
+  updated: TimeRange
+  limit: number
+  order: 'asc' | 'desc'
+}> 
+
 export type Interaction = ChatInteraction | NavInteraction
 
 export const INTERACTION_IPC_CHANNELS = {
@@ -67,8 +76,8 @@ export const INTERACTION_IPC_CHANNELS = {
   GET_CHATS: 'interaction:getChats',
   GET_CHAT_IDS: 'interaction:getChatIds',
   GET_NAVS_BY_URL: 'interaction:getNavsByUrl',
+  GET_NAVS: 'interaction:getNavs',
   GET_NAV_IDS_BY_URL: 'interaction:getNavIdsByUrl',
   APPEND_ASSISTANT_CONTENT: 'interaction:appendAssistantContent',
   UPDATE_NAV_STATE: 'interaction:updateNavState',
 } as const
-

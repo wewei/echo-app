@@ -7,6 +7,7 @@ import {
   ChatState,
   NavState,
   QueryChatsParams,
+  QueryNavsParams,
 } from "@/shared/types/interactionsV2"
 import { EntityData } from '@/shared/types/entity'
 
@@ -22,6 +23,7 @@ type InteractionStore = {
   getChatIds: (params: QueryChatsParams) => number[]
   getNavsByUrl: (url: string) => NavInteraction[]
   getNavIdsByUrl: (url: string) => number[]
+  getNavs: (params: QueryNavsParams) => NavInteraction[]
   appendAssistantContent: (id: number, content: string, timestamp: number) => boolean
   updateNavState: (id: number, state: Partial<NavState>) => boolean
   close: () => void
@@ -74,6 +76,7 @@ const initDatabase = (db: Database): void => {
 
 // <<<<<<< HEAD
 const createInteractionStore = (dbPath: string): InteractionStore => {
+  console.log("createInteractionStore dbpath = ", dbPath);
   const db = new Sqlite(dbPath)
 // =======
 // const createInteractionStore = (profileId: string): InteractionStore => {
@@ -245,6 +248,58 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     `).all(...values, params.limit ?? DEFAULT_LIMIT).map(result => result.id)
   }
 
+  const prepareGetNavsConditions = ({
+    userContent,
+    contextId,
+    created,
+    updated,
+  }: Omit<QueryNavsParams, 'limit' | 'order'>): [string[], (string | number)[]] => {  
+    const conditions: string[] = []
+    const values: (string | number)[] = []
+    if (Number.isSafeInteger(contextId)) {
+      conditions.push(`i.contextId = ?`)
+      values.push(contextId)
+    } else if (contextId === null) {
+      conditions.push(`i.contextId IS NULL`)
+    }
+    if (Number.isFinite(created?.before)) {
+      conditions.push(`i.createdAt < ?`)
+      values.push(created.before)
+    }
+    if (Number.isFinite(created?.after)) {
+      conditions.push(`i.createdAt > ?`)
+      values.push(created.after)
+    }
+    if (Number.isFinite(updated?.before)) {
+      conditions.push(`c.updatedAt < ?`)
+      values.push(updated.before)
+    }
+    if (Number.isFinite(updated?.after)) {
+      conditions.push(`c.updatedAt > ?`)
+      values.push(updated.after)
+    } 
+    if (userContent !== undefined && userContent !== null) {
+      conditions.push(`i.userContent = ?`)
+      values.push(userContent)
+    }
+    return [conditions, values]
+  }
+
+  const getNavs = (params: QueryNavsParams): NavInteraction[] => {
+    const [conditions, values] = prepareGetNavsConditions(params)
+    
+    return db.prepare<(string | number)[], NavInteraction>(`
+      SELECT 
+        i.id, i.type, i.userContent, i.contextId, i.createdAt,
+        n.title, n.description, n.favIconUrl, n.imageAssetId, n.updatedAt
+      FROM navs n
+      LEFT JOIN interaction i ON n.id = i.id
+      WHERE ${conditions.join(' AND ')}
+      ORDER BY i.createdAt ${params.order === 'desc' ? 'DESC' : 'ASC'}
+      LIMIT ?
+    `).all(...values, params.limit ?? DEFAULT_LIMIT)
+  }
+
   const appendAssistantContent = (id: number, content: string, timestamp: number): boolean => {
     const result = db.prepare<[string, number, number], boolean>(`
       UPDATE chat SET assistantContent = assistantContent || ?, updatedAt = ? WHERE id = ?
@@ -277,6 +332,7 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     getChatIds: getChatIdsByContextId,
     getNavsByUrl,
     getNavIdsByUrl,
+    getNavs,
     appendAssistantContent,
     updateNavState,
     close

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { useEffect, useReducer, useCallback, useMemo } from "react";
+import { useEffect, useReducer, useCallback, useMemo, useState } from "react";
 import { Interaction, ChatInteraction, BaseInteraction } from "@/shared/types/interactionsV2";
 import { makeEventHub } from "@/shared/utils/event";
 import { useCurrentProfileId } from "./profile";

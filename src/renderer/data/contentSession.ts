@@ -34,13 +34,15 @@ const useContentSession = () => {
     if (!hasInitialized) {
       return;
     }
-    console.log("useContentSession activeTab =", contentSession.interactionId);
     handleTabActiveOrCreate(contentSession.interactionId);
+    setContentSession(prevState => ({
+      ...prevState,
+      interactionId: null
+    }));
 
   }, [hasInitialized, contentSession.interactionId]);
 
   const handleTabClick = (tab: TabItem) => {
-console.log("handleTabClick tab =", tab);
 
     setContentSession(prevState => ({
       ...prevState,
@@ -67,7 +69,6 @@ console.log("handleTabClick tab =", tab);
         mostRecentlyAccessedTab = updatedTabs.reduce((newest, tab) => tab.lastAccessed > newest.lastAccessed ? tab : newest);
       }
 
-      console.log("handleTabClose mostRecentlyAccessedTab =", mostRecentlyAccessedTab, ", updatedTabs =", updatedTabs, ", updatedHiddenTabs =", updatedHiddenTabs);
       return {
         ...prevState,
         tabs: updatedTabs,

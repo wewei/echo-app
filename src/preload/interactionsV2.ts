@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron'
-import { ChatInteraction, INTERACTION_IPC_CHANNELS, NavInteraction, ChatState, NavState, Interaction, QueryChatsParams } from '@/shared/types/interactionsV2'
+import { ChatInteraction, INTERACTION_IPC_CHANNELS, NavInteraction, ChatState, NavState, Interaction, QueryChatsParams, QueryNavsParams } from '@/shared/types/interactionsV2'
 import { EntityData } from '@/shared/types/entity'
 
 export const interactionV2API = {
@@ -23,6 +23,9 @@ export const interactionV2API = {
 
   getChatIds: (profileId: string, params: QueryChatsParams): Promise<number[]> =>
     ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_CHAT_IDS, profileId, params),
+
+  getNavs: (profileId: string, params: QueryNavsParams): Promise<NavInteraction[]> =>
+    ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_NAVS, profileId, params),
 
   getNavsByUrl: (profileId: string, url: string): Promise<NavInteraction[]> =>
     ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.GET_NAVS_BY_URL, profileId, url),
@@ -55,6 +58,7 @@ export const withProfileId = (profileId: string) => (api: InteractionV2Api): Pro
     getNavState: (id) => api.getNavState(profileId, id),
     getChats: (params) => api.getChats(profileId, params),
     getChatIds: (params) => api.getChatIds(profileId, params),
+    getNavs: (params) => api.getNavs(profileId, params),
     getNavsByUrl: (url) => api.getNavsByUrl(profileId, url),
     getNavIdsByUrl: (url: string) => api.getNavIdsByUrl(profileId, url),
     appendAssistantContent: (id, content, timestamp) => api.appendAssistantContent(profileId, id, content, timestamp),

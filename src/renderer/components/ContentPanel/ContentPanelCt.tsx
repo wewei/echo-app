@@ -19,8 +19,7 @@ export const ContentPanelCt: React.FC = () => {
 
   useEffect(() => {
     const interactionIdStr = searchParams.get("interactionId");
-    console.log("ContentPanelCt useEffect interactionId =", interactionIdStr);
-
+console.log("searchParams ContentPanelCt interactionIdStr =", interactionIdStr);
     if (interactionIdStr) {
       const interactionId = parseInt(interactionIdStr);
       setContentSession(prevState => ({
@@ -28,6 +27,7 @@ export const ContentPanelCt: React.FC = () => {
         interactionId
       }));
     }
+    
   }, [searchParams]);
 
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
@@ -52,7 +52,6 @@ export const ContentPanelCt: React.FC = () => {
     setMenuAnchor(null);
   };
 
-  console.log("ContentPanelCt contentSession ", contentSession);
   return (
     <ContentPanelRp
       profileId={profileId}

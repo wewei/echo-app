@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Box, Typography, Paper, IconButton } from '@mui/material';
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -20,6 +20,7 @@ interface InteractionViewRpProps {
   hasNext: boolean;
   onPrevious: () => void;
   onNext: () => void;
+  onLinkClicked?: (contextId: number, url: string) => void;
 }
 
 const convertLatexDelimiters = (content: string): string => {
@@ -30,11 +31,21 @@ const convertLatexDelimiters = (content: string): string => {
     .replace(/\\\[(.*?)\\\]/g, '$$$1$$')
 }
 
-export default function InteractionViewRp({ interaction, hasPrevious, hasNext, onPrevious, onNext }: InteractionViewRpProps) {
+export default function InteractionViewRp({ interaction, hasPrevious, hasNext, onPrevious, onNext, onLinkClicked }: InteractionViewRpProps) {
   const profileId = useCurrentProfileId();
   const processedContent = convertLatexDelimiters(interaction.userContent);
   const [assistantContent, setAssistantContent] = useState(interaction.assistantContent);
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const handleClick: React.MouseEventHandler = useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const link = target.closest('a');
+    if (link) {
+      e.preventDefault();
+      console.log("handleClick link = ", link.href, ", interaction =", interaction);
+      onLinkClicked?.(interaction.id, link.href);
+    }
+  }, [onLinkClicked]);
 
   useEffect(() => {
     const unwatch = appendContentEventHub.watch([profileId, String(interaction.id)], (content) => {
@@ -57,7 +68,7 @@ export default function InteractionViewRp({ interaction, hasPrevious, hasNext, o
       px: 2,
       width: '100%',
       position: 'relative'
-    }}>
+    }} onClick={handleClick}>
       <Box sx={{
         position: 'absolute',
         top: 0,

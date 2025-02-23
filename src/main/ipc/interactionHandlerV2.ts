@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron'
-import { ChatInteraction, INTERACTION_IPC_CHANNELS, NavInteraction, NavState, QueryChatsParams } from '@/shared/types/interactionsV2'
+import { ChatInteraction, INTERACTION_IPC_CHANNELS, NavInteraction, NavState, QueryChatsParams, QueryNavsParams } from '@/shared/types/interactionsV2'
 import { getInteractionStore } from '@/main/services/interactionManagerV2'
 import { EntityData } from '@/shared/types/entity'
 
@@ -57,6 +57,14 @@ export const registerInteractionHandlersV2 = () => {
     (_, profileId: string, url: string) =>
       getInteractionStore(profileId).getNavIdsByUrl(url)
   )
+
+  ipcMain.handle(
+    INTERACTION_IPC_CHANNELS.GET_NAVS,
+    async (_, profileId: string, params: QueryNavsParams) => {
+      const store = getInteractionStore(profileId);
+      return store.getNavs(params);
+    }
+  );
 
   ipcMain.handle(
     INTERACTION_IPC_CHANNELS.APPEND_ASSISTANT_CONTENT,
