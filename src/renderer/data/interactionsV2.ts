@@ -147,7 +147,7 @@ export const useRecentChats = (contextId?: number): ListResult<BaseInteraction> 
   const [state, dispatch] = useInteractionListReducer<CreatedAction>((current, action) => {
     if (action.type === "created") {
       return {
-        items: [...current.items, action.interaction],
+        items: [action.interaction, ...current.items],
         hasMore: current.hasMore,
       }
     }

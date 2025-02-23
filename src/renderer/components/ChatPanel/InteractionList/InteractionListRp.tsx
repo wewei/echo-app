@@ -69,7 +69,7 @@ export default function InteractionListRp({ interactions, hasMore, loadMore, onL
           <ListItem key={interaction.id}>
             <InteractionView interaction={interaction} onLinkClicked={onLinkClicked} />
           </ListItem>
-        ))}
+        )).reverse()}
       </List>
     </Box>
   );
