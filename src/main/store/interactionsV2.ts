@@ -21,8 +21,8 @@ type InteractionStore = {
   getChatIds: (params: QueryChatsParams) => number[]
   getNavsByUrl: (url: string) => NavInteraction[]
   getNavIdsByUrl: (url: string) => number[]
-  appendAssistantContent: (id: number, content: string, timestamp: number) => void
-  updateNavState: (id: number, state: Partial<NavState>) => void
+  appendAssistantContent: (id: number, content: string, timestamp: number) => boolean
+  updateNavState: (id: number, state: Partial<NavState>) => boolean
   close: () => void
 }
 
@@ -234,20 +234,22 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     `).all(...values, params.limit ?? DEFAULT_LIMIT).map(result => result.id)
   }
 
-  const appendAssistantContent = (id: number, content: string, timestamp: number): void => {
-    db.prepare<[string, number, number], void>(`
+  const appendAssistantContent = (id: number, content: string, timestamp: number): boolean => {
+    const result = db.prepare<[string, number, number], boolean>(`
       UPDATE chat SET assistantContent = assistantContent || ?, updatedAt = ? WHERE id = ?
     `).run(content, timestamp, id)
+    return result.changes > 0
   }
 
-  const updateNavState = (id: number, state: Partial<NavState>): void => {
+  const updateNavState = (id: number, state: Partial<NavState>): boolean => {
     const [updates, values] = Object.entries(state).reduce(([updates, values], [key, value]) => {
       values.push(value)
       return [updates + `${key} = ?, `, values]
     }, ['', []])
     values.push(id)
     const sql = `UPDATE navs SET ${updates.slice(0, -2)} WHERE id = ?`
-    db.prepare(sql).run(...values)
+    const result = db.prepare(sql).run(...values)
+    return result.changes > 0
   }
 
   const close = (): void => {

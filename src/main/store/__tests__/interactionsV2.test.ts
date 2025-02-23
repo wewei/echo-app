@@ -336,6 +336,11 @@ describe('InteractionStore', () => {
       expect(state?.assistantContent).toBe('你好！')
       expect(state?.updatedAt).toBe(1234567892)
     })
+
+    it('应该返回 false 当 ID 不存在时', () => {
+      const result = store.appendAssistantContent(-1, '内容', 1234567892)
+      expect(result).toBe(false)
+    })
   })
 
   describe('updateNavState', () => {
@@ -365,6 +370,14 @@ describe('InteractionStore', () => {
         imageAssetId: null,
         updatedAt: 1234567892
       })
+    })
+
+    it('应该返回 false 当 ID 不存在时', () => {
+      const result = store.updateNavState(-1, {
+        title: '新标题',
+        updatedAt: 1234567892
+      })
+      expect(result).toBe(false)
     })
   })
 
