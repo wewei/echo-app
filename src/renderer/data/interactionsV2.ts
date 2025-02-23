@@ -1,7 +1,10 @@
-import { useState, useEffect, useReducer, useCallback } from "react";
-import { Interaction, ChatInteraction } from "@/shared/types/interactionsV2";
+/* eslint-disable @typescript-eslint/no-empty-function */
+import { useEffect, useReducer, useCallback, useMemo } from "react";
+import { Interaction, ChatInteraction, BaseInteraction } from "@/shared/types/interactionsV2";
 import { makeEventHub } from "@/shared/utils/event";
 import { useCurrentProfileId } from "./profile";
+import { traceBack } from "./traceBack";
+import { ProfileInteractionV2Api } from "@/preload/interactionsV2";
 
 export type CreateParams<T extends { id: number }> = Omit<T, 'id'>;
 
@@ -16,108 +19,91 @@ type ListResult<T> = {
 const createChatEventHub = makeEventHub<ChatInteraction>();
 const appendContentEventHub = makeEventHub<string>()
 
-const mockInteractions: Interaction[] = [
-  {
-    id: 1,
-    type: 'chat',
-    userContent: 'Hello, how can I help you today?',
-    contextId: null,
-    createdAt: Date.now(),
-    model: 'gpt-3',
-    assistantContent: 'I am here to assist you with your inquiries.',
-    updatedAt: Date.now(),
-  },
-  {
-    id: 2,
-    type: 'chat',
-    userContent: 'What is the weather like today?',
-    contextId: null,
-    createdAt: Date.now(),
-    model: 'gpt-3',
-    assistantContent: 'The weather is sunny with a slight chance of rain.',
-    updatedAt: Date.now(),
-  },
-  {
-    id: 3,
-    type: 'nav',
-    userContent: 'https://example.com',
-    contextId: null,
-    createdAt: Date.now(),
-    title: 'Example Page',
-    description: 'This is an example page.',
-    favIconUrl: null,
-    imageAssetId: null,
-    updatedAt: Date.now(),
-  },
-  {
-    id: 4,
-    type: 'nav',
-    userContent: 'https://another-example.com',
-    contextId: null,
-    createdAt: Date.now(),
-    title: 'Another Example Page',
-    description: 'This is another example page.',
-    favIconUrl: null,
-    imageAssetId: null,
-    updatedAt: Date.now(),
-  },
-  {
-    id: 5,
-    type: 'chat',
-    userContent: 'Tell me a joke.',
-    contextId: null,
-    createdAt: Date.now(),
-    model: 'gpt-3',
-    assistantContent: 'Why did the scarecrow win an award? Because he was outstanding in his field!',
-    updatedAt: Date.now(),
-  }
-];
+type InteractionState = {
+  items: BaseInteraction[]
+  hasMore: boolean
+}
 
-const mockChatInteractions: ChatInteraction[] = [
-  {
-    id: 1,
-    type: 'chat',
-    userContent: 'Hello, how can I help you today?',
-    contextId: null,
-    createdAt: Date.now(),
-    model: 'gpt-3',
-    assistantContent: 'I am here to assist you with your inquiries.',
-    updatedAt: Date.now(),
-  },
-  {
-    id: 2,
-    type: 'chat',
-    userContent: 'What is the weather like today?',
-    contextId: null,
-    createdAt: Date.now(),
-    model: 'gpt-3',
-    assistantContent: 'The weather is sunny with a slight chance of rain.',
-    updatedAt: Date.now(),
-  },
-  {
-    id: 5,
-    type: 'chat',
-    userContent: 'Tell me a joke.',
-    contextId: null,
-    createdAt: Date.now(),
-    model: 'gpt-3',
-    assistantContent: 'Why did the scarecrow win an award? Because he was outstanding in his field!',
-    updatedAt: Date.now(),
-  }
-];
+type MoreLoadedAction = {
+  type: 'moreLoaded'
+  interactions: BaseInteraction[]
+  hasMore: boolean
+}
 
-const useMockData = false; // Set this to false to use real data
+type RefreshedAction = {
+  type: 'refreshed'
+  interactions: BaseInteraction[]
+  hasMore: boolean
+}
+
+const BATCH_SIZE = 20
+
+export const useTraceBack = (
+  api: ProfileInteractionV2Api,
+  context: BaseInteraction
+): ListResult<BaseInteraction> => {
+  const [state, dispatch] = useReducer(
+    (current: InteractionState, action: MoreLoadedAction | RefreshedAction) => {
+      switch (action.type) {
+        case "moreLoaded":
+          return {
+            items: [...current.items, ...action.interactions],
+            hasMore: action.hasMore,
+          };
+        case "refreshed":
+          return { items: action.interactions, hasMore: action.hasMore };
+      }
+    },
+    { items: [], hasMore: true }
+  );
+
+  const stream = useMemo(() => traceBack(api)(context), [api, context]);
+  const refresh = useCallback(async () => {
+    const reader = stream.getReader();
+    const interactions: BaseInteraction[] = [];
+    for (let i = 0; i < BATCH_SIZE; i++) {
+      const interaction = await reader.read();
+      if (interaction.done) {
+        break;
+      }
+      interactions.push(interaction.value);
+    }
+    dispatch({
+      type: "refreshed",
+      interactions,
+      hasMore: interactions.length === BATCH_SIZE,
+    });
+  }, [api, stream]);
+
+  const loadMore = useCallback(async () => {
+    const reader = stream.getReader();
+    const interactions: BaseInteraction[] = [];
+    for (let i = 0; i < BATCH_SIZE; i++) {
+      const interaction = await reader.read();
+      if (interaction.done) {
+        break;
+      }
+      interactions.push(interaction.value);
+    }
+    dispatch({
+      type: "moreLoaded",
+      interactions,
+      hasMore: interactions.length === BATCH_SIZE,
+    });
+  }, [stream]);
+
+  useEffect(() => {
+    refresh();
+  }, [stream]);
+
+  return {
+    ...state,
+    loadMore,
+    refresh,
+  };
+};
 
 const useRecentInteractions = (contextId?: number): ListResult<Interaction> => {
-  if (useMockData) {
-    return {
-      items: mockInteractions,
-      hasMore: false,
-      loadMore: () => {},
-      refresh: () => {}
-    };
-  }
-
   type RecentInteractionState = {
     items: Interaction[]
     hasMore: boolean
@@ -155,15 +141,6 @@ const useRecentInteractions = (contextId?: number): ListResult<Interaction> => {
 };
 
 function useRecentChatInteractions(contextId?: number): ListResult<ChatInteraction> {
-  if (useMockData) {
-    return {
-      items: mockChatInteractions,
-      hasMore: false,
-      loadMore: () => {},
-      refresh: () => {}
-    };
-  }
-
   type RecentChatInteractionState = {
     items: ChatInteraction[]
     hasMore: boolean
