@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { useEffect, useReducer, useCallback, useMemo, useState, useRef } from "react";
+import { useEffect, useReducer, useCallback, useMemo, useState, useRef, ActionDispatch, Reducer } from "react";
 import { ChatState, ChatInteraction, BaseInteraction, NavState, Interaction } from "@/shared/types/interactionsV2";
 import { makeEventHub } from "@/shared/utils/event";
 import { recentChats, traceBack } from "./interactionStreams";
@@ -45,57 +45,42 @@ type CreatedAction = {
 
 const BATCH_SIZE = 20
 
-export const useTraceBack = (
-  context: BaseInteraction
-): ListResult<BaseInteraction> => {
-  const api = useInteractionApi()
-  const [state, dispatch] = useReducer(
-    (current: InteractionState, action: MoreLoadedAction | RefreshedAction) => {
-      switch (action.type) {
-        case "moreLoaded":
-          return {
-            items: [...current.items, ...action.interactions],
-            hasMore: action.hasMore,
-          };
-        case "refreshed":
-          return { items: action.interactions, hasMore: action.hasMore };
-      }
-    },
-    { items: [], hasMore: true }
-  );
+const readStreams = async (stream: ReadableStream<BaseInteraction>, batchSize: number): Promise<BaseInteraction[]> => {
+  const reader = stream.getReader()
+  const interactions: BaseInteraction[] = []
+  for (let i = 0; i < batchSize; i++) {
+    const interaction = await reader.read()
+    if (interaction.done) {
+      break
+    }
+    interactions.push(interaction.value)
+  }
+  reader.cancel()
+  return interactions
+}
 
-  const stream = useMemo(() => traceBack(api)(context), [api, context]);
+const useStreamActions = (
+  stream: ReadableStream<BaseInteraction>,
+  batchSize: number,
+  dispatch: ActionDispatch<[action: MoreLoadedAction | RefreshedAction]>
+): { loadMore: () => void; refresh: () => void } => {
   const refresh = useCallback(async () => {
     if (stream.locked) {
-      return
+      return;
     }
-    const reader = stream.getReader();
-    const interactions: BaseInteraction[] = [];
-    for (let i = 0; i < BATCH_SIZE; i++) {
-      const interaction = await reader.read();
-      if (interaction.done) {
-        break;
-      }
-      interactions.push(interaction.value);
-    }
-    reader.releaseLock()
+    const interactions = await readStreams(stream, batchSize);
     dispatch({
       type: "refreshed",
       interactions,
       hasMore: interactions.length === BATCH_SIZE,
     });
-  }, [api, stream]);
+  }, [stream]);
 
   const loadMore = useCallback(async () => {
-    const reader = stream.getReader();
-    const interactions: BaseInteraction[] = [];
-    for (let i = 0; i < BATCH_SIZE; i++) {
-      const interaction = await reader.read();
-      if (interaction.done) {
-        break;
-      }
-      interactions.push(interaction.value);
+    if (stream.locked) {
+      return;
     }
+    const interactions = await readStreams(stream, batchSize);
     dispatch({
       type: "moreLoaded",
       interactions,
@@ -103,9 +88,45 @@ export const useTraceBack = (
     });
   }, [stream]);
 
-  useEffect(() => {
-    refresh();
-  }, [stream]);
+  useEffect(() => { refresh() }, [stream])
+
+  return { loadMore, refresh };
+};
+
+const useInteractionListReducer = <A extends { type: string }>(
+  reducer: Reducer<InteractionState, A> = (current) => current
+) => {
+  return useReducer(
+    (
+      current: InteractionState,
+      action: MoreLoadedAction | RefreshedAction | A
+    ) => {
+      switch (action.type) {
+        case "moreLoaded":
+          return {
+            items: [...current.items, ...(action as MoreLoadedAction).interactions],
+            hasMore: (action as MoreLoadedAction).hasMore,
+          };
+        case "refreshed":
+          return {
+            items: (action as RefreshedAction).interactions,
+            hasMore: (action as RefreshedAction).hasMore,
+          };
+        default:
+          return reducer(current, action as A);
+      }
+    },
+    { items: [], hasMore: true }
+  );
+};
+
+export const useTraceBack = (
+  context: BaseInteraction
+): ListResult<BaseInteraction> => {
+  const api = useInteractionApi()
+  const [state, dispatch] = useInteractionListReducer()
+  const stream = useMemo(() => traceBack(api)(context), [api, context])
+  const { loadMore, refresh } = useStreamActions(stream, BATCH_SIZE, dispatch)
 
   return {
     ...state,
@@ -123,63 +144,18 @@ const eventPath = (profileId: string, contextId?: number | null) => {
 
 export const useRecentChats = (contextId?: number): ListResult<BaseInteraction> => {
   const api = useInteractionApi()
-  const [state, dispatch] = useReducer(
-    (
-      current: InteractionState,
-      action: MoreLoadedAction | RefreshedAction | CreatedAction
-    ) => {
-      switch (action.type) {
-        case "moreLoaded":
-          return {
-            items: [...current.items, ...action.interactions],
-            hasMore: action.hasMore,
-          };
-        case "refreshed":
-          return { items: action.interactions, hasMore: action.hasMore };
-        case "created":
-          return {
-            items: [...current.items, action.interaction],
-            hasMore: current.hasMore,
-          };
+  const [state, dispatch] = useInteractionListReducer<CreatedAction>((current, action) => {
+    if (action.type === "created") {
+      return {
+        items: [...current.items, action.interaction],
+        hasMore: current.hasMore,
       }
-    },
-    { items: [], hasMore: true }
-  );
+    }
+    return current
+  });
 
   const stream = useMemo(() => recentChats({ getChats: api.getChats })(contextId), [api, contextId]);
-  const refresh = useCallback(async () => {
-    if (stream.locked) {
-      return
-    }
-    const reader = stream.getReader();
-    const interactions: BaseInteraction[] = [];
-    for (let i = 0; i < BATCH_SIZE; i++) {
-      const interaction = await reader.read();
-      if (interaction.done) {
-        break;
-      }
-      interactions.push(interaction.value);
-    }
-    reader.releaseLock()
-    dispatch({ type: 'refreshed', interactions, hasMore: interactions.length > 0 })
-  }, [stream]);
-
-  const loadMore = useCallback(async () => {
-    const reader = stream.getReader();
-    const interactions: BaseInteraction[] = [];
-    for (let i = 0; i < BATCH_SIZE; i++) {
-      const interaction = await reader.read();
-      if (interaction.done) {
-        break;
-      }
-      interactions.push(interaction.value);
-    }
-    dispatch({ type: 'moreLoaded', interactions, hasMore: interactions.length > 0 })
-  }, [stream]);
-
-  useEffect(() => {
-    refresh();
-  }, [stream]); 
+  const { loadMore, refresh } = useStreamActions(stream, BATCH_SIZE, dispatch)
 
   useEffect(() => {
     const unwatch = interactionCreatedEventHub.watch(
