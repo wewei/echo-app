@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { TabItem } from '../components/ContentPanel/ContentPanelRp';
-import { Interaction } from '@/shared/types/interactionsV2';
 
 export type TypeString = "Response" | "Link";
 

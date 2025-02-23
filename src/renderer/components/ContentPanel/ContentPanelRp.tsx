@@ -4,7 +4,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import WebPanel from '../WebPanel/WebPanel';
 import InteractionView from '@/renderer/components/ChatPanel/InteractionView';
-import { useInteraction } from '@/renderer/data/interactionsV2';
+import { useBaseInteraction } from '@/renderer/data/interactionsV2';
+import { Interaction } from '@/shared/types/interactionsV2';
 
 export interface TabItem {
   id: number;
@@ -15,7 +16,7 @@ export interface TabItem {
 interface ContentPanelRpProps {
   tabs: TabItem[];
   hiddenTabs: TabItem[];
-  activeTab: number | null;
+  interaction: Interaction;
   menuAnchor: HTMLElement | null;
   profileId?: string;
   onTabClick: (tab: TabItem) => void;
@@ -31,8 +32,7 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
   tabs,
   hiddenTabs,
   menuAnchor,
-  activeTab,
-  profileId,
+  interaction,
   onTabClick,
   onCloseTab,
   onHiddenTabClick,
@@ -41,12 +41,6 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
   onTitleChange,
   handleLinkClick,
 }) => {
-  const interaction = useInteraction(profileId, activeTab);
-  console.log("ContentPanelRp profileId =", profileId, "activeTab =", activeTab, "interaction =", interaction);
-  useEffect(() => {
-    console.log("ContentPanelRp interaction changed =", interaction);
-  }, [interaction])
-
   const handleClick = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     const link = target.closest('a');
@@ -95,10 +89,10 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
                   borderRight: '1px solid rgba(0,0,0,0.12)',
-                  backgroundColor: tab.id === activeTab ? '#3c3c3c' : '#2d2d2d', // 使用深色背景
+                  backgroundColor: tab.id === interaction.id ? '#3c3c3c' : '#2d2d2d', // 使用深色背景
                   color: '#ffffff', // 浅色文字
                   boxShadow: 'none', // 移除阴影效果
-                  borderBottom: tab.id === activeTab ? '2px solid #f0f0f0' : '1px solid #444', // 选中状态使用更亮的底部边框
+                  borderBottom: tab.id === interaction.id ? '2px solid #f0f0f0' : '1px solid #444', // 选中状态使用更亮的底部边框
                   borderRadius: '4px 4px 0 0',
                   padding: '8px 16px', // 增加内边距
                   '&:hover': {
@@ -112,7 +106,7 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
                     left: 0,
                     right: 0,
                     height: '2px',
-                    background: tab.id === activeTab ? 'primary.main' : 'transparent',
+                    background: tab.id === interaction.id ? 'primary.main' : 'transparent',
                     borderRadius: '4px 4px 0 0'
                   },
                   marginTop: '2px',

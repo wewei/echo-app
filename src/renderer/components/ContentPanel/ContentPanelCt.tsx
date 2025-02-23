@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { ContentPanelRp } from './ContentPanelRp';
-import useContentSession from '../../data/contentSession';
-import { getInteraction } from '@/renderer/data/interactionsV2';
+import useContentSession from '@/renderer/data/contentSession';
+import { useInteraction } from '@/renderer/data/interactionsV2';
+import { isEntityReady } from '@/renderer/data/entity';
+import Loading from '../Loading';
 
 export const ContentPanelCt: React.FC = () => {
-  const { profileId } = useParams();
   const [searchParams] = useSearchParams();
 
   const {
@@ -19,7 +20,6 @@ export const ContentPanelCt: React.FC = () => {
 
   useEffect(() => {
     const interactionIdStr = searchParams.get("interactionId");
-console.log("searchParams ContentPanelCt interactionIdStr =", interactionIdStr);
     if (interactionIdStr) {
       const interactionId = parseInt(interactionIdStr);
       setContentSession(prevState => ({
@@ -52,12 +52,13 @@ console.log("searchParams ContentPanelCt interactionIdStr =", interactionIdStr);
     setMenuAnchor(null);
   };
 
-  return (
+  const interaction = useInteraction(contentSession.activeTab);
+
+  return isEntityReady(interaction) ? (
     <ContentPanelRp
-      profileId={profileId}
       tabs={contentSession.tabs}
       hiddenTabs={contentSession.hiddenTabs}
-      activeTab={contentSession.activeTab}
+      interaction={interaction}
       onTabClick={handleTabClick}
       onCloseTab={handleTabClose}
       onHiddenTabClick={handleHiddenTabClick}
@@ -67,5 +68,5 @@ console.log("searchParams ContentPanelCt interactionIdStr =", interactionIdStr);
       onMenuClose={handleMenuClose}
       handleLinkClick={handleLinkClick}
     />
-  );
+  ) : <Loading />;
 };

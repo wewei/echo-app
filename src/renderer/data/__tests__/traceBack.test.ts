@@ -1,4 +1,4 @@
-import { traceBack } from '../traceBack';
+import { traceBack } from '../interactionStreams';
 import { buildMockNodes, mockInteractionApi } from '@/shared/mock/mockInteractionAPI'
 import { BaseInteraction } from '@/shared/types/interactionsV2';
 import { streamToAsyncIterator } from '@/shared/utils/stream'
@@ -45,16 +45,6 @@ describe('traceBack', () => {
       },
     ])
   );
-
-  it('should be a function', () => {
-    expect(typeof traceBack).toBe('function');
-  });
-
-  it('should return a ReadableStream', async () => {
-    const interaction = await api.getInteraction(1)
-    const stream = traceBack(api)(interaction)
-    expect(stream).toBeInstanceOf(ReadableStream)
-  })
 
   it('should get the correct trace back from a chat interaction, the initial interaction should be excluded', async () => {
     const interaction = await api.getInteraction(4)

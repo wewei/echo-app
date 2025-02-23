@@ -1,6 +1,6 @@
 import React from 'react';
 import InteractionListRp from './InteractionListRp';
-import { useRecentChatInteractions, useRecentInteractions } from '../../../data/interactionsV2';
+import { useRecentChats } from '@/renderer/data/interactionsV2';
 
 interface InteractionListCtProps {
   contextId?: number;
@@ -8,14 +8,13 @@ interface InteractionListCtProps {
 }
 
 export default function InteractionListCt({ contextId, onLinkClicked }: InteractionListCtProps) {
-  const { items: interactions, hasMore, loadMore } = useRecentChatInteractions(contextId);
-  console.log("InteractionListCt interactions =", interactions, ", hasMore =", hasMore);
+  const recentChats = useRecentChats(contextId);
 
   return (
     <InteractionListRp
-      interactions={interactions}
-      hasMore={hasMore}
-      loadMore={loadMore}
+      interactions={recentChats.items}
+      hasMore={recentChats.hasMore}
+      loadMore={recentChats.loadMore}
       onLinkClicked={onLinkClicked}
     />
   );

@@ -1,6 +1,5 @@
 import Sqlite, { Database } from 'better-sqlite3'
 import {
-  BaseInteraction,
   ChatInteraction,
   NavInteraction,
   Interaction,

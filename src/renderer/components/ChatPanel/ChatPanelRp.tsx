@@ -1,14 +1,11 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Box, styled } from '@mui/material';
-import { Query, Response } from '@/shared/types/interactions';
 import InteractionList from './InteractionList';
 import MessageInput from './MessageInput';
 
 interface Props {
   onLinkClicked?: (contextId: number, url: string) => void;
   onSendMessage: (message: string) => void
-  loadMore: (() => void) | null
-  hasMore: boolean
   disabled: boolean
 }
 
@@ -33,8 +30,6 @@ const InputContainer = styled(Box)({
 export default function ChatPanelRp({
   onLinkClicked,
   onSendMessage,
-  loadMore,
-  hasMore,
   disabled
 }: Props) {
 

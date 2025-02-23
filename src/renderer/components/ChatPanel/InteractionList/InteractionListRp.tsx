@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Box, List, ListItem } from '@mui/material';
-import { ChatInteraction } from '@/shared/types/interactionsV2';
+import { BaseInteraction } from '@/shared/types/interactionsV2';
 import InteractionView from '../InteractionView/';
 
 interface InteractionListRpProps {
-  interactions: ChatInteraction[];
+  interactions: BaseInteraction[];
   hasMore: boolean;
   loadMore: (() => void) | null;
   onLinkClicked?: (contextId: number, url: string) => void;

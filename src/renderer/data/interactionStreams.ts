@@ -1,5 +1,5 @@
-import type { QueryChatsParams, ChatInteraction, BaseInteraction, ChatState } from "@/shared/types/interactionsV2"
-
+import type { BaseInteraction } from "@/shared/types/interactionsV2"
+import type { ProfileInteractionV2Api } from "@/preload/interactionsV2"
 const DEFAULT_BATCH_LIMIT = 20
 
 /**
@@ -16,10 +16,7 @@ export const traceBack =
     getChats,
     getInteraction,
     batchLimit = DEFAULT_BATCH_LIMIT,
-  }: {
-    getChats: (params: QueryChatsParams) => Promise<ChatInteraction[]>
-    getChatState: (id: number) => Promise<ChatState | null>
-    getInteraction: (id: number) => Promise<BaseInteraction | null>
+  }: Pick<ProfileInteractionV2Api, 'getChats' | 'getInteraction'> & {
     batchLimit?: number
   }) =>
   (
@@ -68,3 +65,33 @@ export const traceBack =
           : pullContext(controller),
     });
   }
+
+export const recentChats =
+  ({
+    getChats,
+    batchLimit = DEFAULT_BATCH_LIMIT,
+  }: Pick<ProfileInteractionV2Api, 'getChats'> & {
+    batchLimit?: number
+  }) =>
+  (contextId?: number | null, timestamp: number = Date.now()): ReadableStream<BaseInteraction> => {
+
+    return new ReadableStream({
+      pull: async (controller) => {
+        const interactions = await getChats({
+          contextId,
+          created: { before: timestamp },
+          order: "desc",
+          limit: batchLimit,
+        });
+        if (interactions.length > 0) {
+          timestamp = interactions[interactions.length - 1].createdAt;
+          for (const interaction of interactions) {
+            controller.enqueue(interaction);
+          }
+        }
+        if (interactions.length < batchLimit) {
+          controller.close()
+        }
+      }
+    });
+  };

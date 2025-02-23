@@ -47,21 +47,6 @@ export type Rest<T extends unknown[]> = T extends [infer _, ...infer U] ? U : ne
 
 export type ProfileInteractionV2Api = {
   [K in keyof InteractionV2Api]: (...args: Rest<Parameters<InteractionV2Api[K]>>) => ReturnType<InteractionV2Api[K]>
-}
-
-export const withProfileId = (profileId: string) => (api: InteractionV2Api): ProfileInteractionV2Api => {
-  return {
-    createChat: (chat) => api.createChat(profileId, chat),
-    createNav: (nav) => api.createNav(profileId, nav),
-    getInteraction: (id) => api.getInteraction(profileId, id),
-    getChatState: (id) => api.getChatState(profileId, id),
-    getNavState: (id) => api.getNavState(profileId, id),
-    getChats: (params) => api.getChats(profileId, params),
-    getChatIds: (params) => api.getChatIds(profileId, params),
-    getNavs: (params) => api.getNavs(profileId, params),
-    getNavsByUrl: (url) => api.getNavsByUrl(profileId, url),
-    getNavIdsByUrl: (url: string) => api.getNavIdsByUrl(profileId, url),
-    appendAssistantContent: (id, content, timestamp) => api.appendAssistantContent(profileId, id, content, timestamp),
-    updateNavState: (id, state) => api.updateNavState(profileId, id, state),
-  }
+} & {
+  profileId: () => string
 }
