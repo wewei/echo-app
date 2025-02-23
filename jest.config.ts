@@ -12,6 +12,7 @@ const config: Config = {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov'],
+  coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/build/', '/src/shared/mock/'],
   
   // 添加模块名映射配置
   moduleNameMapper: {
