@@ -52,7 +52,8 @@ export const ContentPanelCt: React.FC = () => {
     setMenuAnchor(null);
   };
 
-  const interaction = useInteraction(contentSession.activeTab);
+  // TODO, contentSession.activeTab 可能为 null, 此时不应 render ContentPanel
+  const interaction = useInteraction(contentSession.activeTab)
 
   return isEntityReady(interaction) ? (
     <ContentPanelRp
