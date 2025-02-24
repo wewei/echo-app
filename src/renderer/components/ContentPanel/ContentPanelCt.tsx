@@ -51,15 +51,13 @@ export const ContentPanelCt: React.FC = () => {
   const handleMenuClose = () => {
     setMenuAnchor(null);
   };
+  const interactionId = contentSession.activeTab;
 
-  // TODO, contentSession.activeTab 可能为 null, 此时不应 render ContentPanel
-  const interaction = useInteraction(contentSession.activeTab)
-
-  return isEntityReady(interaction) ? (
+  return Number.isInteger(interactionId) ? (
     <ContentPanelRp
       tabs={contentSession.tabs}
       hiddenTabs={contentSession.hiddenTabs}
-      interaction={interaction}
+      interactionId={interactionId}
       onTabClick={handleTabClick}
       onCloseTab={handleTabClose}
       onHiddenTabClick={handleHiddenTabClick}
@@ -69,5 +67,5 @@ export const ContentPanelCt: React.FC = () => {
       onMenuClose={handleMenuClose}
       handleLinkClick={handleLinkClick}
     />
-  ) : <Loading />;
+  ) : null;
 };

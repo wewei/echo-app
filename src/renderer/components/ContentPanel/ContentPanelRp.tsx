@@ -4,8 +4,9 @@ import CloseIcon from '@mui/icons-material/Close';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import WebPanel from '../WebPanel/WebPanel';
 import InteractionView from '@/renderer/components/ChatPanel/InteractionView';
-import { useBaseInteraction } from '@/renderer/data/interactionsV2';
-import { Interaction } from '@/shared/types/interactionsV2';
+import { useInteraction } from '@/renderer/data/interactionsV2';
+import Loading from '../Loading';
+import { isEntityReady } from '@/renderer/data/entity';
 
 export interface TabItem {
   id: number;
@@ -16,7 +17,7 @@ export interface TabItem {
 interface ContentPanelRpProps {
   tabs: TabItem[];
   hiddenTabs: TabItem[];
-  interaction: Interaction;
+  interactionId: number;
   menuAnchor: HTMLElement | null;
   profileId?: string;
   onTabClick: (tab: TabItem) => void;
@@ -32,7 +33,7 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
   tabs,
   hiddenTabs,
   menuAnchor,
-  interaction,
+  interactionId,
   onTabClick,
   onCloseTab,
   onHiddenTabClick,
@@ -51,9 +52,10 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
       handleLinkClick?.(link.href);
     }
   }, [handleLinkClick]);
-  
 
-  return (
+  const interaction = useInteraction(interactionId);
+
+  return isEntityReady(interaction) ? (
     <Box sx={{
       width: '100%', 
       height: '100%', 
@@ -184,5 +186,5 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
         )}
       </Box>
     </Box>
-  );
+  ) : <Loading />;
 };
