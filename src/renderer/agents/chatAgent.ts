@@ -1,18 +1,18 @@
 import { OpenAI } from "openai";
 import { Agent } from "./agent";
 import { streamToAsyncIterator } from "@/shared/utils/stream";
-import { ChatInteraction } from "@/shared/types/interactionsV2";
+import { BaseInteraction, ChatInteraction } from "@/shared/types/interactionsV2";
 
 export type ChatAgentInput = {
   profileId: string
   model: string
-  chatInteraction: ChatInteraction
+  chatInteraction: BaseInteraction
 }
 
-const prepareMessages = async (profileId: string, { userContent, contextId, id, assistantContent }: ChatInteraction): Promise<OpenAI.ChatCompletionMessageParam[]> => {
+const prepareMessages = async (profileId: string, { userContent, contextId, id, createdAt }: BaseInteraction): Promise<OpenAI.ChatCompletionMessageParam[]> => {
   const recentInteractions = await window.electron.interactionsV2.getChats(profileId, {
     created: {
-      before: Date.now(),
+      before: createdAt,
     },
     contextId,
     limit: 30,
@@ -24,7 +24,7 @@ const prepareMessages = async (profileId: string, { userContent, contextId, id, 
       content: userContent,
       timestamp: createdAt,
     })),
-    { role: "user", content: assistantContent, timestamp: Date.now() },
+    { role: "user", content: userContent, timestamp: createdAt },
   ]
     .sort((a, b) => a.timestamp - b.timestamp)
     .map(({ role, content }) => ({ role, content }));
