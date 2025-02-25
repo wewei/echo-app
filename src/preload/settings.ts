@@ -1,9 +1,9 @@
 import { ipcRenderer } from 'electron'
-import type { ISettingsAPI } from '@/shared/types/ipc'
+import type { SettingsApi } from '@/shared/types/ipc'
 
 
 // Settings API
-export const settingsAPI: ISettingsAPI = {
+export const settingsAPI: SettingsApi = {
   read: (profileId, scope) => 
     ipcRenderer.invoke('settings:read', profileId, scope),
   write: (profileId, scope, settings) => 

@@ -1,5 +1,5 @@
 import type { BaseInteraction } from "@/shared/types/interactions"
-import type { ProfileInteractionApi } from "@/preload/interactions"
+import type { ProfileInteractionApi } from "@/shared/types/ipc"
 const DEFAULT_BATCH_LIMIT = 20
 
 /**

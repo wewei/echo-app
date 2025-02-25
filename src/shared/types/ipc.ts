@@ -13,7 +13,7 @@ import {
   QueryNavsParams,
 } from "./interactions";
 
-export interface IProfileAPI {
+export interface ProfileApi {
   create: (username: string, avatar: string) => Promise<Profile>
   delete: (profileId: string) => Promise<void>
   update: (profileId: string, updates: Partial<Profile>) => Promise<Profile | null>
@@ -21,14 +21,14 @@ export interface IProfileAPI {
   get: (profileId: string) => Promise<Profile | null>
 }
 
-export interface IAssetAPI {
+export interface AssetApi {
   save: (profileId: string, content: ArrayBuffer, mimeType: string) => Promise<AssetMetadata>
   read: (profileId: string, assetId: string) => Promise<{ content: ArrayBuffer; metadata: AssetMetadata } | null>
   delete: (profileId: string, assetId: string) => Promise<void>
   getUrl: (profileId: string, assetId: string) => string
 }
 
-export interface ISettingsAPI {
+export interface SettingsApi {
   read: (profileId: string, scope: string) => Promise<Settings>
   write: (profileId: string, scope: string, settings: Settings) => Promise<void>
   update: (profileId: string, scope: string, updates: Settings) => Promise<Settings>
@@ -37,7 +37,7 @@ export interface ISettingsAPI {
   getScopes: (profileId: string) => Promise<string[]>
 }
 
-export interface IChatAPI {
+export interface ChatApi {
   send: (
     profileId: string,
     params: OpenAI.Chat.Completions.ChatCompletionCreateParams
@@ -67,17 +67,17 @@ export interface InteractionApi {
   updateNavState(profileId: string, id: number, state: Partial<NavState>): Promise<boolean>
 }
 
-export interface IElectronAPI {
-  profile: IProfileAPI
-  asset: IAssetAPI
-  settings: ISettingsAPI
-  chat: IChatAPI
+export interface ElectronApi {
+  profile: ProfileApi
+  asset: AssetApi
+  settings: SettingsApi
+  chat: ChatApi
   interactions: InteractionApi
 }
 
 declare global {
   interface Window {
-    electron: IElectronAPI
+    electron: ElectronApi
   }
 } 
 

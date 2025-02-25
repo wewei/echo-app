@@ -1,9 +1,9 @@
 import { ipcRenderer } from 'electron'
 import { OpenAI } from 'openai'
 import { v4 as uuid } from 'uuid'
-import { IChatAPI } from '@/shared/types/ipc'
+import { ChatApi } from '@/shared/types/ipc'
 
-export const chatAPI: IChatAPI = {
+export const chatAPI: ChatApi = {
   send: ( profileId, params) => ipcRenderer.invoke('chat:send', profileId, params),
 
   stream: (profileId, params, onChunk, onDone, onError) => {
