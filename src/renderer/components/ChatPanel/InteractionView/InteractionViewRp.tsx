@@ -5,13 +5,14 @@ import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import 'katex/dist/katex.min.css'
-import { ChatInteraction } from '@/shared/types/interactions';
+import { ChatInteraction, BaseInteraction } from '@/shared/types/interactions';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { useSearchParams } from 'react-router-dom';
 
 interface InteractionViewRpProps {
   interaction: ChatInteraction;
-  onLinkClicked?: (contextId: number, url: string) => void;
+  onInteractionClick?: (interaction: BaseInteraction, url: string | null) => void;
+  onInteractionExpand?: (interaction: BaseInteraction, url: string | null) => void;
 }
 
 const convertLatexDelimiters = (content: string): string => {
@@ -22,19 +23,20 @@ const convertLatexDelimiters = (content: string): string => {
     .replace(/\\\[(.*?)\\\]/g, '$$$1$$')
 }
 
-export default function InteractionViewRp({ interaction, onLinkClicked }: InteractionViewRpProps) {
+export default function InteractionViewRp({ interaction, onInteractionClick, onInteractionExpand }: InteractionViewRpProps) {
   const processedContent = convertLatexDelimiters(interaction.userContent);
-  const [, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const handleClick: React.MouseEventHandler = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
     const target = e.target as HTMLElement;
     const link = target.closest('a');
     if (link) {
-      e.preventDefault();
-      console.log("handleClick link = ", link.href, ", interaction =", interaction);
-      onLinkClicked?.(interaction.id, link.href);
+      onInteractionClick?.(interaction, link.href);
+    } else {
+      onInteractionClick?.(interaction, null);
     }
-  }, [onLinkClicked]);
+  }, [onInteractionClick]);
 
   return (
     <Box
@@ -58,9 +60,7 @@ export default function InteractionViewRp({ interaction, onLinkClicked }: Intera
       >
         <IconButton
           aria-label="expand"
-          onClick={() =>
-            setSearchParams({ interactionId: String(interaction.id) })
-          }
+          onClick={() => onInteractionExpand?.(interaction, null)}
         >
           <OpenInFullIcon />
         </IconButton>

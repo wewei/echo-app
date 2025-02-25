@@ -1,16 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Box, List, ListItem } from '@mui/material';
 import { BaseInteraction } from '@/shared/types/interactions';
+import { Box, List, ListItem, Button } from '@mui/material';
 import InteractionView from '../InteractionView/';
 
 interface InteractionListRpProps {
   interactions: BaseInteraction[];
   hasMore: boolean;
   loadMore: (() => void) | null;
-  onLinkClicked?: (contextId: number, url: string) => void;
+  onInteractionClick?: (interaction: BaseInteraction, url: string | null) => void;
+  onInteractionExpand?: (interaction: BaseInteraction, url: string | null) => void;
 }
 
-export default function InteractionListRp({ interactions, hasMore, loadMore, onLinkClicked }: InteractionListRpProps) {
+export default function InteractionListRp({ interactions, hasMore, loadMore, onInteractionClick, onInteractionExpand }: InteractionListRpProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const [stayAtBottom, setStayAtBottom] = useState(true);
 
@@ -67,10 +68,13 @@ export default function InteractionListRp({ interactions, hasMore, loadMore, onL
       <List>
         {interactions.map((interaction) => (
           <ListItem key={interaction.id}>
-            <InteractionView interaction={interaction} onLinkClicked={onLinkClicked} />
+            <InteractionView interaction={interaction} onInteractionClick={onInteractionClick} onInteractionExpand={onInteractionExpand} />
           </ListItem>
         )).reverse()}
       </List>
+      {hasMore && loadMore && (
+        <Button onClick={loadMore}>Load more</Button>
+      )}
     </Box>
   );
 }

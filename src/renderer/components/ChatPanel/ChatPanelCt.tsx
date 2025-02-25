@@ -5,14 +5,17 @@ import { ChatSettingsSchema, CHAT_SETTINGS } from '@/shared/types/chatSettings'
 import { useSettings } from '@/renderer/data/settings'
 import { chatAgent } from '@/renderer/agents/chatAgent'
 import { createChatInteraction, appendAssistantContent } from '@/renderer/data/interactions';
+import { BaseInteraction } from '@/shared/types/interactions';
 
 interface Props {
-  onLinkClicked?: (contextId: number, url: string) => void
+  onInteractionClick?: (interaction: BaseInteraction, url: string | null) => void;
+  onInteractionExpand?: (interaction: BaseInteraction, url: string | null) => void;
   disabled?: boolean
 }
 
 export default function ChatPanelCt({
-  onLinkClicked,
+  onInteractionClick,
+  onInteractionExpand,
   disabled = false
 }: Props) {
   const profileId = useCurrentProfileId()
@@ -42,8 +45,9 @@ export default function ChatPanelCt({
 
   return (
     <ChatPanelRp
-      onLinkClicked={onLinkClicked}
       onSendMessage={handleSendMessage}
+      onInteractionClick={onInteractionClick}
+      onInteractionExpand={onInteractionExpand}
       disabled={disabled}
     />
   )

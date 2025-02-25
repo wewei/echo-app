@@ -1,21 +1,25 @@
 import React from 'react';
 import InteractionListRp from './InteractionListRp';
 import { useRecentChats } from '@/renderer/data/interactions';
+import { BaseInteraction } from '@/shared/types/interactions';
 
 interface InteractionListCtProps {
   contextId?: number;
-  onLinkClicked?: (contextId: number, url: string) => void;
+  onInteractionClick?: (interaction: BaseInteraction, url: string | null) => void;
+  onInteractionExpand?: (interaction: BaseInteraction, url: string | null) => void;
 }
 
-export default function InteractionListCt({ contextId, onLinkClicked }: InteractionListCtProps) {
+export default function InteractionListCt({ contextId, onInteractionClick, onInteractionExpand }: InteractionListCtProps) {
   const recentChats = useRecentChats(contextId);
 
+  console.log("recentChats = ", recentChats);
   return (
     <InteractionListRp
       interactions={recentChats.items}
       hasMore={recentChats.hasMore}
       loadMore={recentChats.loadMore}
-      onLinkClicked={onLinkClicked}
+      onInteractionClick={onInteractionClick}
+      onInteractionExpand={onInteractionExpand}
     />
   );
 }

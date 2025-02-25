@@ -1,14 +1,14 @@
 import React from "react";
 import { useSearchParams } from "react-router-dom";
-import SplitView from "./SplitView";
 import ContentPanel from "./ContentPanel";
-import ChatPanel from "./ChatPanel";
 import { Drawer, IconButton, Box } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import AppMenu from "./AppMenu";
 import { useCurrentProfileId } from "../data/profile";
 import { InteractionApiProvider } from "../contexts/interactonApi";
 import { withProfileId } from "@/renderer/data/interactions";
+import useTabState, { TabItem, TabState } from "../data/tabState";
+import CloseIcon from "@mui/icons-material/Close";
 
 export default function MainPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -16,35 +16,32 @@ export default function MainPage() {
   const profileId = useCurrentProfileId();
   const interactionApi = withProfileId(profileId)(window.electron.interactions)
 
-  const onLinkClicked = async (contextId: number, url: string) => {
-    console.log("onLinkClicked contextId =", contextId, ", url =", url);
-    
-    try {
-      const navs = await window.electron.interactions.getNavs(profileId, { userContent: url });
-      if (navs.length > 0) {
-        // 如果存在，打开第一个 nav
-        console.log("searchParams onLinkClicked Nav exists, opening nav:", navs[0]);
-        setSearchParams({ interactionId: navs[0].id.toString() });
-      } else {
-        // 如果不存在，创建一个新的 nav
-        const newNav = await window.electron.interactions.createNav(profileId, {
-          type: 'nav',
-          userContent: url,
-          contextId,
-          title: '',
-          description: '',
-          favIconUrl: '',
-          imageAssetId: null,
-          createdAt: Date.now(),
-          updatedAt: Date.now()
-        });
-        console.log("searchParams onLinkClicked Created new nav:", newNav);
-        setSearchParams({ interactionId: newNav.id.toString() });
-      }
-    } catch (error) {
-      console.error("Error handling link click:", error);
-    }
-  }
+  const { 
+    tabState,
+    setTabState,
+    handleTabActiveOrCreate,
+    handleTabClick,
+    handleTabClose,
+    handleHiddenTabClick,
+    handleTitleChange } = useTabState();
+
+  const onTabClick = (tab: TabItem) => {
+    console.log("Tab clicked", tab);
+    // Implement tab click logic here
+    handleTabClick(tab);
+  };
+
+  const onCloseTab = (id: string) => {
+    console.log("Tab closed", id);
+    // Implement tab close logic here
+    handleTabClose(id);
+  };
+
+  const onHiddenTabClick = (tab: TabItem) => {
+    console.log("Hidden tab clicked", tab);
+    // Implement hidden tab click logic here
+    handleHiddenTabClick(tab);
+  };
 
   return (
     <InteractionApiProvider interactionApi={interactionApi}>
@@ -56,12 +53,57 @@ export default function MainPage() {
           left: 0,
           right: 0,
           bottom: 0,
+          display: "flex",
+          flexDirection: "row",
         }}
       >
-        <SplitView
-          leftContent={<ContentPanel />}
-          rightContent={<ChatPanel onLinkClicked={onLinkClicked} />}
-        />
+        <Box
+          sx={{
+            width: "200px",
+            display: "flex",
+            flexDirection: "column",
+            borderRight: "1px solid #ccc",
+            overflowY: "auto",
+          }}
+        >
+          {tabState && (tabState.tabs.map((tab) => (
+            <Box
+              key={tab.id}
+              data-key={tab.id}
+              onClick={() => onTabClick(tab)}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                borderRight: "1px solid rgba(0,0,0,0.12)",
+                backgroundColor: tab.id === tabState.activeTab ? "#000000" : "#fff",
+                padding: "8px 16px",
+              }}
+            >
+              <span style={{ flex: 1 }}>{tab.title}</span>
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCloseTab(tab.id);
+                }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          )))}
+        </Box>
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden"
+          }}
+        >
+          <ContentPanel contextId={tabState.contextId}/>
+        </Box>
         <IconButton
           onClick={() => {
             setSearchParams({ menu: "/" });

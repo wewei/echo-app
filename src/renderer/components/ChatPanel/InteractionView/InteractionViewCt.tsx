@@ -7,25 +7,29 @@ import Loading from '@/renderer/components/Loading';
 import { useChatState } from '@/renderer/data/interactions';
 interface InteractionViewCtProps {
   interaction: BaseInteraction;
+  onInteractionClick?: (interaction: BaseInteraction, url: string | null) => void;
+  onInteractionExpand?: (interaction: BaseInteraction, url: string | null) => void;
   onLinkClicked?: (contextId: number, url: string) => void;
 }
 
-const ChatInteractionView = ({ interaction, onLinkClicked }: {
+const ChatInteractionView = ({ interaction, onInteractionClick, onInteractionExpand }: {
   interaction: BaseInteraction;
-  onLinkClicked?: (contextId: number, url: string) => void;
+  onInteractionClick?: (interaction: BaseInteraction, url: string | null) => void;
+  onInteractionExpand?: (interaction: BaseInteraction, url: string | null) => void;
 }) => {
   const chatState = useChatState(interaction.id)
   return isEntityReady(chatState) ?
     <InteractionViewRp 
       interaction={ { ...interaction, ...chatState, type: 'chat' } } 
-      onLinkClicked={onLinkClicked}
+      onInteractionClick={onInteractionClick}
+      onInteractionExpand={onInteractionExpand}
     />
   : <Loading />
 }
 
-export default function InteractionViewCt({ interaction, onLinkClicked }: InteractionViewCtProps) {
+export default function InteractionViewCt({ interaction, onInteractionClick, onInteractionExpand }: InteractionViewCtProps) {
   if (interaction.type === 'chat') {
-    return <ChatInteractionView interaction={interaction} onLinkClicked={onLinkClicked} />
+    return <ChatInteractionView interaction={interaction} onInteractionClick={onInteractionClick} onInteractionExpand={onInteractionExpand} />
   }
   return null
 }

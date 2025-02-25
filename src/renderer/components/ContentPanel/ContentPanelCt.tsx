@@ -1,71 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React from 'react';
 import { ContentPanelRp } from './ContentPanelRp';
-import useContentSession from '@/renderer/data/contentSession';
-import { useInteraction } from '@/renderer/data/interactions';
-import { isEntityReady } from '@/renderer/data/entity';
-import Loading from '../Loading';
+import { BaseInteraction } from '@/shared/types/interactions';
 
-export const ContentPanelCt: React.FC = () => {
-  const [searchParams] = useSearchParams();
+interface ContentPanelCtProps {
+  contextId: number;
+  onInteractionExpand?: (interaction: BaseInteraction, url: string | null) => void;
+}
 
-  const {
-    contentSession,
-    setContentSession,
-    handleTabClick,
-    handleTabClose,
-    handleHiddenTabClick,
-    handleTitleChange,
-  } = useContentSession();
 
-  useEffect(() => {
-    const interactionIdStr = searchParams.get("interactionId");
-    if (interactionIdStr) {
-      const interactionId = parseInt(interactionIdStr);
-      setContentSession(prevState => ({
-        ...prevState,
-        interactionId
-      }));
-    }
-    
-  }, [searchParams]);
-
-  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
-
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-    setMenuAnchor(event.currentTarget);
-  };
-
-  const handleLinkClick = (responseurl: string) => {
-    // if (isEntityReady(response)) {
-    //   setContentSession(prevState => ({
-    //     ...prevState,
-    //     queryId: response.queryId,
-    //     type: "Link",
-    //     link: responseurl,
-    //     responseId: response.id
-    //   }))
-    // }
-  }
-
-  const handleMenuClose = () => {
-    setMenuAnchor(null);
-  };
-  const interactionId = contentSession.activeTab;
-
-  return Number.isInteger(interactionId) ? (
+export const ContentPanelCt: React.FC<ContentPanelCtProps> = ({
+  contextId,
+  onInteractionExpand
+}) => {
+console.log("ContentPanelCt", contextId);
+  return (
     <ContentPanelRp
-      tabs={contentSession.tabs}
-      hiddenTabs={contentSession.hiddenTabs}
-      interactionId={interactionId}
-      onTabClick={handleTabClick}
-      onCloseTab={handleTabClose}
-      onHiddenTabClick={handleHiddenTabClick}
-      onTitleChange={handleTitleChange}
-      menuAnchor={menuAnchor}
-      onMenuClick={handleMenuClick}
-      onMenuClose={handleMenuClose}
-      handleLinkClick={handleLinkClick}
+      contextId={contextId}
+      onTitleChange={() => {}}
+      onInteractionExpand={onInteractionExpand}
     />
-  ) : null;
+  );
 };

@@ -1,10 +1,12 @@
 import React from 'react';
-import { Box, styled } from '@mui/material';
+import { Box, styled, TextField } from '@mui/material';
 import InteractionList from './InteractionList';
+import { BaseInteraction } from '@/shared/types/interactions';
 import MessageInput from './MessageInput';
 
 interface Props {
-  onLinkClicked?: (contextId: number, url: string) => void;
+  onInteractionClick?: (interaction: BaseInteraction, url: string | null) => void;
+  onInteractionExpand?: (interaction: BaseInteraction, url: string | null) => void;
   onSendMessage: (message: string) => void
   disabled: boolean
 }
@@ -28,8 +30,9 @@ const InputContainer = styled(Box)({
 });
 
 export default function ChatPanelRp({
-  onLinkClicked,
   onSendMessage,
+  onInteractionClick,
+  onInteractionExpand,
   disabled
 }: Props) {
 
@@ -39,7 +42,8 @@ export default function ChatPanelRp({
       <InteractionListContainer>
         <InteractionList
           contextId={undefined} // Pass appropriate contextId if needed
-          onLinkClicked={onLinkClicked}
+          onInteractionClick={onInteractionClick}
+          onInteractionExpand={onInteractionExpand}
         />
       </InteractionListContainer>
       <InputContainer>
