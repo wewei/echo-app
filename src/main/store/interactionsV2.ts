@@ -73,19 +73,9 @@ const initDatabase = (db: Database): void => {
   `)
 }
 
-// <<<<<<< HEAD
 const createInteractionStore = (dbPath: string): InteractionStore => {
   console.log("createInteractionStore dbpath = ", dbPath);
   const db = new Sqlite(dbPath)
-// =======
-// const createInteractionStore = (profileId: string): InteractionStore => {
-//   const dbPath = path.join(getProfileDir(profileId), 'sqlite')
-
-//   if (!fs.existsSync(dbPath)) {
-//     fs.mkdirSync(dbPath, { recursive: true })
-//   }
-//   const db = new Sqlite(path.join(dbPath, 'echo.sqlite'))
-// >>>>>>> a01f959 (Update tab logic with new design)
   initDatabase(db)
 
   const createChat = (chat: EntityData<ChatInteraction>): ChatInteraction => {

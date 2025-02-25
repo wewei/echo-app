@@ -2,8 +2,6 @@ import { OpenAI } from 'openai'
 import type { Profile } from '@/shared/types/profile'
 import type { AssetMetadata } from '@/shared/types/asset'
 import type { Settings } from '@/shared/types/settings'
-import type { Message, MessageQuery } from '@/shared/types/message'
-import { InteractionApi } from './interactions'
 import { InteractionV2Api } from './interactionsV2'
 
 export interface IProfileAPI {
@@ -44,20 +42,11 @@ export interface IChatAPI {
   ) => () => void;
 }
 
-export interface IMessageAPI {
-  add: (profileId: string, message: Message) => Promise<void>
-  get: (profileId: string, uuid: string) => Promise<Message | null>
-  query: (profileId: string, query: MessageQuery) => Promise<Message[]>
-  update: (profileId: string, message: Message) => Promise<void>
-}
-
 export interface IElectronAPI {
   profile: IProfileAPI
   asset: IAssetAPI
   settings: ISettingsAPI
   chat: IChatAPI
-  message: IMessageAPI
-  interactions: InteractionApi
   interactionsV2: InteractionV2Api
 }
 
