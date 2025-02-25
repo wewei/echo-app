@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron'
-import type { ISettingsAPI } from './types'
+import type { ISettingsAPI } from '@/shared/types/ipc'
 
 
 // Settings API

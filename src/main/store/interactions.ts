@@ -74,7 +74,6 @@ const initDatabase = (db: Database): void => {
 }
 
 const createInteractionStore = (dbPath: string): InteractionStore => {
-  console.log("createInteractionStore dbpath = ", dbPath);
   const db = new Sqlite(dbPath)
   initDatabase(db)
 

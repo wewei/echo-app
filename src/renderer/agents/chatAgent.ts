@@ -1,7 +1,7 @@
 import { OpenAI } from "openai";
 import { Agent } from "./agent";
 import { streamToAsyncIterator } from "@/shared/utils/stream";
-import { BaseInteraction, ChatInteraction } from "@/shared/types/interactions";
+import { BaseInteraction } from "@/shared/types/interactions";
 
 export type ChatAgentInput = {
   profileId: string

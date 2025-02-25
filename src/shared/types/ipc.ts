@@ -2,7 +2,16 @@ import { OpenAI } from 'openai'
 import type { Profile } from '@/shared/types/profile'
 import type { AssetMetadata } from '@/shared/types/asset'
 import type { Settings } from '@/shared/types/settings'
-import { InteractionApi } from './interactions'
+import { EntityData } from './entity'
+import {
+  ChatInteraction,
+  ChatState,
+  Interaction,
+  NavInteraction,
+  NavState,
+  QueryChatsParams,
+  QueryNavsParams,
+} from "./interactions";
 
 export interface IProfileAPI {
   create: (username: string, avatar: string) => Promise<Profile>
@@ -32,14 +41,30 @@ export interface IChatAPI {
   send: (
     profileId: string,
     params: OpenAI.Chat.Completions.ChatCompletionCreateParams
-  ) => Promise<OpenAI.Chat.Completions.ChatCompletion>;
+  ) => Promise<OpenAI.Chat.Completions.ChatCompletion>
+
   stream: (
     profileId: string,
     params: OpenAI.Chat.Completions.ChatCompletionCreateParams,
     onChunk: (delta: OpenAI.Chat.Completions.ChatCompletionChunk) => void,
     onDone: () => void,
     onError: (error: Error) => void
-  ) => () => void;
+  ) => () => void
+}
+
+export interface InteractionApi {
+  createChat(profileId: string, chat: EntityData<ChatInteraction>): Promise<ChatInteraction>
+  createNav(profileId: string, nav: EntityData<NavInteraction>): Promise<NavInteraction>
+  getInteraction(profileId: string, id: number): Promise<Interaction | null>
+  getChatState(profileId: string, id: number): Promise<ChatState | null>
+  getNavState(profileId: string, id: number): Promise<NavState | null>
+  getChats(profileId: string, params: QueryChatsParams): Promise<ChatInteraction[]>
+  getChatIds(profileId: string, params: QueryChatsParams): Promise<number[]>
+  getNavs(profileId: string, params: QueryNavsParams): Promise<NavInteraction[]>
+  getNavsByUrl(profileId: string, url: string): Promise<NavInteraction[]>
+  getNavIdsByUrl(profileId: string, url: string): Promise<number[]>
+  appendAssistantContent(profileId: string, id: number, content: string, timestamp: number): Promise<boolean>
+  updateNavState(profileId: string, id: number, state: Partial<NavState>): Promise<boolean>
 }
 
 export interface IElectronAPI {
@@ -55,3 +80,17 @@ declare global {
     electron: IElectronAPI
   }
 } 
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export type Rest<T extends unknown[]> = T extends [infer _, ...infer U]
+  ? U
+  : never;
+
+export type ProfileInteractionApi = {
+  [K in keyof InteractionApi]: (
+    ...args: Rest<Parameters<InteractionApi[K]>>
+  ) => ReturnType<InteractionApi[K]>;
+} & {
+  profileId: () => string;
+};
+

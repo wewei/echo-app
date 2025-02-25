@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react'
-import { ProfileInteractionApi } from '@/preload/interactions'
+import { ProfileInteractionApi } from '@/shared/types/ipc'
 
 export const InteractionApiContext = createContext<ProfileInteractionApi | null>(null)
 

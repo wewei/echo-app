@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron'
-import type { IProfileAPI } from './types'
+import type { IProfileAPI } from '@/shared/types/ipc'
 
 export const profileAPI: IProfileAPI = {
   create: (username, avatar) => 

@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron'
-import type { IAssetAPI } from './types'
+import type { IAssetAPI } from '@/shared/types/ipc'
 
 // Asset API
 export const assetAPI: IAssetAPI = {

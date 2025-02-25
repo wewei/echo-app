@@ -5,7 +5,7 @@ import { makeEventHub } from "@/shared/utils/event";
 import { recentChats, traceBack } from "./interactionStreams";
 import { useInteractionApi } from "../contexts/interactonApi";
 import { ENTITY_PENDING, EntityRendererState, isEntityReady } from "./entity";
-import type { InteractionApi, ProfileInteractionApi } from "@/preload/interactions";
+import type { InteractionApi, ProfileInteractionApi } from "@/shared/types/ipc";
 export type CreateParams<T extends { id: number }> = Omit<T, 'id'>;
 
 type ListResult<T> = {

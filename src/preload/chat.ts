@@ -1,22 +1,12 @@
 import { ipcRenderer } from 'electron'
 import { OpenAI } from 'openai'
 import { v4 as uuid } from 'uuid'
+import { IChatAPI } from '@/shared/types/ipc'
 
-export const chatAPI = {
-  send: (
-    profileId: string,
-    params: OpenAI.Chat.Completions.ChatCompletionCreateParams,
-  ): Promise<OpenAI.Chat.Completions.ChatCompletion> => {
-    return ipcRenderer.invoke('chat:send', profileId, params)
-  },
+export const chatAPI: IChatAPI = {
+  send: ( profileId, params) => ipcRenderer.invoke('chat:send', profileId, params),
 
-  stream: (
-    profileId: string,
-    params: OpenAI.Chat.Completions.ChatCompletionCreateParams,
-    onChunk: (chunk: OpenAI.Chat.Completions.ChatCompletionChunk) => void,
-    onDone: () => void,
-    onError: (error: Error) => void,
-  ): () => void => {
+  stream: (profileId, params, onChunk, onDone, onError) => {
     const streamId = uuid();
     console.log(params)
     const chunkHandler = (_: unknown, id: string, chunk: OpenAI.Chat.Completions.ChatCompletionChunk) => {
