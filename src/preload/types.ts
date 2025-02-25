@@ -2,7 +2,7 @@ import { OpenAI } from 'openai'
 import type { Profile } from '@/shared/types/profile'
 import type { AssetMetadata } from '@/shared/types/asset'
 import type { Settings } from '@/shared/types/settings'
-import { InteractionV2Api } from './interactionsV2'
+import { InteractionApi } from './interactions'
 
 export interface IProfileAPI {
   create: (username: string, avatar: string) => Promise<Profile>
@@ -47,7 +47,7 @@ export interface IElectronAPI {
   asset: IAssetAPI
   settings: ISettingsAPI
   chat: IChatAPI
-  interactionsV2: InteractionV2Api
+  interactions: InteractionApi
 }
 
 declare global {

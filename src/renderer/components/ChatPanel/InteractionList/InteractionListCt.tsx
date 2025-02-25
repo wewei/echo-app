@@ -1,6 +1,6 @@
 import React from 'react';
 import InteractionListRp from './InteractionListRp';
-import { useRecentChats } from '@/renderer/data/interactionsV2';
+import { useRecentChats } from '@/renderer/data/interactions';
 
 interface InteractionListCtProps {
   contextId?: number;

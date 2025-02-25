@@ -1,5 +1,5 @@
-import type { ChatInteraction, NavInteraction, NavState, Interaction } from "@/shared/types/interactionsV2"
-import type { ProfileInteractionV2Api } from "@/preload/interactionsV2"
+import type { ChatInteraction, NavInteraction, NavState, Interaction } from "@/shared/types/interactions"
+import type { ProfileInteractionApi } from "@/preload/interactions"
 import { faker } from '@faker-js/faker'
 
 type InteractionNode =
@@ -20,7 +20,7 @@ const interactionsFromNodes = (nodes: InteractionNode[]): Interaction[] => {
 
 export const mockInteractionApi = (
   interactionNodes: InteractionNode[]
-): ProfileInteractionV2Api & { maxCreatedAt: number; maxUpdatedAt: number } => {
+): ProfileInteractionApi & { maxCreatedAt: number; maxUpdatedAt: number } => {
   const interactions = interactionsFromNodes(interactionNodes);
   const interactionMap = new Map(
     interactions.map((interaction) => [interaction.id, interaction])

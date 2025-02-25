@@ -1,5 +1,5 @@
 import { createInteractionStore } from '../interactions'
-import { ChatInteraction, NavInteraction } from '@/shared/types/interactionsV2'
+import { ChatInteraction, NavInteraction } from '@/shared/types/interactions'
 import { EntityData } from '@/shared/types/entity'
 import path from 'path'
 import fs from 'fs'

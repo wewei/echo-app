@@ -1,9 +1,9 @@
 import { ipcMain } from 'electron'
-import { ChatInteraction, INTERACTION_IPC_CHANNELS, NavInteraction, NavState, QueryChatsParams, QueryNavsParams } from '@/shared/types/interactionsV2'
-import { getInteractionStore } from '@/main/services/interactionManagerV2'
+import { ChatInteraction, INTERACTION_IPC_CHANNELS, NavInteraction, NavState, QueryChatsParams, QueryNavsParams } from '@/shared/types/interactions'
+import { getInteractionStore } from '@/main/services/interactionManager'
 import { EntityData } from '@/shared/types/entity'
 
-export const registerInteractionHandlersV2 = () => {
+export const registerInteractionHandlers = () => {
   ipcMain.handle(
     INTERACTION_IPC_CHANNELS.CREATE_CHAT,
     (_, profileId: string, chat: EntityData<ChatInteraction>) =>

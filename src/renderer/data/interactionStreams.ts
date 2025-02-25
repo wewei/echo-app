@@ -1,5 +1,5 @@
-import type { BaseInteraction } from "@/shared/types/interactionsV2"
-import type { ProfileInteractionV2Api } from "@/preload/interactionsV2"
+import type { BaseInteraction } from "@/shared/types/interactions"
+import type { ProfileInteractionApi } from "@/preload/interactions"
 const DEFAULT_BATCH_LIMIT = 20
 
 /**
@@ -16,7 +16,7 @@ export const traceBack =
     getChats,
     getInteraction,
     batchLimit = DEFAULT_BATCH_LIMIT,
-  }: Pick<ProfileInteractionV2Api, 'getChats' | 'getInteraction'> & {
+  }: Pick<ProfileInteractionApi, 'getChats' | 'getInteraction'> & {
     batchLimit?: number
   }) =>
   (
@@ -70,7 +70,7 @@ export const recentChats =
   ({
     getChats,
     batchLimit = DEFAULT_BATCH_LIMIT,
-  }: Pick<ProfileInteractionV2Api, 'getChats'> & {
+  }: Pick<ProfileInteractionApi, 'getChats'> & {
     batchLimit?: number
   }) =>
   (contextId?: number | null, timestamp: number = Date.now()): ReadableStream<BaseInteraction> => {

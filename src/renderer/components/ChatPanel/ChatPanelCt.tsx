@@ -4,7 +4,7 @@ import { useCurrentProfileId } from '@/renderer/data/profile'
 import { ChatSettingsSchema, CHAT_SETTINGS } from '@/shared/types/chatSettings'
 import { useSettings } from '@/renderer/data/settings'
 import { chatAgent } from '@/renderer/agents/chatAgent'
-import { createChatInteraction, appendAssistantContent } from '@/renderer/data/interactionsV2';
+import { createChatInteraction, appendAssistantContent } from '@/renderer/data/interactions';
 
 interface Props {
   onLinkClicked?: (contextId: number, url: string) => void

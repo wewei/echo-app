@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import 'katex/dist/katex.min.css'
-import { ChatInteraction } from '@/shared/types/interactionsV2';
+import { ChatInteraction } from '@/shared/types/interactions';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { useSearchParams } from 'react-router-dom';
 

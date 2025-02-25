@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Box, List, ListItem } from '@mui/material';
-import { BaseInteraction } from '@/shared/types/interactionsV2';
+import { BaseInteraction } from '@/shared/types/interactions';
 import InteractionView from '../InteractionView/';
 
 interface InteractionListRpProps {

@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { useEffect, useReducer, useCallback, useMemo, useState, useRef, ActionDispatch, Reducer } from "react";
-import { ChatState, ChatInteraction, BaseInteraction, NavState, Interaction } from "@/shared/types/interactionsV2";
+import { ChatState, ChatInteraction, BaseInteraction, NavState, Interaction } from "@/shared/types/interactions";
 import { makeEventHub } from "@/shared/utils/event";
 import { recentChats, traceBack } from "./interactionStreams";
 import { useInteractionApi } from "../contexts/interactonApi";
 import { ENTITY_PENDING, EntityRendererState, isEntityReady } from "./entity";
-import type { InteractionV2Api, ProfileInteractionV2Api } from "@/preload/interactionsV2";
+import type { InteractionApi, ProfileInteractionApi } from "@/preload/interactions";
 export type CreateParams<T extends { id: number }> = Omit<T, 'id'>;
 
 type ListResult<T> = {
@@ -176,14 +176,14 @@ export const useRecentChats = (contextId?: number): ListResult<BaseInteraction> 
 };
 
 export const createChatInteraction = async (profileId: string, params: CreateParams<ChatInteraction>): Promise<ChatInteraction> => {
-  const chat = await window.electron.interactionsV2.createChat(profileId, params);
+  const chat = await window.electron.interactions.createChat(profileId, params);
   
   interactionCreatedEventHub.notify(eventPath(profileId, params.contextId), chat);
   return chat;
 };
 
 export const appendAssistantContent = async (profileId: string, interactionId: number, content: string): Promise<void> => {
-  await window.electron.interactionsV2.appendAssistantContent(profileId, interactionId, content, Date.now());
+  await window.electron.interactions.appendAssistantContent(profileId, interactionId, content, Date.now());
   
   appendContentEventHub.notify([profileId, String(interactionId)], content)
 };
@@ -281,7 +281,7 @@ export const useInteraction = (interactionId: number): EntityRendererState<Inter
   return state
 }
 
-export const withProfileId = (profileId: string) => (api: InteractionV2Api): ProfileInteractionV2Api => {
+export const withProfileId = (profileId: string) => (api: InteractionApi): ProfileInteractionApi => {
   return {
     profileId: () => profileId,
     createChat: (chat) => api.createChat(profileId, chat),

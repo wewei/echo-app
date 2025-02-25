@@ -4,7 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import WebPanel from '../WebPanel/WebPanel';
 import InteractionView from '@/renderer/components/ChatPanel/InteractionView';
-import { useInteraction } from '@/renderer/data/interactionsV2';
+import { useInteraction } from '@/renderer/data/interactions';
 import Loading from '../Loading';
 import { isEntityReady } from '@/renderer/data/entity';
 

@@ -1,6 +1,6 @@
 import { app } from 'electron'
 import { cached } from '@/shared/utils/cache'
-import { createInteractionStore } from '../store/interactionsV2'
+import { createInteractionStore } from '../store/interactions'
 import path from 'node:path'
 import fs from 'node:fs'
 import { isEntityExist } from '@/shared/types/entity'

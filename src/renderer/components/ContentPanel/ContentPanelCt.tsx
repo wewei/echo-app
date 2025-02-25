@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ContentPanelRp } from './ContentPanelRp';
 import useContentSession from '@/renderer/data/contentSession';
-import { useInteraction } from '@/renderer/data/interactionsV2';
+import { useInteraction } from '@/renderer/data/interactions';
 import { isEntityReady } from '@/renderer/data/entity';
 import Loading from '../Loading';
 

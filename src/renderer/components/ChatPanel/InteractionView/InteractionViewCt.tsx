@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import React from 'react';
 import InteractionViewRp from './InteractionViewRp';
-import { BaseInteraction } from '@/shared/types/interactionsV2';
+import { BaseInteraction } from '@/shared/types/interactions';
 import { isEntityReady } from '@/renderer/data/entity';
 import Loading from '@/renderer/components/Loading';
-import { useChatState } from '@/renderer/data/interactionsV2';
+import { useChatState } from '@/renderer/data/interactions';
 interface InteractionViewCtProps {
   interaction: BaseInteraction;
   onLinkClicked?: (contextId: number, url: string) => void;

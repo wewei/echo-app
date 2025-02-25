@@ -1,6 +1,6 @@
 import { traceBack } from '../interactionStreams';
 import { buildMockNodes, mockInteractionApi } from '@/shared/mock/mockInteractionAPI'
-import { BaseInteraction } from '@/shared/types/interactionsV2';
+import { BaseInteraction } from '@/shared/types/interactions';
 import { streamToAsyncIterator } from '@/shared/utils/stream'
 import { faker } from '@faker-js/faker'
 

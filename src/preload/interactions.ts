@@ -1,8 +1,8 @@
 import { ipcRenderer } from 'electron'
-import { ChatInteraction, INTERACTION_IPC_CHANNELS, NavInteraction, ChatState, NavState, Interaction, QueryChatsParams, QueryNavsParams } from '@/shared/types/interactionsV2'
+import { ChatInteraction, INTERACTION_IPC_CHANNELS, NavInteraction, ChatState, NavState, Interaction, QueryChatsParams, QueryNavsParams } from '@/shared/types/interactions'
 import { EntityData } from '@/shared/types/entity'
 
-export const interactionV2API = {
+export const interactionAPI = {
   createChat: (profileId: string, chat: EntityData<ChatInteraction>): Promise<ChatInteraction> =>
     ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.CREATE_CHAT, profileId, chat),
 
@@ -40,13 +40,13 @@ export const interactionV2API = {
     ipcRenderer.invoke(INTERACTION_IPC_CHANNELS.UPDATE_NAV_STATE, profileId, id, state),
 }
 
-export type InteractionV2Api = typeof interactionV2API
+export type InteractionApi = typeof interactionAPI
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export type Rest<T extends unknown[]> = T extends [infer _, ...infer U] ? U : never
 
-export type ProfileInteractionV2Api = {
-  [K in keyof InteractionV2Api]: (...args: Rest<Parameters<InteractionV2Api[K]>>) => ReturnType<InteractionV2Api[K]>
+export type ProfileInteractionApi = {
+  [K in keyof InteractionApi]: (...args: Rest<Parameters<InteractionApi[K]>>) => ReturnType<InteractionApi[K]>
 } & {
   profileId: () => string
 }

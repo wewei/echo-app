@@ -7,7 +7,7 @@ import {
   NavState,
   QueryChatsParams,
   QueryNavsParams,
-} from "@/shared/types/interactionsV2"
+} from "@/shared/types/interactions"
 import { EntityData } from '@/shared/types/entity'
 
 export const DEFAULT_LIMIT = 10

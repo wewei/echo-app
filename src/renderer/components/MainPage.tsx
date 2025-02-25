@@ -8,26 +8,26 @@ import MenuIcon from "@mui/icons-material/Menu";
 import AppMenu from "./AppMenu";
 import { useCurrentProfileId } from "../data/profile";
 import { InteractionApiProvider } from "../contexts/interactonApi";
-import { withProfileId } from "@/renderer/data/interactionsV2";
+import { withProfileId } from "@/renderer/data/interactions";
 
 export default function MainPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const menuPath = searchParams.get("menu");
   const profileId = useCurrentProfileId();
-  const interactionApi = withProfileId(profileId)(window.electron.interactionsV2)
+  const interactionApi = withProfileId(profileId)(window.electron.interactions)
 
   const onLinkClicked = async (contextId: number, url: string) => {
     console.log("onLinkClicked contextId =", contextId, ", url =", url);
     
     try {
-      const navs = await window.electron.interactionsV2.getNavs(profileId, { userContent: url });
+      const navs = await window.electron.interactions.getNavs(profileId, { userContent: url });
       if (navs.length > 0) {
         // 如果存在，打开第一个 nav
         console.log("searchParams onLinkClicked Nav exists, opening nav:", navs[0]);
         setSearchParams({ interactionId: navs[0].id.toString() });
       } else {
         // 如果不存在，创建一个新的 nav
-        const newNav = await window.electron.interactionsV2.createNav(profileId, {
+        const newNav = await window.electron.interactions.createNav(profileId, {
           type: 'nav',
           userContent: url,
           contextId,

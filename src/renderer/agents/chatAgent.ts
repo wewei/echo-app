@@ -1,7 +1,7 @@
 import { OpenAI } from "openai";
 import { Agent } from "./agent";
 import { streamToAsyncIterator } from "@/shared/utils/stream";
-import { BaseInteraction, ChatInteraction } from "@/shared/types/interactionsV2";
+import { BaseInteraction, ChatInteraction } from "@/shared/types/interactions";
 
 export type ChatAgentInput = {
   profileId: string
@@ -10,7 +10,7 @@ export type ChatAgentInput = {
 }
 
 const prepareMessages = async (profileId: string, { userContent, contextId, id, createdAt }: BaseInteraction): Promise<OpenAI.ChatCompletionMessageParam[]> => {
-  const recentInteractions = await window.electron.interactionsV2.getChats(profileId, {
+  const recentInteractions = await window.electron.interactions.getChats(profileId, {
     created: {
       before: createdAt,
     },

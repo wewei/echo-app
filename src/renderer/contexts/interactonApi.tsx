@@ -1,9 +1,9 @@
 import React, { createContext, useContext } from 'react'
-import { ProfileInteractionV2Api } from '@/preload/interactionsV2'
+import { ProfileInteractionApi } from '@/preload/interactions'
 
-export const InteractionApiContext = createContext<ProfileInteractionV2Api | null>(null)
+export const InteractionApiContext = createContext<ProfileInteractionApi | null>(null)
 
-export const useInteractionApi = (): ProfileInteractionV2Api => {
+export const useInteractionApi = (): ProfileInteractionApi => {
   const context = useContext(InteractionApiContext)
   if (!context) {
     throw new Error('useInteractionApi must be used within a InteractionApiProvider')
@@ -16,7 +16,7 @@ export const InteractionApiProvider = ({
   interactionApi,
 }: {
   children: React.ReactNode;
-  interactionApi: ProfileInteractionV2Api;
+  interactionApi: ProfileInteractionApi;
 }) => {
   return (
     <InteractionApiContext.Provider value={interactionApi}>
