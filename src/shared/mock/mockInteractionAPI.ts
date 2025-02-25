@@ -1,5 +1,5 @@
 import type { ChatInteraction, NavInteraction, NavState, Interaction } from "@/shared/types/interactions"
-import type { ProfileInteractionApi } from "@/preload/interactions"
+import type { ProfileInteractionApi } from "@/shared/types/ipc"
 import { faker } from '@faker-js/faker'
 
 type InteractionNode =

@@ -586,4 +586,140 @@ describe('InteractionStore', () => {
       expect(ids).toEqual([replyIds[2]])
     })
   })
+
+  describe("getNavs", () => {
+    let rootNav: NavInteraction
+    let replyNavs: NavInteraction[]
+
+    beforeEach(() => {
+      const rootNavData: EntityData<NavInteraction> = {
+        type: 'nav',
+        userContent: 'https://example.com',
+        contextId: null,
+        createdAt: 1000,
+        title: '根导航',
+        description: '这是根导航',
+        favIconUrl: 'favicon.ico',
+        imageAssetId: 'img1',
+        updatedAt: 1100
+      }
+
+      rootNav = store.createNav(rootNavData)
+
+      const replyNavsData: EntityData<NavInteraction>[] = [
+        {
+          type: 'nav',
+          userContent: 'https://example1.com',
+          contextId: rootNav.id,
+          createdAt: 2000,
+          title: '回复1',
+          description: '回复导航1',
+          favIconUrl: 'favicon1.ico',
+          imageAssetId: 'img2',
+          updatedAt: 2100
+        },
+        {
+          type: 'nav',
+          userContent: 'https://example2.com', 
+          contextId: rootNav.id,
+          createdAt: 3000,
+          title: '回复2',
+          description: '回复导航2',
+          favIconUrl: 'favicon2.ico',
+          imageAssetId: 'img3',
+          updatedAt: 3100
+        },
+        {
+          type: 'nav',
+          userContent: 'https://example3.com',
+          contextId: rootNav.id,
+          createdAt: 4000,
+          title: '回复3',
+          description: '回复导航3',
+          favIconUrl: 'favicon3.ico',
+          imageAssetId: 'img4',
+          updatedAt: 4100
+        }
+      ]
+
+      replyNavs = replyNavsData.map(data => store.createNav(data))
+    })
+
+    it('应该根据上下文ID获取导航', () => {
+      const navs = store.getNavs({
+        contextId: rootNav.id
+      })
+      expect(navs).toHaveLength(3)
+      expect(navs.map(nav => nav.id)).toEqual(replyNavs.map(nav => nav.id))
+
+      const navs2 = store.getNavs({
+        contextId: null
+      })
+      expect(navs2).toHaveLength(1)
+      expect(navs2[0].id).toBe(rootNav.id)
+    })
+
+    it('应该根据创建时间筛选导航', () => {
+      const navs = store.getNavs({
+        contextId: rootNav.id,
+        created: {
+          after: 2500,
+          before: 3500
+        }
+      })
+      expect(navs).toHaveLength(1)
+      expect(navs[0].id).toBe(replyNavs[1].id)
+    })
+
+    it('应该根据更新时间筛选导航', () => {
+      const navs = store.getNavs({
+        contextId: rootNav.id,
+        updated: {
+          after: 2000,
+          before: 3200
+        }
+      })
+      expect(navs).toHaveLength(2)
+      expect(navs.map(({ id }) => id)).toStrictEqual([
+        replyNavs[0].id,
+        replyNavs[1].id,
+      ]);
+    })
+
+    it('应该根据用户内容筛选导航', () => {
+      const navs = store.getNavs({
+        userContent: 'https://example2.com'
+      })
+      expect(navs).toHaveLength(1)
+      expect(navs[0].id).toBe(replyNavs[1].id)
+    })
+
+    it('应该限制返回导航数量', () => {
+      const navs = store.getNavs({
+        contextId: rootNav.id,
+        limit: 2
+      })
+      expect(navs).toHaveLength(2)
+      expect(navs.map(nav => nav.id)).toEqual(replyNavs.slice(0, 2).map(nav => nav.id))
+    })
+
+    it('应该根据 order 排序', () => {
+      const navs = store.getNavs({
+        contextId: rootNav.id,
+        order: 'desc'
+      })
+      expect(navs.map(nav => nav.id)).toEqual(replyNavs.map(nav => nav.id).reverse())
+    })
+
+    it('应该组合多个条件筛选导航', () => {
+      const navs = store.getNavs({
+        contextId: rootNav.id,
+        created: { after: 2500 },
+        userContent: 'https://example2.com',
+        limit: 1
+      })
+      expect(navs).toHaveLength(1)
+      expect(navs[0].id).toBe(replyNavs[1].id)
+    })
+  })
 }) 

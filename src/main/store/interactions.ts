@@ -259,11 +259,11 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
       values.push(created.after)
     }
     if (Number.isFinite(updated?.before)) {
-      conditions.push(`c.updatedAt < ?`)
+      conditions.push(`n.updatedAt < ?`)
       values.push(updated.before)
     }
     if (Number.isFinite(updated?.after)) {
-      conditions.push(`c.updatedAt > ?`)
+      conditions.push(`n.updatedAt > ?`)
       values.push(updated.after)
     } 
     if (userContent !== undefined && userContent !== null) {
