@@ -1,8 +1,6 @@
 import { traceBack } from '../interactionStreams';
 import { buildMockNodes, mockInteractionApi } from '@/shared/mock/mockInteractionAPI'
-import { BaseInteraction } from '@/shared/types/interactions';
 import { streamToAsyncIterator } from '@/shared/utils/stream'
-import { faker } from '@faker-js/faker'
 
 
 describe('traceBack', () => {
@@ -47,18 +45,17 @@ describe('traceBack', () => {
   );
 
   it('should get the correct trace back from a chat interaction, the initial interaction should be excluded', async () => {
-    const interaction = await api.getInteraction(4)
-    const stream = traceBack(api)(interaction)
+    const stream = traceBack(api)(4)
     const ids: number[] = []
     for await (const chunk of streamToAsyncIterator(stream)) {
       ids.push(chunk.id)
     }
+    console.log(ids)
     expect(ids).toEqual([3, 2, 1])
   })
 
   it('should get the correct trace back from a nav interaction', async () => {
-    const interaction = await api.getInteraction(2)
-    const stream = traceBack(api)(interaction)
+    const stream = traceBack(api)(2)
     const ids: number[] = []
     for await (const chunk of streamToAsyncIterator(stream)) {
       ids.push(chunk.id)
@@ -67,8 +64,7 @@ describe('traceBack', () => {
   })
 
   it('should get the correct trace back from a deep nav interaction', async () => {
-    const interaction = await api.getInteraction(13)
-    const stream = traceBack(api)(interaction)
+    const stream = traceBack(api)(13)
     const ids: number[] = []
     for await (const chunk of streamToAsyncIterator(stream)) {
       ids.push(chunk.id)
@@ -77,8 +73,7 @@ describe('traceBack', () => {
   })
 
   it('should get the correct trace back from a deep chat interaction', async () => {
-    const interaction = await api.getInteraction(12)
-    const stream = traceBack(api)(interaction)
+    const stream = traceBack(api)(12)
     const ids: number[] = []
     for await (const chunk of streamToAsyncIterator(stream)) {
       ids.push(chunk.id)
@@ -86,31 +81,8 @@ describe('traceBack', () => {
     expect(ids).toEqual([11, 10, 9, 8, 7, 1])
   })
 
-  it('should handle the case when the chat context is not found', async () => {
-    const interaction: BaseInteraction = {
-      id: -1,
-      type: "chat",
-      userContent: faker.lorem.sentence(),
-      contextId: null,
-      createdAt: 0,
-    };
-    const stream = traceBack(api)(interaction)
-    const ids: number[] = []
-    for await (const chunk of streamToAsyncIterator(stream)) {
-      ids.push(chunk.id)
-    }
-    expect(ids).toEqual([])
-  })
-
-  it('should handle the case when the nav context is not found', async () => {
-    const interaction: BaseInteraction = {
-      id: -1,
-      type: "nav",
-      userContent: faker.internet.url(),
-      contextId: null,
-      createdAt: 0,
-    };
-    const stream = traceBack(api)(interaction)
+  it('should handle the case when the context is not found', async () => {
+    const stream = traceBack(api)(-1)
     const ids: number[] = []
     for await (const chunk of streamToAsyncIterator(stream)) {
       ids.push(chunk.id)
@@ -119,8 +91,7 @@ describe('traceBack', () => {
   })
 
   it('should handle pulling after closed', async () => {
-    const interaction = await api.getInteraction(1)
-    const stream = traceBack(api)(interaction)
+    const stream = traceBack(api)(1)
     const ids: number[] = []
     for await (const chunk of streamToAsyncIterator(stream)) {
       ids.push(chunk.id)
@@ -133,11 +104,10 @@ describe('traceBack', () => {
   })
 
   it('should handle the case when the context is not found', async () => {
-    const interaction = await api.getInteraction(4)
     const stream = traceBack({
       ...api,
       getInteraction: async (id) => (id === 1 ? null : api.getInteraction(id)),
-    })(interaction);
+    })(4);
     const ids: number[] = []
     for await (const chunk of streamToAsyncIterator(stream)) {
       ids.push(chunk.id)

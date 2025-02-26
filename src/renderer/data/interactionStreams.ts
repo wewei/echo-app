@@ -20,13 +20,16 @@ export const traceBack =
     batchLimit?: number
   }) =>
   (
-    interaction: BaseInteraction
+    contextId: number,
   ): ReadableStream<BaseInteraction> => {
-    let iter: BaseInteraction = interaction
+    let iter: BaseInteraction | null = null
 
     type Controller = ReadableStreamDefaultController<BaseInteraction>
 
     const pullContext = async (controller: Controller) => {
+      if (iter === null) {
+        iter = await getInteraction(contextId)
+      }
       if (!Number.isInteger(iter.contextId)) {
         controller.close()
         return
@@ -56,14 +59,24 @@ export const traceBack =
         return pullContext(controller)
       }
     }
+    const pull = async (controller: Controller) => {
+      if (iter === null) {
+        iter = await getInteraction(contextId)
+        if (iter === null) {
+          controller.close()
+          return
+        }
+        return pull(controller)
+      }
+      if (iter.type === "chat") {
+        return pullChatsOrContext(controller);
+      } else {
+        return pullContext(controller);
+      }
+    }
 
 
-    return new ReadableStream({
-      pull: (controller) =>
-        iter.type === "chat"
-          ? pullChatsOrContext(controller)
-          : pullContext(controller),
-    });
+    return new ReadableStream({ pull });
   }
 
 export const recentChats =

@@ -121,11 +121,11 @@ const useInteractionListReducer = <A extends { type: string }>(
 };
 
 export const useTraceBack = (
-  context: BaseInteraction
+  contextId: number
 ): ListResult<BaseInteraction> => {
   const api = useInteractionApi()
   const [state, dispatch] = useInteractionListReducer()
-  const stream = useMemo(() => traceBack(api)(context), [api, context])
+  const stream = useMemo(() => traceBack(api)(contextId), [api, contextId])
   const { loadMore, refresh } = useStreamActions(stream, BATCH_SIZE, dispatch)
 
   return {
