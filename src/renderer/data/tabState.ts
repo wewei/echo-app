@@ -1,8 +1,28 @@
-import { unstable_useId } from '@mui/material';
+import { BaseInteraction } from '@/shared/types/interactions';
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 export type TypeString = "Response" | "Link";
+
+export interface DisplayInfo {
+  type: 'Link' | 'Chat';
+  link?: string;
+  chatInteraction?: BaseInteraction;
+}
+
+export class DisplayInfoFactory {
+  static create(interaction: BaseInteraction, url: string | null): DisplayInfo | null {
+    if (url === null && interaction === null) {
+      return null;
+    }
+
+    if (url) {
+      return { type: 'Link', link: url };
+    } else {
+      return { type: 'Chat', chatInteraction: interaction };
+    }
+  }
+}
 
 export interface TabItem {
   id: string;
@@ -10,6 +30,7 @@ export interface TabItem {
   title: string;
   lastAccessed: number;
   isTemporaryTab: boolean;
+  displayInfo?: DisplayInfo;
 }
 
 export interface TabState {
@@ -34,15 +55,17 @@ const useTabState = () => {
       setTabState(JSON.parse(storedContentSession));
     }
     setHasInitialized(true);
-
-    
   }, []);
 
   useEffect(() => {
     if (hasInitialized && tabState.tabs.length === 0) {
-      handleTabActiveOrCreate(null);
+      handleTabActiveOrCreate(null, null);
     }
   }, [hasInitialized]);
+
+  useEffect(() => {
+    console.log("tabs changed= ", tabState.tabs);
+  }, [tabState.tabs]);
 
   const handleTabClick = (tab: TabItem) => {
 
@@ -106,14 +129,14 @@ const useTabState = () => {
     saveContentSessionAsync(tabState);
   };
 
-  const handleTabActiveOrCreate = (interactionId : string | null) => {
+  const handleTabActiveOrCreate = (contextId : number | null, displayInfo : DisplayInfo | null) => {
     console.log("handleTabActiveOrCreate", hasInitialized);
     if (!hasInitialized) {
       return;
     }
 
-    const existingVisibleTab = tabState.tabs.find(tab => tab.id === interactionId);
-    const existingHiddenTab = tabState.hiddenTabs.find(tab => tab.id === interactionId);
+    const existingVisibleTab = tabState.tabs.find(tab => tab.contextId === contextId);
+    const existingHiddenTab = tabState.hiddenTabs.find(tab => tab.contextId === contextId);
 
     if (existingVisibleTab) {
       handleTabClick(existingVisibleTab);
@@ -121,11 +144,12 @@ const useTabState = () => {
       handleHiddenTabClick(existingHiddenTab);
     } else {
       const newTab: TabItem = {
-        id: interactionId === null ? uuidv4() : interactionId,
-        contextId: interactionId === null ? null : Number(interactionId),
-        title: interactionId === null ? "New Tab" : "Interaction:" + interactionId,
+        id: uuidv4(),
+        contextId: contextId,
+        title: contextId === null ? "New Tab" : "Context:" + contextId,
+        displayInfo: displayInfo,
         lastAccessed: Date.now(),
-        isTemporaryTab: interactionId === null
+        isTemporaryTab: contextId === null
       };
 
       let updatedTabs = [...tabState.tabs, newTab];
@@ -141,6 +165,7 @@ const useTabState = () => {
         ...prevState,
         tabs: updatedTabs,
         hiddenTabs: updatedHiddenTabs,
+        activeTab: newTab.id,
       }));
     }
 

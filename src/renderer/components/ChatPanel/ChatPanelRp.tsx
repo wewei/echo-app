@@ -5,6 +5,7 @@ import { BaseInteraction } from '@/shared/types/interactions';
 import MessageInput from './MessageInput';
 
 interface Props {
+  contextId: number | null
   onInteractionClick?: (interaction: BaseInteraction, url: string | null) => void;
   onInteractionExpand?: (interaction: BaseInteraction, url: string | null) => void;
   onSendMessage: (message: string) => void
@@ -30,6 +31,7 @@ const InputContainer = styled(Box)({
 });
 
 export default function ChatPanelRp({
+  contextId,
   onSendMessage,
   onInteractionClick,
   onInteractionExpand,
@@ -41,7 +43,7 @@ export default function ChatPanelRp({
     <Container>
       <InteractionListContainer>
         <InteractionList
-          contextId={undefined} // Pass appropriate contextId if needed
+          contextId={contextId} // Pass appropriate contextId if needed
           onInteractionClick={onInteractionClick}
           onInteractionExpand={onInteractionExpand}
         />

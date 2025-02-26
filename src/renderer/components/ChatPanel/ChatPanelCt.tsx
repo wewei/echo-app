@@ -8,12 +8,14 @@ import { createChatInteraction, appendAssistantContent } from '@/renderer/data/i
 import { BaseInteraction } from '@/shared/types/interactions';
 
 interface Props {
+  contextId?: number
   onInteractionClick?: (interaction: BaseInteraction, url: string | null) => void;
   onInteractionExpand?: (interaction: BaseInteraction, url: string | null) => void;
   disabled?: boolean
 }
 
 export default function ChatPanelCt({
+  contextId,
   onInteractionClick,
   onInteractionExpand,
   disabled = false
@@ -27,7 +29,7 @@ export default function ChatPanelCt({
       type: 'chat',
       model,
       userContent: message,
-      contextId: null,
+      contextId: contextId,
       createdAt: Date.now(),
       assistantContent: '',
       updatedAt: Date.now()
@@ -45,6 +47,7 @@ export default function ChatPanelCt({
 
   return (
     <ChatPanelRp
+      contextId={contextId}
       onSendMessage={handleSendMessage}
       onInteractionClick={onInteractionClick}
       onInteractionExpand={onInteractionExpand}

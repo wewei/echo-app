@@ -60,7 +60,10 @@ export default function InteractionViewRp({ interaction, onInteractionClick, onI
       >
         <IconButton
           aria-label="expand"
-          onClick={() => onInteractionExpand?.(interaction, null)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onInteractionExpand?.(interaction, null);
+          }}
         >
           <OpenInFullIcon />
         </IconButton>

@@ -1,60 +1,58 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Box } from '@mui/material';
 import WebPanel from '../WebPanel/WebPanel';
 import InteractionView from '@/renderer/components/ChatPanel/InteractionView';
-import { isEntityReady } from '@/renderer/data/entity';
 import SplitView from '../SplitView';
 import ChatPanel from '../ChatPanel';
 import { BaseInteraction } from '@/shared/types/interactions';
+import { TabItem } from '@/renderer/data/tabState';
 
 interface ContentPanelRpProps {
-  contextId: number;
+  tab: TabItem
   profileId?: string;
   onTitleChange: (id: string, title: string) => void;
+  onInteractionClick?: (tab: TabItem, interaction: BaseInteraction, url: string | null) => void;
   onInteractionExpand?: (interaction: BaseInteraction, url: string | null) => void;
 }
 
 export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
-  contextId,
+  tab,
   onTitleChange,
+  onInteractionClick,
   onInteractionExpand
 }) => {
-  const [interaction, setInteraction] = useState<BaseInteraction | null>(null);
-  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
-  const onInteractionClick = (interaction: BaseInteraction, url : string) => {
-    console.log("handleLinkClick", interaction, ", url =", url);
-    setInteraction(interaction);
-    setCurrentUrl(url);
-  }
 
+  console.log("ContentPanelRpProps render tab", tab);
   return (
     <SplitView
       leftContent={<Box sx={{ height: '100%', overflow: 'auto' }}>
-      {interaction && isEntityReady(interaction) ? (
-        (() => {
-          // 如果标签有 context，显示网页
-          if (currentUrl !== null) {
-
-            return (
-              <WebPanel
-                url={currentUrl}
-                tabId={interaction.id.toString()}
-                onTitleChange={onTitleChange}
+        {tab.displayInfo ? (
+          tab.displayInfo.type === 'Link' ? (
+            <WebPanel
+              url={tab.displayInfo.link}
+              tabId={tab.id}
+              onTitleChange={onTitleChange}
+            />
+          ) : (
+            tab.displayInfo.chatInteraction ? (
+              <InteractionView
+                interaction={tab.displayInfo.chatInteraction}
+                onInteractionClick={(intersection, url) => {
+                  onInteractionClick(tab, intersection, url);
+                }}
+                onInteractionExpand={onInteractionExpand}
               />
-            );
-          } else if (interaction.type === "chat") {
-            return <InteractionView 
-              interaction={interaction}
-              onInteractionClick={onInteractionClick}
-              onInteractionExpand={onInteractionExpand}
-            />;
-          } 
-          
-          return null;
-        })()
-      ) : null}
-    </Box>}
-      rightContent={<ChatPanel onInteractionClick={onInteractionClick} onInteractionExpand={onInteractionExpand} />}
+            ) : null
+          )
+        ) : null}
+      </Box>}
+      rightContent={
+        <ChatPanel
+          contextId={tab.contextId}
+          onInteractionClick={(intersection, url) => {
+            onInteractionClick(tab, intersection, url);
+          }}
+          onInteractionExpand={onInteractionExpand} />}
     />
   );
 };

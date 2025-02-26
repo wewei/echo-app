@@ -1,22 +1,25 @@
 import React from 'react';
 import { ContentPanelRp } from './ContentPanelRp';
 import { BaseInteraction } from '@/shared/types/interactions';
+import { TabItem } from '@/renderer/data/tabState';
 
 interface ContentPanelCtProps {
-  contextId: number;
+  tab: TabItem;
+  onInteractionClick?: (tab: TabItem, interaction: BaseInteraction, url: string | null) => void;
   onInteractionExpand?: (interaction: BaseInteraction, url: string | null) => void;
 }
 
 
 export const ContentPanelCt: React.FC<ContentPanelCtProps> = ({
-  contextId,
+  tab,
+  onInteractionClick,
   onInteractionExpand
 }) => {
-console.log("ContentPanelCt", contextId);
   return (
     <ContentPanelRp
-      contextId={contextId}
+      tab={tab}
       onTitleChange={() => {}}
+      onInteractionClick={onInteractionClick}
       onInteractionExpand={onInteractionExpand}
     />
   );
