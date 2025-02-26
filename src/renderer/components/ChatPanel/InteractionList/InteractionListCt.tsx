@@ -1,6 +1,6 @@
 import React from 'react';
 import InteractionListRp from './InteractionListRp';
-import { useRecentChats } from '@/renderer/data/interactions';
+import { useChats } from '@/renderer/data/interactions';
 import { BaseInteraction } from '@/shared/types/interactions';
 
 interface InteractionListCtProps {
@@ -10,7 +10,7 @@ interface InteractionListCtProps {
 }
 
 export default function InteractionListCt({ contextId, onInteractionClick, onInteractionExpand }: InteractionListCtProps) {
-  const recentChats = useRecentChats(contextId);
+  const recentChats = useChats(contextId);
 
   console.log("recentChats = ", recentChats);
   return (

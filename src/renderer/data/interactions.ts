@@ -2,7 +2,7 @@
 import { useEffect, useReducer, useCallback, useMemo, useState, useRef, ActionDispatch, Reducer } from "react";
 import { ChatState, ChatInteraction, BaseInteraction, NavState, Interaction } from "@/shared/types/interactions";
 import { makeEventHub } from "@/shared/utils/event";
-import { recentChats, traceBack } from "./interactionStreams";
+import { recentChats, traceBack, chatsForContext } from "./interactionStreams";
 import { useInteractionApi } from "../contexts/interactonApi";
 import { ENTITY_PENDING, EntityRendererState, isEntityReady } from "./entity";
 import type { InteractionApi, ProfileInteractionApi } from "@/shared/types/ipc";
@@ -174,6 +174,46 @@ export const useRecentChats = (contextId?: number): ListResult<BaseInteraction> 
     refresh
   };
 };
+
+export const useChats = (contextId?: number) => {
+  const api = useInteractionApi()
+  const [state, dispatch] = useInteractionListReducer<CreatedAction>((current, action) => {
+    if (action.type === "created") {
+      return {
+        items: [action.interaction, ...current.items],
+        hasMore: current.hasMore,
+      }
+    }
+    return current
+  });
+
+  const stream = useMemo(
+    () =>
+      chatsForContext({
+        getChats: api.getChats,
+        getInteraction: api.getInteraction,
+      })(contextId),
+    [api, contextId]
+  );
+  const { loadMore, refresh } = useStreamActions(stream, BATCH_SIZE, dispatch)
+
+  useEffect(() => {
+    const unwatch = interactionCreatedEventHub.watch(
+      eventPath(api.profileId(), contextId),
+      (interaction: BaseInteraction) => {
+        dispatch({ type: "created", interaction });
+      }
+    );
+    return () => { unwatch() }
+  }, [api.profileId(), contextId])
+
+  return {
+    items: state.items,
+    hasMore: state.hasMore,
+    loadMore,
+    refresh
+  };
+}
 
 export const createChatInteraction = async (profileId: string, params: CreateParams<ChatInteraction>): Promise<ChatInteraction> => {
   const chat = await window.electron.interactions.createChat(profileId, params);

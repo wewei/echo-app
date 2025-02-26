@@ -1,5 +1,6 @@
 import type { BaseInteraction } from "@/shared/types/interactions"
 import type { ProfileInteractionApi } from "@/shared/types/ipc"
+import { concatStreams } from "@/shared/utils/stream"
 const DEFAULT_BATCH_LIMIT = 20
 
 /**
@@ -105,3 +106,17 @@ export const recentChats =
       }
     });
   };
+
+export const chatsForContext =
+  ({
+    getChats,
+    getInteraction,
+    batchLimit = DEFAULT_BATCH_LIMIT,
+  }: Pick<ProfileInteractionApi, "getChats" | "getInteraction"> & {
+    batchLimit?: number;
+  }) =>
+  (contextId?: number) =>
+    concatStreams(
+      recentChats({ getChats, batchLimit })(contextId),
+      traceBack({ getChats, getInteraction, batchLimit })(contextId)
+    );
