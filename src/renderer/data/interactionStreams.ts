@@ -27,9 +27,6 @@ export const traceBack =
     type Controller = ReadableStreamDefaultController<BaseInteraction>
 
     const pullContext = async (controller: Controller) => {
-      if (iter === null) {
-        iter = await getInteraction(contextId)
-      }
       if (!Number.isInteger(iter.contextId)) {
         controller.close()
         return

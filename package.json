@@ -73,7 +73,7 @@
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.3",
     "@mui/material": "^6.4.3",
-    "better-sqlite3": "~11.7.2",
+    "better-sqlite3": "^11.8.1",
     "electron": "^34.2.0",
     "electron-squirrel-startup": "^1.0.1",
     "i18next": "^24.2.2",

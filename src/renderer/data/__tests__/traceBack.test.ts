@@ -50,7 +50,6 @@ describe('traceBack', () => {
     for await (const chunk of streamToAsyncIterator(stream)) {
       ids.push(chunk.id)
     }
-    console.log(ids)
     expect(ids).toEqual([3, 2, 1])
   })
 
