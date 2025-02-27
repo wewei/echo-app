@@ -43,7 +43,7 @@ export default function ChatPanelCt({
       appendAssistantContent(profileId, chatInteraction.id, chunk)
     }
     
-  }, [profileId, model])
+  }, [profileId, model, contextId])
 
   return (
     <ChatPanelRp
