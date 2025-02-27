@@ -44,13 +44,13 @@ describe('traceBack', () => {
     ])
   );
 
-  it('should get the correct trace back from a chat interaction, the initial interaction should be excluded', async () => {
+  it('should get the correct trace back from a chat interaction, the initial interaction should be included', async () => {
     const stream = traceBack(api)(4)
     const ids: number[] = []
     for await (const chunk of streamToAsyncIterator(stream)) {
       ids.push(chunk.id)
     }
-    expect(ids).toEqual([3, 2, 1])
+    expect(ids).toEqual([4, 3, 2, 1])
   })
 
   it('should get the correct trace back from a nav interaction', async () => {
@@ -59,7 +59,7 @@ describe('traceBack', () => {
     for await (const chunk of streamToAsyncIterator(stream)) {
       ids.push(chunk.id)
     }
-    expect(ids).toEqual([1])
+    expect(ids).toEqual([2, 1])
   })
 
   it('should get the correct trace back from a deep nav interaction', async () => {
@@ -68,7 +68,7 @@ describe('traceBack', () => {
     for await (const chunk of streamToAsyncIterator(stream)) {
       ids.push(chunk.id)
     }
-    expect(ids).toEqual([10, 9, 8, 7, 1])
+    expect(ids).toEqual([13, 10, 9, 8, 7, 1])
   })
 
   it('should get the correct trace back from a deep chat interaction', async () => {
@@ -77,7 +77,7 @@ describe('traceBack', () => {
     for await (const chunk of streamToAsyncIterator(stream)) {
       ids.push(chunk.id)
     }
-    expect(ids).toEqual([11, 10, 9, 8, 7, 1])
+    expect(ids).toEqual([12, 11, 10, 9, 8, 7, 1])
   })
 
   it('should handle the case when the context is not found', async () => {
@@ -95,7 +95,7 @@ describe('traceBack', () => {
     for await (const chunk of streamToAsyncIterator(stream)) {
       ids.push(chunk.id)
     }
-    expect(ids).toEqual([])
+    expect(ids).toEqual([1])
     const reader = stream.getReader()
     const result = await reader.read()
     expect(result.done).toBe(true)
@@ -111,7 +111,7 @@ describe('traceBack', () => {
     for await (const chunk of streamToAsyncIterator(stream)) {
       ids.push(chunk.id)
     }
-    expect(ids).toEqual([3, 2])
+    expect(ids).toEqual([4, 3, 2])
   })
 });
 

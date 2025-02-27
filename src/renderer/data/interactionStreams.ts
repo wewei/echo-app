@@ -64,6 +64,7 @@ export const traceBack =
           controller.close()
           return
         }
+        controller.enqueue(iter)
         return pull(controller)
       }
       if (iter.type === "chat") {
