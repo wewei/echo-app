@@ -211,7 +211,7 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     return [conditions, values]
   }
 
-  const getChatsByContextId = (params: QueryChatsParams): ChatInteraction[] => {
+  const getChats = (params: QueryChatsParams): ChatInteraction[] => {
     const [conditions, values] = prepareGetChatsConditions(params)
     return db.prepare<(string | number)[], ChatInteraction>(`
       SELECT
@@ -225,7 +225,7 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     `).all(...values, params.limit ?? DEFAULT_LIMIT)
   }
 
-  const getChatIdsByContextId = (params: QueryChatsParams): number[] => {
+  const getChatIds = (params: QueryChatsParams): number[] => {
     const [conditions, values] = prepareGetChatsConditions(params)
     return db.prepare<(string | number)[], { id: number }>(`
       SELECT c.id FROM chat c
@@ -316,8 +316,8 @@ const createInteractionStore = (dbPath: string): InteractionStore => {
     getInteraction,
     getChatState,
     getNavState,
-    getChats: getChatsByContextId,
-    getChatIds: getChatIdsByContextId,
+    getChats,
+    getChatIds,
     getNavsByUrl,
     getNavIdsByUrl,
     getNavs,

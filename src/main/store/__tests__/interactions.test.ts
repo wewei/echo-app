@@ -381,7 +381,7 @@ describe('InteractionStore', () => {
     })
   })
 
-  describe('getChatsByContextId', () => {
+  describe('getChats', () => {
     beforeEach(() => {
       // 准备测试数据
       store.createChat({
@@ -493,7 +493,7 @@ describe('InteractionStore', () => {
     })
   })
 
-  describe('getChatIdsByContextId', () => {
+  describe('getChatIds', () => {
     let rootChat: ChatInteraction
     let replyIds: number[]
 
