@@ -35,7 +35,6 @@ export interface TabItem {
 
 export interface TabState {
   tabs: TabItem[];
-  hiddenTabs: TabItem[];
   activeTab: string | null;
 }
 
@@ -45,7 +44,6 @@ const useTabState = () => {
   const [hasInitialized, setHasInitialized] = useState(false);
   const [tabState, setTabState] = useState<TabState>({
     tabs: [],
-    hiddenTabs: [],
     activeTab: null
   });
 
@@ -80,40 +78,14 @@ const useTabState = () => {
   const handleTabClose = (id: string) => {
     setTabState(prevState => {
       let updatedTabs = prevState.tabs.filter(tab => tab.id !== id);
-      let updatedHiddenTabs = [...prevState.hiddenTabs];
-
-      if (updatedTabs.length < MAX_VISIBLE_TABS && updatedHiddenTabs.length > 0) {
-        const mostRecentlyUsedHiddenTab = updatedHiddenTabs.reduce((newest, tab) => tab.lastAccessed > newest.lastAccessed ? tab : newest);
-        updatedHiddenTabs = updatedHiddenTabs.filter(t => t.id !== mostRecentlyUsedHiddenTab.id);
-        updatedTabs = [...updatedTabs, mostRecentlyUsedHiddenTab];
-      }
+      const mostRecentlyUsedHiddenTab = updatedTabs.reduce((newest, tab) => tab.lastAccessed > newest.lastAccessed ? tab : newest);
 
       return {
         ...prevState,
         tabs: updatedTabs,
-        hiddenTabs: updatedHiddenTabs,
+        activeTab: mostRecentlyUsedHiddenTab.id
       };
     });
-
-    saveContentSessionAsync(tabState);
-  };
-
-  const handleHiddenTabClick = (tab: TabItem) => {
-    let updatedTabs = [...tabState.tabs, tab];
-    let updatedHiddenTabs = tabState.hiddenTabs.filter(hiddenTab => hiddenTab.id !== tab.id);
-
-    if (updatedTabs.length > MAX_VISIBLE_TABS) {
-      // Move the least recently used tab to hiddenTabs
-      const leastRecentlyUsedTab = tabState.tabs.reduce((oldest, tab) => tab.lastAccessed < oldest.lastAccessed ? tab : oldest);
-      updatedTabs = updatedTabs.filter(t => t.id !== leastRecentlyUsedTab.id);
-      updatedHiddenTabs = [...updatedHiddenTabs, leastRecentlyUsedTab];
-    }
-
-    setTabState(prevState => ({
-      ...prevState,
-      hiddenTabs: updatedHiddenTabs,
-      tabs: updatedTabs,
-    }));
 
     saveContentSessionAsync(tabState);
   };
@@ -136,12 +108,9 @@ const useTabState = () => {
     }
 
     const existingVisibleTab = tabState.tabs.find(tab => tab.contextId === contextId);
-    const existingHiddenTab = tabState.hiddenTabs.find(tab => tab.contextId === contextId);
 
     if (existingVisibleTab) {
       handleTabClick(existingVisibleTab);
-    } else if (existingHiddenTab) {
-      handleHiddenTabClick(existingHiddenTab);
     } else {
       const newTab: TabItem = {
         id: uuidv4(),
@@ -153,18 +122,10 @@ const useTabState = () => {
       };
 
       let updatedTabs = [...tabState.tabs, newTab];
-      let updatedHiddenTabs = [...tabState.hiddenTabs];
-      if (updatedTabs.length > MAX_VISIBLE_TABS) {
-        // Move the least recently used tab to hiddenTabs
-        const leastRecentlyUsedTab = updatedTabs.reduce((oldest, tab) => tab.lastAccessed < oldest.lastAccessed ? tab : oldest);
-        updatedTabs = updatedTabs.filter(t => t.id !== leastRecentlyUsedTab.id);
-        updatedHiddenTabs = [...updatedHiddenTabs, leastRecentlyUsedTab];
-      }
 
       setTabState(prevState => ({
         ...prevState,
         tabs: updatedTabs,
-        hiddenTabs: updatedHiddenTabs,
         activeTab: newTab.id,
       }));
     }
@@ -187,7 +148,6 @@ const useTabState = () => {
     handleTabActiveOrCreate,
     handleTabClick,
     handleTabClose,
-    handleHiddenTabClick,
     handleTitleChange,
   };
 };

@@ -15,6 +15,9 @@ export default function InteractionListRp({ interactions, hasMore, loadMore, onI
   const listRef = useRef<HTMLDivElement>(null);
   const [stayAtBottom, setStayAtBottom] = useState(true);
 
+  const [scrolling, setScrolling] = useState(false);
+  const timeoutRef = useRef(null);
+
   useEffect(() => {
     if (stayAtBottom && listRef.current) {
       const elem = listRef.current;
@@ -41,30 +44,14 @@ export default function InteractionListRp({ interactions, hasMore, loadMore, onI
     if (isAtBottom && hasMore && loadMore) {
       loadMore();
     }
+
+    setScrolling(true);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setScrolling(false), 1000);
   };
 
   return (
-    <Box ref={listRef} onScroll={handleScroll} sx={{
-      overflow: 'auto',
-      '&::-webkit-scrollbar': {
-        width: '8px',
-        opacity: 0,
-        transition: 'opacity 0.3s',
-      },
-      '&:hover::-webkit-scrollbar': {
-        opacity: 1,
-      },
-      '&::-webkit-scrollbar-thumb': {
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        borderRadius: '4px',
-      },
-      '&::-webkit-scrollbar-thumb:hover': {
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      },
-      '&::-webkit-scrollbar-track': {
-        backgroundColor: 'transparent',
-      },
-    }} >
+    <Box ref={listRef} onScroll={handleScroll}>
       <List>
         {interactions.map((interaction) => (
           <ListItem key={interaction.id}>

@@ -9,12 +9,15 @@ interface Props {
   leftContent: React.ReactNode | null
   rightContent: React.ReactNode | null
   onNavigate?: (url: string) => void
+  showToggleButtons?: boolean
+  autoSwitchModeOnRelease?: boolean
+  initialSplitRatio?: number
 }
 
-export default function SplitView({ leftContent, rightContent }: Props) {
+export default function SplitView({ leftContent, rightContent, showToggleButtons = true, autoSwitchModeOnRelease = true, initialSplitRatio = 0.5 }: Props) {
   const [mode, setMode] = useState<ViewMode>(leftContent ? rightContent ? 'split' : 'left' : 'right')
-  const [splitRatio, setSplitRatio] = useState(0.5) // 0.5 表示 50%
-  const [splitRadioSave, setSplitRadioSave] = useState(0.5) // 0.5 表示 50%
+  const [splitRatio, setSplitRatio] = useState(initialSplitRatio)
+  const [splitRadioSave, setSplitRadioSave] = useState(initialSplitRatio)
   const [isDragging, setIsDragging] = useState(false)  // 新增状态用于控制覆盖层
   const containerRef = useRef<HTMLDivElement>(null)
   const isDraggingRef = useRef(false)
@@ -50,14 +53,16 @@ export default function SplitView({ leftContent, rightContent }: Props) {
     setIsDragging(false)
 
     // 在松开时检查是否需要切换模式
-    if (isLeftNarrow) {
-      setMode('right')
-      setSplitRatio(splitRadioSave)
-    } else if (isRightNarrow) {
-      setMode('left')
-      setSplitRatio(splitRadioSave)
+    if (autoSwitchModeOnRelease) {
+      if (isLeftNarrow) {
+        setMode('right')
+        setSplitRatio(splitRadioSave)
+      } else if (isRightNarrow) {
+        setMode('left')
+        setSplitRatio(splitRadioSave)
+      }
     }
-  }, [isLeftNarrow, isRightNarrow, splitRadioSave])
+  }, [isLeftNarrow, isRightNarrow, splitRadioSave, autoSwitchModeOnRelease])
 
   useEffect(() => {
     if (mode === 'split') {
@@ -132,7 +137,6 @@ export default function SplitView({ leftContent, rightContent }: Props) {
             sx={{
               width: "100%",
               height: "100%",
-              overflow: "auto",
               visibility: mode === "right" ? "hidden" : "visible",
               opacity: mode === "right" ? 0 : 1,
               transition: "visibility 0.3s, opacity 0.3s",
@@ -195,7 +199,7 @@ export default function SplitView({ leftContent, rightContent }: Props) {
       )}
 
       {/* 控制按钮组 */}
-      {leftContent !== null && rightContent !== null && (
+      {showToggleButtons && leftContent !== null && rightContent !== null && (
         <ButtonGroup
           sx={{
             position: "absolute",
@@ -263,7 +267,6 @@ export default function SplitView({ leftContent, rightContent }: Props) {
             sx={{
               width: "100%",
               height: "100%",
-              overflow: "auto",
               visibility: mode === "left" ? "hidden" : "visible",
               opacity: mode === "left" ? 0 : 1,
               transition: "visibility 0.3s, opacity 0.3s",

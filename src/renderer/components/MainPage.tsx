@@ -1,7 +1,7 @@
 import React from "react";
 import { useSearchParams } from "react-router-dom";
 import ContentPanel from "./ContentPanel";
-import { Drawer, IconButton, Box, Button } from "@mui/material";
+import { Drawer, IconButton, Box, Button, Tabs, Tab } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import AppMenu from "./AppMenu";
 import { useCurrentProfileId } from "../data/profile";
@@ -11,6 +11,8 @@ import useTabState, { TabItem, TabState } from "../data/tabState";
 import CloseIcon from "@mui/icons-material/Close";
 import { BaseInteraction } from "@/shared/types/interactions";
 import { DisplayInfoFactory } from "../data/tabState";
+import SplitView from './SplitView';
+
 
 
 export default function MainPage() {
@@ -26,7 +28,6 @@ export default function MainPage() {
     handleTabActiveOrCreate,
     handleTabClick,
     handleTabClose,
-    handleHiddenTabClick,
     handleTitleChange } = useTabState();
 
   const onTabClick = (tab: TabItem) => {
@@ -39,12 +40,6 @@ export default function MainPage() {
     console.log("Tab closed", id);
     // Implement tab close logic here
     handleTabClose(id);
-  };
-
-  const onHiddenTabClick = (tab: TabItem) => {
-    console.log("Hidden tab clicked", tab);
-    // Implement hidden tab click logic here
-    handleHiddenTabClick(tab);
   };
 
   const onInteractionExpand = (interaction: BaseInteraction, url: string | null) => {
@@ -72,12 +67,13 @@ export default function MainPage() {
     }));
   }
 
+
+  console.log("  tabState.activeTab", tabState);
   return (
     <InteractionApiProvider interactionApi={interactionApi}>
       <Box
         sx={{
           height: "100%",
-          position: "fixed",
           top: 0,
           left: 0,
           right: 0,
@@ -86,100 +82,63 @@ export default function MainPage() {
           flexDirection: "row",
         }}
       >
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "flex-start",
-            height: "100%",
-            width: "100%",
-            borderRight: "1px solid #ccc",
-            overflowY: "auto",
-          }}
-        >
-          <Box
+
+        <Box sx={{ flexGrow: 1 }}>
+          <SplitView
+            initialSplitRatio={0.15}
+            showToggleButtons={false}
+            autoSwitchModeOnRelease={false}
+            leftContent={
+              <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <Tabs orientation="vertical" variant="fullWidth" value={tabState.activeTab} sx={{ flexGrow: 1 }}>
+                {tabState && tabState.tabs.map((tab) => (
+                  <Tab value={tab.id} label={
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      {tab.title}
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTabClose(tab.id);
+                        }}
+                        sx={{ ml: 1 }}
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  } onClick={() => onTabClick(tab)}/>
+                ))}
+                </Tabs>
+                <Button onClick={(e) => {
+                  e.stopPropagation();
+                  handleTabActiveOrCreate(null, null);
+                  }}>Create New Tab</Button>
+              </Box>
+            }
+            rightContent={tabState.activeTab && (
+              <ContentPanel 
+                  tab={tabState.tabs.find(tab => tab.id === tabState.activeTab)}
+                  onInteractionClick={onInteractionClick}
+                  onInteractionExpand={onInteractionExpand} 
+                />
+            )}
+
+          />
+        </Box>
+        <Box>
+          <IconButton
+            onClick={() => {
+              setSearchParams({ menu: "/" });
+            }}
             sx={{
-              width: "200px",
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              borderRight: "1px solid #ccc",
-              overflowY: "auto",
-              position: "relative"
+              top: 16,
+              right: 16,
+              zIndex: 1200,
             }}
           >
-            {tabState && tabState.tabs.map((tab) => (
-              <Box
-                key={tab.id}
-                onClick={() => onTabClick(tab)}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  borderRight: "1px solid rgba(0,0,0,0.12)",
-                  backgroundColor: tab.id === tabState.activeTab ? "#303030" : "#101010",
-                  padding: "8px 16px",
-                }}
-              >
-                <span style={{ flex: 1 }}>{tab.title}</span>
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCloseTab(tab.id);
-                  }}
-                >
-                  <CloseIcon fontSize="small" />
-                </IconButton>
-              </Box>
-            ))}
-            <Button
-              onClick={() => handleTabActiveOrCreate(null, null)}
-              sx={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                width: "100%",
-                textAlign: "center",
-                backgroundColor: "#f5f5f5",
-                borderTop: "1px solid #ccc"
-              }}
-            >
-              新建标签
-            </Button>
-          </Box>
-          {tabState.activeTab && (
-            <Box
-              sx={{
-                flexGrow: 1,
-                height: "100%",
-                display: "flex",
-                flexDirection: "column"
-              }}
-            >
-              <ContentPanel 
-                tab={tabState.tabs.find(tab => tab.id === tabState.activeTab)}
-                onInteractionClick={onInteractionClick}
-                onInteractionExpand={onInteractionExpand} 
-              />
-            </Box>
-          )}
+            <MenuIcon />
+          </IconButton>
         </Box>
-        <IconButton
-          onClick={() => {
-            setSearchParams({ menu: "/" });
-          }}
-          sx={{
-            position: "fixed",
-            top: 16,
-            right: 16,
-            zIndex: 1200,
-          }}
-        >
-          <MenuIcon />
-        </IconButton>
         <Drawer
           anchor="right"
           open={Boolean(menuPath)}
