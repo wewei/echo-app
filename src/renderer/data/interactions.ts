@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { useEffect, useReducer, useCallback, useMemo, useState, useRef, ActionDispatch, Reducer } from "react";
-import { ChatState, ChatInteraction, BaseInteraction, NavState, Interaction } from "@/shared/types/interactions";
+import { ChatState, ChatInteraction, BaseInteraction, NavState, Interaction, NavInteraction } from "@/shared/types/interactions";
 import { makeEventHub } from "@/shared/utils/event";
 import { recentChats, traceBack, chatsForContext } from "./interactionStreams";
 import { useInteractionApi } from "../contexts/interactonApi";
@@ -220,6 +220,13 @@ export const createChatInteraction = async (profileId: string, params: CreatePar
   
   interactionCreatedEventHub.notify(eventPath(profileId, params.contextId), chat);
   return chat;
+};
+
+export const createNavInteraction = async (profileId: string, params: CreateParams<NavInteraction>): Promise<NavInteraction> => {
+  const nav = await window.electron.interactions.createNav(profileId, params);
+  
+  interactionCreatedEventHub.notify(eventPath(profileId, params.contextId), nav);
+  return nav;
 };
 
 export const appendAssistantContent = async (profileId: string, interactionId: number, content: string): Promise<void> => {

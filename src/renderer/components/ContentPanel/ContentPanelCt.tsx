@@ -7,13 +7,15 @@ interface ContentPanelCtProps {
   tab: TabItem;
   onInteractionClick?: (tab: TabItem, interaction: BaseInteraction, url: string | null) => void;
   onInteractionExpand?: (interaction: BaseInteraction, url: string | null) => void;
+  onTabUpdate: (tab: TabItem) => void;
 }
 
 
 export const ContentPanelCt: React.FC<ContentPanelCtProps> = ({
   tab,
   onInteractionClick,
-  onInteractionExpand
+  onInteractionExpand,
+  onTabUpdate
 }) => {
   return (
     <ContentPanelRp
@@ -21,6 +23,7 @@ export const ContentPanelCt: React.FC<ContentPanelCtProps> = ({
       onTitleChange={() => {}}
       onInteractionClick={onInteractionClick}
       onInteractionExpand={onInteractionExpand}
+      onTabUpdate={onTabUpdate}
     />
   );
 };

@@ -13,13 +13,15 @@ interface ContentPanelRpProps {
   onTitleChange: (id: string, title: string) => void;
   onInteractionClick?: (tab: TabItem, interaction: BaseInteraction, url: string | null) => void;
   onInteractionExpand?: (interaction: BaseInteraction, url: string | null) => void;
+  onTabUpdate: (tab: TabItem) => void;
 }
 
 export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
   tab,
   onTitleChange,
   onInteractionClick,
-  onInteractionExpand
+  onInteractionExpand,
+  onTabUpdate
 }) => {
 
   console.log("ContentPanelRpProps render tab", tab);
@@ -48,11 +50,13 @@ export const ContentPanelRp: React.FC<ContentPanelRpProps> = ({
       </Box>}
       rightContent={
         <ChatPanel
-          contextId={tab.contextId}
+          tab={tab}
           onInteractionClick={(intersection, url) => {
             onInteractionClick(tab, intersection, url);
           }}
-          onInteractionExpand={onInteractionExpand} />}
+          onInteractionExpand={onInteractionExpand}
+          onTabUpdate={onTabUpdate} 
+        />}
     />
   );
 };

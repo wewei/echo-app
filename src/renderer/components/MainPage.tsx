@@ -25,6 +25,7 @@ export default function MainPage() {
   const { 
     tabState,
     setTabState,
+    handleTabCreate,
     handleTabActiveOrCreate,
     handleTabClick,
     handleTabClose,
@@ -67,6 +68,20 @@ export default function MainPage() {
     }));
   }
 
+  const onTabUpdate = (tab: TabItem) => {
+    console.log("onTabUpdate", tab);
+    setTabState(prevState => ({
+      ...prevState,
+      tabs: prevState.tabs.map(t =>
+        t.id === tab.id ? {
+          ...t,
+          contextId: tab.contextId,
+          isTemporaryTab: tab.isTemporaryTab,
+          displayInfo: tab.displayInfo
+        } : t
+      )
+    }));
+  }
 
   console.log("  tabState.activeTab", tabState);
   return (
@@ -111,7 +126,7 @@ export default function MainPage() {
                 </Tabs>
                 <Button onClick={(e) => {
                   e.stopPropagation();
-                  handleTabActiveOrCreate(null, null);
+                  handleTabCreate(null, null);
                   }}>Create New Tab</Button>
               </Box>
             }
@@ -120,6 +135,7 @@ export default function MainPage() {
                   tab={tabState.tabs.find(tab => tab.id === tabState.activeTab)}
                   onInteractionClick={onInteractionClick}
                   onInteractionExpand={onInteractionExpand} 
+                  onTabUpdate={onTabUpdate}
                 />
             )}
 

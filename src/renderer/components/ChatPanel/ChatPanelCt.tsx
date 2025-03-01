@@ -4,20 +4,23 @@ import { useCurrentProfileId } from '@/renderer/data/profile'
 import { ChatSettingsSchema, CHAT_SETTINGS } from '@/shared/types/chatSettings'
 import { useSettings } from '@/renderer/data/settings'
 import { chatAgent } from '@/renderer/agents/chatAgent'
-import { createChatInteraction, appendAssistantContent } from '@/renderer/data/interactions';
+import { createChatInteraction, appendAssistantContent, createNavInteraction } from '@/renderer/data/interactions';
 import { BaseInteraction } from '@/shared/types/interactions';
+import { TabItem } from '@/renderer/data/tabState';
 
 interface Props {
-  contextId?: number
+  tab: TabItem;
   onInteractionClick?: (interaction: BaseInteraction, url: string | null) => void;
   onInteractionExpand?: (interaction: BaseInteraction, url: string | null) => void;
+  onTabUpdate: (tab: TabItem) => void;
   disabled?: boolean
 }
 
 export default function ChatPanelCt({
-  contextId,
+  tab,
   onInteractionClick,
   onInteractionExpand,
+  onTabUpdate,
   disabled = false
 }: Props) {
   const profileId = useCurrentProfileId()
@@ -25,6 +28,29 @@ export default function ChatPanelCt({
   const model = chatSettings?.[chatSettings?.provider]?.model
 
   const handleSendMessage = useCallback(async (message: string) => {
+    let contextId = tab.contextId;
+    if (tab.isTemporaryTab) {
+      const nav = await createNavInteraction(profileId, {
+        type: 'nav',
+        title: message,
+        contextId: null,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        userContent: '', // 提供适当的值
+        description: '', // 提供适当的值
+        favIconUrl: '', // 提供适当的值
+        imageAssetId: '' // 提供适当的值
+      });
+
+      contextId = nav.id;
+    }
+
+    onTabUpdate({
+      ...tab,
+      contextId,
+      isTemporaryTab: false
+    })
+
     const chatInteraction = await createChatInteraction(profileId, {
       type: 'chat',
       model,
@@ -43,11 +69,11 @@ export default function ChatPanelCt({
       appendAssistantContent(profileId, chatInteraction.id, chunk)
     }
     
-  }, [profileId, model, contextId])
+  }, [profileId, model, tab.contextId])
 
   return (
     <ChatPanelRp
-      contextId={contextId}
+      contextId={tab.contextId}
       onSendMessage={handleSendMessage}
       onInteractionClick={onInteractionClick}
       onInteractionExpand={onInteractionExpand}

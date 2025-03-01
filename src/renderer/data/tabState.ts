@@ -48,22 +48,16 @@ const useTabState = () => {
   });
 
   useEffect(() => {
-    const storedContentSession = localStorage.getItem('tabState');
-    if (storedContentSession) {
-      setTabState(JSON.parse(storedContentSession));
+    const storedTabState = localStorage.getItem('tabState');
+    if (storedTabState) {
+      setTabState(JSON.parse(storedTabState));
     }
     setHasInitialized(true);
   }, []);
 
   useEffect(() => {
-    if (hasInitialized && tabState.tabs.length === 0) {
-      handleTabActiveOrCreate(null, null);
-    }
-  }, [hasInitialized]);
-
-  useEffect(() => {
-    console.log("tabs changed= ", tabState.tabs);
-  }, [tabState.tabs]);
+    saveTabState(tabState);
+  }, [tabState]);
 
   const handleTabClick = (tab: TabItem) => {
 
@@ -71,23 +65,19 @@ const useTabState = () => {
       ...prevState,
       activeTab: tab.id,
     }));
-
-    saveContentSessionAsync(tabState);
   };
 
   const handleTabClose = (id: string) => {
     setTabState(prevState => {
       let updatedTabs = prevState.tabs.filter(tab => tab.id !== id);
-      const mostRecentlyUsedHiddenTab = updatedTabs.reduce((newest, tab) => tab.lastAccessed > newest.lastAccessed ? tab : newest);
+      const mostRecentlyUsedHiddenTab = updatedTabs.length > 0 ? updatedTabs.reduce((newest, tab) => tab.lastAccessed > newest.lastAccessed ? tab : newest) : null;
 
       return {
         ...prevState,
         tabs: updatedTabs,
-        activeTab: mostRecentlyUsedHiddenTab.id
+        activeTab: mostRecentlyUsedHiddenTab?.id || null
       };
     });
-
-    saveContentSessionAsync(tabState);
   };
 
   const handleTitleChange = (id: string, title: string) => {
@@ -97,9 +87,30 @@ const useTabState = () => {
         tab.id === id ? { ...tab, title } : tab
       )
     }));
-
-    saveContentSessionAsync(tabState);
   };
+
+  const handleTabCreate = (contextId : number | null, displayInfo : DisplayInfo | null, isTemporaryTab?: boolean) => {
+    if (!hasInitialized) {
+      return;
+    }
+
+    const newTab: TabItem = {
+      id: uuidv4(),
+      contextId: contextId,
+      title: contextId === null ? "New Tab" : "Context:" + contextId,
+      displayInfo: displayInfo,
+      lastAccessed: Date.now(),
+      isTemporaryTab: isTemporaryTab ?? true
+    };
+
+    let updatedTabs = [...tabState.tabs, newTab];
+
+    setTabState(prevState => ({
+      ...prevState,
+      tabs: updatedTabs,
+      activeTab: newTab.id,
+    }));
+  }
 
   const handleTabActiveOrCreate = (contextId : number | null, displayInfo : DisplayInfo | null) => {
     console.log("handleTabActiveOrCreate", hasInitialized);
@@ -112,39 +123,18 @@ const useTabState = () => {
     if (existingVisibleTab) {
       handleTabClick(existingVisibleTab);
     } else {
-      const newTab: TabItem = {
-        id: uuidv4(),
-        contextId: contextId,
-        title: contextId === null ? "New Tab" : "Context:" + contextId,
-        displayInfo: displayInfo,
-        lastAccessed: Date.now(),
-        isTemporaryTab: contextId === null
-      };
-
-      let updatedTabs = [...tabState.tabs, newTab];
-
-      setTabState(prevState => ({
-        ...prevState,
-        tabs: updatedTabs,
-        activeTab: newTab.id,
-      }));
+      handleTabCreate(contextId, displayInfo);
     }
-
-    saveContentSessionAsync(tabState);
   };
 
-  const saveContentSessionAsync = async (session: TabState) => {
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        localStorage.setItem('tabState', JSON.stringify(session));
-        resolve();
-      }, 1000);
-    });
+  const saveTabState = async (tabState: TabState) => {
+    localStorage.setItem('tabState', JSON.stringify(tabState));
   };
 
   return {
     tabState,
     setTabState,
+    handleTabCreate,
     handleTabActiveOrCreate,
     handleTabClick,
     handleTabClose,
