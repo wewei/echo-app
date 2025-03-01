@@ -5,3 +5,11 @@ body {
   max-width: 38rem;
   padding: 2rem;
 }
+
+.drag {
+  -webkit-app-region: drag;
+}
+
+button {
+  -webkit-app-region: no-drag;
+} 

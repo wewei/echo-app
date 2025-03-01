@@ -84,87 +84,106 @@ export default function MainPage() {
   }
 
   console.log("  tabState.activeTab", tabState);
+
+  const handleMinimize = () => {
+    window.electron.window.minimize()
+  }
+
+  const handleMaximize = () => {
+    window.electron.window.maximize()
+  }
+
+  const handleClose = () => {
+    window.electron.window.close()
+  }
+
   return (
     <InteractionApiProvider interactionApi={interactionApi}>
-      <Box
-        sx={{
-          height: "100%",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          display: "flex",
-          flexDirection: "row",
-        }}
-      >
-
-        <Box sx={{ flexGrow: 1 }}>
-          <SplitView
-            initialSplitRatio={0.15}
-            showToggleButtons={false}
-            autoSwitchModeOnRelease={false}
-            leftContent={
-              <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <Tabs orientation="vertical" variant="fullWidth" value={tabState.activeTab} sx={{ flexGrow: 1 }}>
-                {tabState && tabState.tabs.map((tab) => (
-                  <Tab value={tab.id} label={
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      {tab.title}
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleTabClose(tab.id);
-                        }}
-                        sx={{ ml: 1 }}
-                      >
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  } onClick={() => onTabClick(tab)}/>
-                ))}
-                </Tabs>
-                <Button onClick={(e) => {
-                  e.stopPropagation();
-                  handleTabCreate(null, null);
-                  }}>Create New Tab</Button>
-              </Box>
-            }
-            rightContent={tabState.activeTab && (
-              <ContentPanel 
-                  tab={tabState.tabs.find(tab => tab.id === tabState.activeTab)}
-                  onInteractionClick={onInteractionClick}
-                  onInteractionExpand={onInteractionExpand} 
-                  onTabUpdate={onTabUpdate}
-                />
-            )}
-
-          />
-        </Box>
-        <Box>
-          <IconButton
-            onClick={() => {
-              setSearchParams({ menu: "/" });
-            }}
-            sx={{
-              top: 16,
-              right: 16,
-              zIndex: 1200,
-            }}
-          >
-            <MenuIcon />
-          </IconButton>
-        </Box>
-        <Drawer
-          anchor="right"
-          open={Boolean(menuPath)}
-          onClose={() => {
-            setSearchParams({ menu: "" });
+        <Box
+          sx={{
+            height: "100%",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: "flex",
+            flexDirection: "row",
           }}
         >
-          <AppMenu />
-        </Drawer>
-      </Box>
+          <Box sx={{ flexGrow: 1 }}>
+            <SplitView
+              initialSplitRatio={0.15}
+              showToggleButtons={false}
+              autoSwitchModeOnRelease={false}
+              leftContent={
+                <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  <div className="h-8 flex justify-between items-center bg-gray-800 drag">
+                    <div className="flex">
+                      <button onClick={handleMinimize} className="px-4 hover:bg-gray-700">─</button>
+                      <button onClick={handleMaximize} className="px-4 hover:bg-gray-700">□</button>
+                      <button onClick={handleClose} className="px-4 hover:bg-red-600">×</button>
+                    </div>
+                  </div>
+                  <Tabs orientation="vertical" variant="fullWidth" value={tabState.activeTab} sx={{ flexGrow: 1 }}>
+                  {tabState && tabState.tabs.map((tab) => (
+                    <Tab value={tab.id} label={
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        {tab.title}
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTabClose(tab.id);
+                          }}
+                          sx={{ ml: 1 }}
+                        >
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    } onClick={() => onTabClick(tab)}/>
+                  ))}
+                  </Tabs>
+                  <Button onClick={(e) => {
+                    e.stopPropagation();
+                    handleTabCreate(null, null);
+                    }}>Create New Tab</Button>
+                </Box>
+              }
+              rightContent={tabState.activeTab && (
+                <ContentPanel 
+                    tab={tabState.tabs.find(tab => tab.id === tabState.activeTab)}
+                    onInteractionClick={onInteractionClick}
+                    onInteractionExpand={onInteractionExpand} 
+                    onTabUpdate={onTabUpdate}
+                  />
+              )}
+
+            />
+          </Box>
+          <Box>
+            <IconButton
+              onClick={() => {
+                setSearchParams({ menu: "/" });
+              }}
+              sx={{
+                top: 16,
+                right: 16,
+                zIndex: 1200,
+              }}
+            >
+              <MenuIcon />
+            </IconButton>
+          </Box>
+          <Drawer
+            anchor="right"
+            open={Boolean(menuPath)}
+            onClose={() => {
+              setSearchParams({ menu: "" });
+            }}
+          >
+            <AppMenu />
+          </Drawer>
+        </Box>
     </InteractionApiProvider>
   );
 }

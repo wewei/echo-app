@@ -67,12 +67,19 @@ export interface InteractionApi {
   updateNavState(profileId: string, id: number, state: Partial<NavState>): Promise<boolean>
 }
 
+export interface WindowApi {
+  minimize: () => void;
+  maximize: () => void;
+  close: () => void;
+}
+
 export interface ElectronApi {
   profile: ProfileApi
   asset: AssetApi
   settings: SettingsApi
   chat: ChatApi
   interactions: InteractionApi
+  window: WindowApi
 }
 
 declare global {
