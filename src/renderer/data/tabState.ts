@@ -1,4 +1,5 @@
 import { BaseInteraction } from '@/shared/types/interactions';
+import { fa } from '@faker-js/faker/.';
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -38,8 +39,6 @@ export interface TabState {
   activeTab: string | null;
 }
 
-const MAX_VISIBLE_TABS = 5; // Maximum number of visible tabs
-
 const useTabState = () => {
   const [hasInitialized, setHasInitialized] = useState(false);
   const [tabState, setTabState] = useState<TabState>({
@@ -52,12 +51,15 @@ const useTabState = () => {
     if (storedTabState) {
       setTabState(JSON.parse(storedTabState));
     }
+
     setHasInitialized(true);
   }, []);
 
   useEffect(() => {
-    saveTabState(tabState);
-  }, [tabState]);
+    if (tabState.tabs.length === 0) {
+      handleTabCreate(null, null);
+    }
+  }, [hasInitialized]);
 
   const handleTabClick = (tab: TabItem) => {
 
@@ -110,6 +112,8 @@ const useTabState = () => {
       tabs: updatedTabs,
       activeTab: newTab.id,
     }));
+
+    saveTabState(tabState);
   }
 
   const handleTabActiveOrCreate = (contextId : number | null, displayInfo : DisplayInfo | null) => {
@@ -123,8 +127,10 @@ const useTabState = () => {
     if (existingVisibleTab) {
       handleTabClick(existingVisibleTab);
     } else {
-      handleTabCreate(contextId, displayInfo);
+      handleTabCreate(contextId, displayInfo, false);
     }
+
+    saveTabState(tabState);
   };
 
   const saveTabState = async (tabState: TabState) => {
