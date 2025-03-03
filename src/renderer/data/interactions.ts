@@ -202,6 +202,20 @@ export const useChats = (contextId?: number) => {
       eventPath(api.profileId(), contextId),
       (interaction: BaseInteraction) => {
         dispatch({ type: "created", interaction });
+
+        // insert user message into vectorDb
+        const documents = [interaction.userContent];
+        const ids = [`user:${interaction.id}`];
+        const metadatas = [{ role: "user", type: interaction.type, profileId: api.profileId(), chatId: interaction.id, contextId: interaction.contextId, createdAt: interaction.createdAt }];
+
+        console.log("documents =", documents, "ids =", ids, "metadatas =", metadatas)
+        window.electron.vectorDb.add(documents, ids, metadatas)
+        .then(() => {
+          console.log("Document added to vectorDb")
+        })
+        .catch((error) => {
+          console.error("Failed to add document to vectorDb", error);
+        });
       }
     );
     return () => { unwatch() }
@@ -217,7 +231,6 @@ export const useChats = (contextId?: number) => {
 
 export const createChatInteraction = async (profileId: string, params: CreateParams<ChatInteraction>): Promise<ChatInteraction> => {
   const chat = await window.electron.interactions.createChat(profileId, params);
-  
   interactionCreatedEventHub.notify(eventPath(profileId, params.contextId), chat);
   return chat;
 };

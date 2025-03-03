@@ -2,6 +2,7 @@ import { OpenAI } from 'openai'
 import type { Profile } from '@/shared/types/profile'
 import type { AssetMetadata } from '@/shared/types/asset'
 import type { Settings } from '@/shared/types/settings'
+import type { VectorDbMetadata, VectorDbSearchResponse } from '@/shared/types/vectorDb'
 import { EntityData } from './entity'
 import {
   ChatInteraction,
@@ -73,6 +74,11 @@ export interface WindowApi {
   close: () => void;
 }
 
+export interface VectorDbApi {
+  search: (profileId: string, query: string, top_k: number) => Promise<VectorDbSearchResponse>
+  add: (documents: string[], ids: string[], metadatas: VectorDbMetadata[]) => Promise<boolean>
+}
+
 export interface ElectronApi {
   profile: ProfileApi
   asset: AssetApi
@@ -80,6 +86,7 @@ export interface ElectronApi {
   chat: ChatApi
   interactions: InteractionApi
   window: WindowApi
+  vectorDb: VectorDbApi
 }
 
 declare global {
