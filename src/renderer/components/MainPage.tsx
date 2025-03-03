@@ -1,8 +1,9 @@
-import React from "react";
+import React, {useState} from "react";
 import { useSearchParams } from "react-router-dom";
 import ContentPanel from "./ContentPanel";
 import { Drawer, IconButton, Box, Button, Tabs, Tab } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import SearchIcon from "@mui/icons-material/Search";
 import AppMenu from "./AppMenu";
 import { useCurrentProfileId } from "../data/profile";
 import { InteractionApiProvider } from "../contexts/interactonApi";
@@ -12,7 +13,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { BaseInteraction } from "@/shared/types/interactions";
 import { DisplayInfoFactory } from "../data/tabState";
 import SplitView from './SplitView';
-
+import SearchDialog from './SearchDialog';
 
 
 export default function MainPage() {
@@ -30,6 +31,9 @@ export default function MainPage() {
     handleTabClick,
     handleTabClose,
     handleTitleChange } = useTabState();
+
+
+  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
 
   const onTabClick = (tab: TabItem) => {
     console.log("Tab clicked", tab);
@@ -97,6 +101,19 @@ export default function MainPage() {
     window.electron.window.close()
   }
 
+  const handleSearchIconClick = () => {
+    setSearchDialogOpen(true);
+  };
+
+  const handleSearchDialogClose = () => {
+    setSearchDialogOpen(false);
+  };
+
+  const handleSearch = (query: string) => {
+    console.log('Searching for:', query);
+    // Implement your search functionality here
+  };
+
   return (
     <InteractionApiProvider interactionApi={interactionApi}>
         <Box
@@ -160,7 +177,14 @@ export default function MainPage() {
 
             />
           </Box>
-          <Box>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 1,
+              mt: 1,
+              mr: 1,
+            }} >
             <IconButton
               onClick={() => {
                 setSearchParams({ menu: "/" });
@@ -173,6 +197,16 @@ export default function MainPage() {
             >
               <MenuIcon />
             </IconButton>
+            <IconButton
+              onClick={handleSearchIconClick}
+              sx={{
+                top: 16,
+                right: 16,
+                zIndex: 1200,
+              }}
+            >
+              <SearchIcon />
+            </IconButton>
           </Box>
           <Drawer
             anchor="right"
@@ -183,6 +217,11 @@ export default function MainPage() {
           >
             <AppMenu />
           </Drawer>
+          <SearchDialog 
+            open={searchDialogOpen}
+            onClose={handleSearchDialogClose}
+            onSearch={handleSearch}
+          />
         </Box>
     </InteractionApiProvider>
   );
