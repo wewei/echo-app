@@ -32,7 +32,7 @@ export default function InteractionViewRp({ interaction, onInteractionClick, onI
     const target = e.target as HTMLElement;
     const link = target.closest('a');
     if (link) {
-      onInteractionClick?.(interaction, link.href);
+      onInteractionExpand?.(interaction, link.href);
     } else {
       onInteractionClick?.(interaction, null);
     }
