@@ -294,7 +294,6 @@ export const notifyAssistantContent = async (profileId: string, interactionId: n
     contextId,
     assistantContent: content,
     createdAt: Date.now(),
-    updatedAt: Date.now(),
   };
   vectorDbInteractionEventHub.notify(eventPath(profileId), vectorDbInteraction);
 };

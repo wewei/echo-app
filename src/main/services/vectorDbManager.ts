@@ -10,15 +10,19 @@ export const search = async (profileId: string, query: string, top_k: number): P
     headers: {
       'Content-Type': 'application/json; charset=utf-8'
     },
-    body: JSON.stringify({profileId,  query, top_k })
+    body: JSON.stringify({profileId, query, top_k })
   });
 
   if(!response.ok) {
     throw new Error(`Failed to search vectorDb: ${response.statusText}`);
   }
 
-  const { documents, ids, metadatas } = await response.json();
-  return { documents, ids, metadatas };
+  const result = await response.json();
+  return {
+    documents: result.documents ?? [],
+    distances: result.distances ?? [],
+    metadatas: result.metadatas ?? []
+  } satisfies VectorDbSearchResponse;
 }
 
 export const add = async (documents: string[], ids: string[], metadatas: VectorDbMetadata[]): Promise<boolean> => {

@@ -1,34 +1,53 @@
 import React, { useState } from 'react';
 import SearchDialogRp from './SearchDialogRp';
+import type { VectorDbSearchResponse } from '@/shared/types/vectorDb';
 
 interface SearchDialogCtProps {
   open: boolean;
   onClose: () => void;
-  onSearch: (query: string) => void;
+  onSearch: (query: string) => Promise<VectorDbSearchResponse>;
+  onResultClick: (interactionId: number, contextId: number) => void;
 }
 
 const SearchDialogCt: React.FC<SearchDialogCtProps> = ({
   open,
   onClose,
   onSearch,
+  onResultClick,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<VectorDbSearchResponse | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleSearchQueryChange = (query: string) => {
     setSearchQuery(query);
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (searchQuery.trim()) {
-      onSearch(searchQuery);
-      setSearchQuery('');
-      onClose();
+      setLoading(true);
+      try {
+        const results = await onSearch(searchQuery);
+
+        console.log("Search results:", results);
+        setSearchResults(results);
+      } catch (error) {
+        console.error('Search error:', error);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   const handleClose = () => {
     setSearchQuery('');
+    setSearchResults(null);
     onClose();
+  };
+
+  const handleResultClick = (interactionId: number, contextId: number) => {
+    onResultClick(interactionId, contextId);
+    handleClose();
   };
 
   return (
@@ -38,6 +57,9 @@ const SearchDialogCt: React.FC<SearchDialogCtProps> = ({
       onClose={handleClose}
       onSearch={handleSearch}
       onSearchQueryChange={handleSearchQueryChange}
+      searchResults={searchResults}
+      loading={loading}
+      onResultClick={handleResultClick}
     />
   );
 };

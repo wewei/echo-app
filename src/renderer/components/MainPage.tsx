@@ -14,7 +14,7 @@ import { BaseInteraction } from "@/shared/types/interactions";
 import { DisplayInfoFactory } from "../data/tabState";
 import SplitView from './SplitView';
 import SearchDialog from './SearchDialog';
-
+import { VectorDbSearchResponse } from "@/shared/types/vectorDb";
 
 export default function MainPage() {
 
@@ -109,9 +109,38 @@ export default function MainPage() {
     setSearchDialogOpen(false);
   };
 
-  const handleSearch = (query: string) => {
+  const handleSearch = async (query: string): Promise<VectorDbSearchResponse> => {
     console.log('Searching for:', query);
-    // Implement your search functionality here
+    try {
+      // Implement your actual search API call here
+      const searchResults = await window.electron.vectorDb.search(profileId, query, 5);
+      return searchResults;
+    } catch (error) {
+      console.error('Search error:', error);
+      // Return empty results in case of error
+      return {
+        documents: [],
+        distances: [],
+        metadatas: []
+      };
+    }
+  };
+
+  const handleSearchResultClick = (interactionId: number, contextId: number) => {
+    // First, get the interaction from the API
+    window.electron.interactions.getInteraction(profileId, interactionId)
+      .then((interaction: BaseInteraction) => {
+        if (interaction) {
+          // Open the interaction in a new tab or existing tab
+          handleTabActiveOrCreate(
+            interaction.contextId,
+            DisplayInfoFactory.create(interaction, null)
+          );
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching interaction:', error);
+      });
   };
 
   return (
@@ -221,6 +250,7 @@ export default function MainPage() {
             open={searchDialogOpen}
             onClose={handleSearchDialogClose}
             onSearch={handleSearch}
+            onResultClick={handleSearchResultClick}
           />
         </Box>
     </InteractionApiProvider>
