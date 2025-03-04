@@ -4,7 +4,7 @@ import { useCurrentProfileId } from '@/renderer/data/profile'
 import { ChatSettingsSchema, CHAT_SETTINGS } from '@/shared/types/chatSettings'
 import { useSettings } from '@/renderer/data/settings'
 import { chatAgent } from '@/renderer/agents/chatAgent'
-import { createChatInteraction, appendAssistantContent, createNavInteraction } from '@/renderer/data/interactions';
+import { createChatInteraction, appendAssistantContent, createNavInteraction, notifyAssistantContent } from '@/renderer/data/interactions';
 import { BaseInteraction } from '@/shared/types/interactions';
 import { TabItem } from '@/renderer/data/tabState';
 
@@ -61,13 +61,20 @@ export default function ChatPanelCt({
       updatedAt: Date.now()
     });
 
+    // todo: find a better way to handle this if needed
+    let assistantContent = '';
+
     for await (const chunk of chatAgent({
       profileId,
       model,
       chatInteraction,
     })) {
+      assistantContent += chunk;
       appendAssistantContent(profileId, chatInteraction.id, chunk)
     }
+
+    console.log("assistantContent", assistantContent);
+    notifyAssistantContent(profileId, chatInteraction.id, chatInteraction.contextId, assistantContent);
     
   }, [profileId, model, tab.contextId])
 

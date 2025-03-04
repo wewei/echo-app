@@ -6,6 +6,8 @@ import { recentChats, traceBack, chatsForContext } from "./interactionStreams";
 import { useInteractionApi } from "../contexts/interactonApi";
 import { ENTITY_PENDING, EntityRendererState, isEntityReady } from "./entity";
 import type { InteractionApi, ProfileInteractionApi } from "@/shared/types/ipc";
+import { VectorDbInteraction, VectorDbMetadata } from "@/shared/types/vectorDb";
+import { splitTextByParagraph } from "@/shared/utils/text";
 export type CreateParams<T extends { id: number }> = Omit<T, 'id'>;
 
 type ListResult<T> = {
@@ -20,6 +22,8 @@ type ListResult<T> = {
 const interactionCreatedEventHub = makeEventHub<BaseInteraction>();
 // Route /profileId/interactionId
 const appendContentEventHub = makeEventHub<string>()
+
+const vectorDbInteractionEventHub = makeEventHub<VectorDbInteraction>()
 
 type InteractionState = {
   items: BaseInteraction[]
@@ -202,11 +206,30 @@ export const useChats = (contextId?: number) => {
       eventPath(api.profileId(), contextId),
       (interaction: BaseInteraction) => {
         dispatch({ type: "created", interaction });
+      }
+    );
+    return () => { unwatch() }
+  }, [api.profileId(), contextId])
 
-        // insert user message into vectorDb
-        const documents = [interaction.userContent];
-        const ids = [`user:${interaction.id}`];
-        const metadatas = [{ role: "user", type: interaction.type, profileId: api.profileId(), chatId: interaction.id, contextId: interaction.contextId, createdAt: interaction.createdAt }];
+  useEffect(() => {
+    const unwatch = vectorDbInteractionEventHub.watch(
+      eventPath(api.profileId()),
+      (interaction: VectorDbInteraction) => {
+        console.log("interaction =", interaction)
+        // insert message into vectorDb
+        // todo: find a better way to handle this if needed
+        const content = interaction.userContent || interaction.assistantContent;
+        const documents = splitTextByParagraph(content, 200);
+        const ids = documents.map((_, index) => `${interaction.role}:${interaction.type}:${interaction.interactionId}:${index}`);
+        const metadatas: VectorDbMetadata[] = documents.map((_, index) => (
+          { role: interaction.role, 
+            type: interaction.type, 
+            profileId: interaction.profileId, 
+            interactionId: interaction.interactionId, 
+            contextId: interaction.contextId, 
+            createdAt: interaction.createdAt,
+            index: index
+          })); 
 
         console.log("documents =", documents, "ids =", ids, "metadatas =", metadatas)
         window.electron.vectorDb.add(documents, ids, metadatas)
@@ -219,7 +242,8 @@ export const useChats = (contextId?: number) => {
       }
     );
     return () => { unwatch() }
-  }, [api.profileId(), contextId])
+  }, [api.profileId()])
+
 
   return {
     items: state.items,
@@ -232,6 +256,19 @@ export const useChats = (contextId?: number) => {
 export const createChatInteraction = async (profileId: string, params: CreateParams<ChatInteraction>): Promise<ChatInteraction> => {
   const chat = await window.electron.interactions.createChat(profileId, params);
   interactionCreatedEventHub.notify(eventPath(profileId, params.contextId), chat);
+
+  const vectorDbInteraction: VectorDbInteraction = {
+    role: "user",
+    type: chat.type,
+    profileId,
+    interactionId: chat.id,
+    contextId: chat.contextId,
+    createdAt: chat.createdAt,
+    userContent: chat.userContent,
+  };
+
+  vectorDbInteractionEventHub.notify(eventPath(profileId), vectorDbInteraction);
+
   return chat;
 };
 
@@ -246,6 +283,20 @@ export const appendAssistantContent = async (profileId: string, interactionId: n
   await window.electron.interactions.appendAssistantContent(profileId, interactionId, content, Date.now());
   
   appendContentEventHub.notify([profileId, String(interactionId)], content)
+};
+
+export const notifyAssistantContent = async (profileId: string, interactionId: number, contextId: number, content: string): Promise<void> => {
+  const vectorDbInteraction: VectorDbInteraction = {
+    role: "assistant",
+    type: "chat",
+    profileId,
+    interactionId,
+    contextId,
+    assistantContent: content,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  vectorDbInteractionEventHub.notify(eventPath(profileId), vectorDbInteraction);
 };
 
 export const useNavState = (interactionId: number) => {
