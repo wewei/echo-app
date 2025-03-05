@@ -22,3 +22,10 @@ export type VectorDbInteraction = {
     favIconUrl?: string,
     imageAssetId?: string
 } & VectorDbMetadata
+
+
+export interface VectorDbClient {
+    search: (profileId: string, query: string) => Promise<VectorDbSearchResponse>
+    add: (profileId: string, documents: string[], ids: string[], metadatas: VectorDbMetadata[]) => Promise<boolean>
+}
+

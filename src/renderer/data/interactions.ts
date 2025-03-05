@@ -232,7 +232,7 @@ export const useChats = (contextId?: number) => {
           })); 
 
         console.log("documents =", documents, "ids =", ids, "metadatas =", metadatas)
-        window.electron.vectorDb.add(documents, ids, metadatas)
+        window.electron.vectorDb.add(interaction.profileId, documents, ids, metadatas)
         .then(() => {
           console.log("Document added to vectorDb")
         })

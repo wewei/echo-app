@@ -59,6 +59,18 @@ export default {
       bing: {
         apiKey: 'Bing API 密钥'
       }
+    },
+    rag: {
+      title: 'RAG 设置',
+      provider: 'RAG 供应商',
+      providers: {
+        custom: '自定义'
+      },
+      custom: {
+        endpoint: '服务端点',
+        topK: '返回几个结果',
+        distanceThreshold: '距离阈值'
+      }
     }
   },
   welcome: {

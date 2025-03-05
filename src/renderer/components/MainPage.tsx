@@ -112,8 +112,7 @@ export default function MainPage() {
   const handleSearch = async (query: string): Promise<VectorDbSearchResponse> => {
     console.log('Searching for:', query);
     try {
-      // Implement your actual search API call here
-      const searchResults = await window.electron.vectorDb.search(profileId, query, 5);
+      const searchResults = await window.electron.vectorDb.search(profileId, query);
       return searchResults;
     } catch (error) {
       console.error('Search error:', error);

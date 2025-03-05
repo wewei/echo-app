@@ -28,6 +28,7 @@ import type { Profile } from "@/shared/types/profile";
 import Loading from "@/renderer/components/Loading";
 import SearchSettingsView from './SearchSettingsView';
 import ChatSettingsView from './ChatSettingsView';
+import RagSettingsView from './RagSettingsView';
 import { EntityRendererState, isEntityReady } from "@/renderer/data/entity";
 
 interface SettingsPanelRpProps {
@@ -210,6 +211,9 @@ export default function SettingsPanelRp({
       <SearchSettingsView profile={profile} />
 
       <Divider />
+
+      {/* Rag Settings */}
+      <RagSettingsView profile={profile} />
 
       {/* About Section */}
       <List>

@@ -59,6 +59,18 @@ export default {
       bing: {
         apiKey: 'Bing API Key'
       }
+    },
+    rag: {
+      title: 'RAG Settings',
+      provider: 'RAG Provider',
+      providers: {
+        custom: 'Custom',
+      },
+      custom: {
+        endpoint: 'Endpoint',
+        topK: 'Top K',
+        distanceThreshold: 'Distance Threshold'
+      }
     }
   },
   welcome: {

@@ -75,8 +75,8 @@ export interface WindowApi {
 }
 
 export interface VectorDbApi {
-  search: (profileId: string, query: string, top_k: number) => Promise<VectorDbSearchResponse>
-  add: (documents: string[], ids: string[], metadatas: VectorDbMetadata[]) => Promise<boolean>
+  search: (profileId: string, query: string) => Promise<VectorDbSearchResponse>
+  add: (profileId: string, documents: string[], ids: string[], metadatas: VectorDbMetadata[]) => Promise<boolean>
 }
 
 export interface ElectronApi {
