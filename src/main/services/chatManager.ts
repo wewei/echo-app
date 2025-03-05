@@ -14,6 +14,7 @@ export const getClient = async (profileId: string): Promise<OpenAI> => {
     }
 
     client = new (settings.provider === 'azure' ? AzureOpenAI : OpenAI)(settings[settings.provider])
+    clients.set(profileId, client)
   }
   return client
 }
