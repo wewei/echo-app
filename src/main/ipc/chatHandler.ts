@@ -83,7 +83,7 @@ const handleChat = async (
 
           // 递归调用处理新的请求
           
-          await handleChat(event, streamId, profileId, {
+          handleChat(event, streamId, profileId, {
             model: params.model as string,
             messages: updatedMessages
           }, recursionDepth + 1);
@@ -109,6 +109,10 @@ const handleChat = async (
       // 正常的内容，发送给客户端
       sender.send('chat:stream:delta', streamId, chunk);
     }
+  }
+
+  if (recursionDepth === 0) {
+    event.sender.send('chat:stream:done', streamId)
   }
 }
 
@@ -146,8 +150,8 @@ export const registerChatHandlers = () => {
           ]
         }
         
-        await handleChat(event, streamId, profileId, realParams);
-        event.sender.send('chat:stream:done', streamId)
+        handleChat(event, streamId, profileId, realParams);
+        // event.sender.send('chat:stream:done', streamId)
       } catch (error) {
         event.sender.send('chat:stream:error', streamId, error.message)
         throw error // 重新抛出错误以便 preload 脚本可以处理
