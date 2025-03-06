@@ -35,7 +35,8 @@ export default {
       providers: {
         openai: 'OpenAI',
         deepseek: 'DeepSeek',
-        azure: 'Azure OpenAI'
+        azure: 'Azure OpenAI',
+        ollama: 'Ollama'
       },
       models: {
         gpt35: 'GPT-3.5 Turbo',
@@ -43,7 +44,8 @@ export default {
         deepseekChat: 'DeepSeek Chat',
         deepseekCoder: 'DeepSeek Coder',
         azureGpt35: 'Azure GPT-3.5 Turbo',
-        azureGpt4: 'Azure GPT-4'
+        azureGpt4: 'Azure GPT-4',
+        ollamaDeepseekr132: 'DeepSeek R1 32b'
       },
       azure: {
         apiVersion: 'API Version',
@@ -88,4 +90,4 @@ export default {
       loadHistory: 'Failed to load message history'
     }
   }
-} 
+}

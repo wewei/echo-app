@@ -15,6 +15,7 @@ import type { ChatSettings, ChatProvider } from "@/shared/types/chatSettings"
 import OpenAISettings from "./OpenAISettings"
 import DeepSeekSettingsPanel from "./DeepSeekSettings"
 import AzureSettingsPanel from "./AzureSettings"
+import OllamaSettingsPanel from "./OllamaSettings"
 
 interface ChatSettingsViewRpProps {
   settings: ChatSettings
@@ -22,6 +23,7 @@ interface ChatSettingsViewRpProps {
   onOpenAISettingsChange: (settings: ChatSettings['openai']) => void
   onDeepSeekSettingsChange: (settings: ChatSettings['deepseek']) => void
   onAzureSettingsChange: (settings: ChatSettings['azure']) => void
+  onOllamaSettingsChange: (settings: ChatSettings['ollama']) => void
 }
 
 export default function ChatSettingsViewRp({
@@ -29,7 +31,8 @@ export default function ChatSettingsViewRp({
   onProviderChange,
   onOpenAISettingsChange,
   onDeepSeekSettingsChange,
-  onAzureSettingsChange
+  onAzureSettingsChange,
+  onOllamaSettingsChange
 }: ChatSettingsViewRpProps) {
   const { t } = useTranslation()
 
@@ -54,6 +57,13 @@ export default function ChatSettingsViewRp({
           <AzureSettingsPanel
             settings={settings.azure}
             onChange={onAzureSettingsChange}
+          />
+        )
+      case "ollama":
+        return (
+          <OllamaSettingsPanel
+            settings={settings.ollama}
+            onChange={onOllamaSettingsChange}
           />
         )
       default:
@@ -94,6 +104,9 @@ export default function ChatSettingsViewRp({
               <MenuItem value="azure">
                 {t("settings.ai.providers.azure")}
               </MenuItem>
+              <MenuItem value="ollama">
+                {t("settings.ai.providers.ollama")}
+              </MenuItem>
             </Select>
           </FormControl>
 
@@ -102,4 +115,4 @@ export default function ChatSettingsViewRp({
       </ListItem>
     </List>
   )
-} 
+}

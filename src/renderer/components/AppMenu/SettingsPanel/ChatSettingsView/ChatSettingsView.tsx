@@ -24,6 +24,7 @@ import Loading from "@/renderer/components/Loading";
 import OpenAISettings from "./OpenAISettings";
 import DeepSeekSettingsPanel from "./DeepSeekSettings";
 import AzureSettingsPanel from "./AzureSettings";
+import OllamaSettingsPanel from "./OllamaSettings";
 
 type Props = {
   profile: Profile;
@@ -73,6 +74,16 @@ const ChatSettings = ({ profile }: Props) => {
             }}
           />
         );
+      case "ollama":
+        return (
+          <OllamaSettingsPanel
+            settings={settings.ollama}
+            onChange={(ollama) => {
+              const newSettings = { ...settings, ollama };
+              setSettings(newSettings);
+            }}
+          />
+        );
       default:
         return null;
     }
@@ -112,6 +123,9 @@ const ChatSettings = ({ profile }: Props) => {
               </MenuItem>
               <MenuItem value="azure">
                 {t("settings.ai.providers.azure")}
+              </MenuItem>
+              <MenuItem value="ollama">
+                {t("settings.ai.providers.ollama")}
               </MenuItem>
             </Select>
           </FormControl>

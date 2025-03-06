@@ -46,6 +46,11 @@ export default function ChatSettingsViewCt({ profile }: Props) {
     setSettings(newSettings)
   }
 
+  const handleOllamaSettingsChange = (ollama: ChatSettings['ollama']) => {
+    const newSettings = { ...settings, ollama }
+    setSettings(newSettings)
+  }
+
   return (
     <ChatSettingsViewRp
       settings={settings}
@@ -53,6 +58,7 @@ export default function ChatSettingsViewCt({ profile }: Props) {
       onOpenAISettingsChange={handleOpenAISettingsChange}
       onDeepSeekSettingsChange={handleDeepSeekSettingsChange}
       onAzureSettingsChange={handleAzureSettingsChange}
+      onOllamaSettingsChange={handleOllamaSettingsChange}
     />
   )
-} 
+}
