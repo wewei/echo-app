@@ -6,7 +6,7 @@ import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import 'katex/dist/katex.min.css'
 import { ChatInteraction, BaseInteraction } from '@/shared/types/interactions';
-import OpenInFullIcon from '@mui/icons-material/OpenInFull';
+import ForkLeftIcon from '@mui/icons-material/ForkLeft';
 import { useSearchParams } from 'react-router-dom';
 
 interface InteractionViewRpProps {
@@ -65,7 +65,7 @@ export default function InteractionViewRp({ interaction, onInteractionClick, onI
             onInteractionExpand?.(interaction, null);
           }}
         >
-          <OpenInFullIcon />
+          <ForkLeftIcon />
         </IconButton>
       </Box>
       {/* 用户输入内容的气泡 */}
