@@ -212,6 +212,7 @@ export default function MainPage() {
               gap: 1,
               mt: 1,
               mr: 1,
+              ml: 2,
             }} >
             <IconButton
               onClick={() => {
