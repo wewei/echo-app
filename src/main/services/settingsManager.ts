@@ -43,6 +43,9 @@ export const writeSettings = async (
   await ensureSettingsDir(profileId)
   const filePath = getSettingsPath(profileId, scope)
   await fs.writeFile(filePath, JSON.stringify(settings, null, 2))
+  // always notify settings updated after write
+  const {notify: notifySettingsUpdated} = getSettingsEventSource(scope)
+  notifySettingsUpdated({profileId, settings})
 }
 
 // 更新部分 settings
@@ -54,8 +57,6 @@ export const updateSettings = async (
   const current = await readSettings(profileId, scope)
   const updated = { ...current, ...updates }
   await writeSettings(profileId, scope, updated)
-  const {notify: notifySettingsUpdated} = getSettingsEventSource(scope)
-  notifySettingsUpdated({profileId, settings: updated})
   return updated
 }
 

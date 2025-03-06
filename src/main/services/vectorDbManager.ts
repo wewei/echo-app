@@ -95,8 +95,6 @@ export const getClient = async (profileId: string): Promise<VectorDbClient> => {
 }
 
 onSettingsUpdated(RAG_SETTINGS, (profileId, settings) => { 
-  // todo: looks not working properly
-  console.log("Settings updated for profileId: ", profileId, settings);
   clients.delete(profileId) 
 })
 
